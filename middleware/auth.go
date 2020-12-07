@@ -43,11 +43,11 @@ func AuthOwnerAdmin(next http.HandlerFunc) http.HandlerFunc {
 
 		dataToko, err := toko.GetToko(idToko)
 		if err != nil {
-			http.Error(w, "Toko tidak ditemukan", http.StatusBadRequest)
+			http.Error(w, "Tidak ditemukan", http.StatusBadRequest)
 			return
 		}
 
-		dataKaryawan, err := karyawan.GetKaryawan(idToko, strconv.Itoa(user.IDCustomer))
+		dataKaryawan, err := karyawan.AuthKaryawan(idToko, strconv.Itoa(user.IDCustomer))
 		if user.IDCustomer != dataToko.IDOwner {
 			if dataKaryawan.Posisi != "admin" || dataKaryawan.Status != "aktif" {
 				http.Error(w, "Gagal! Anda tidak memiliki otoritas menjalankan fungsi ini.", http.StatusForbidden)

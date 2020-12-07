@@ -20,9 +20,9 @@ type Customers struct {
 // GetCustomer is func
 func (c Customer) GetCustomer(id string) (Customer, error) {
 	con := db.Connect()
-	query := "SELECT idCustomer, username, email, nama FROM customer WHERE idCustomer = ? OR email = ?"
+	query := "SELECT idCustomer, username, email, nama FROM customer WHERE idCustomer = ? OR email = ? OR username = ?"
 
-	err := con.QueryRow(query, id, id).Scan(
+	err := con.QueryRow(query, id, id, id).Scan(
 		&c.IDCustomer, &c.Username, &c.Email, &c.Nama)
 
 	defer con.Close()
@@ -64,7 +64,7 @@ func (c Customer) Register(username, email, nama, password string) error {
 }
 
 // UpdatePassword is func
-func (c *Customer) UpdatePassword(idCustomer int, newPassword string) error {
+func (c Customer) UpdatePassword(idCustomer int, newPassword string) error {
 	con := db.Connect()
 	query := "UPDATE customer SET password = ? WHERE idCustomer = ?"
 	_, err := con.Exec(query, newPassword, idCustomer)
@@ -75,7 +75,7 @@ func (c *Customer) UpdatePassword(idCustomer int, newPassword string) error {
 }
 
 // UpdateProfil is func
-func (c *Customer) UpdateProfil(idCustomer int) error {
+func (c Customer) UpdateProfil(idCustomer int) error {
 	con := db.Connect()
 	query := "UPDATE customer SET username = ?, email = ?, nama = ? WHERE idCustomer = ?"
 	_, err := con.Exec(query, c.Username, c.Email, c.Nama, idCustomer)
