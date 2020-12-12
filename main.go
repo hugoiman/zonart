@@ -47,6 +47,8 @@ func main() {
 	auth.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", mw.AuthOwner(controllers.GetKaryawan)).Methods("GET")
 	auth.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", mw.AuthOwner(controllers.UpdateKaryawan)).Methods("PUT")
 
+	auth.HandleFunc("/api/undangan/{idToko}", mw.AuthOwner(controllers.GetUndangans)).Methods("GET")
+	auth.HandleFunc("/api/undangan/{idToko}/{idUndangan}", controllers.GetUndangan).Methods("GET")
 	auth.HandleFunc("/api/undangan/{idToko}", mw.AuthOwner(controllers.UndangKaryawan)).Methods("POST")
 	auth.HandleFunc("/api/undangan-tolak/{idToko}/{idUndangan}", controllers.TolakUndangan).Methods("POST")
 	auth.HandleFunc("/api/undangan-terima/{idToko}/{idUndangan}", controllers.TerimaUndangan).Methods("POST")
@@ -54,11 +56,22 @@ func main() {
 
 	router.HandleFunc("/api/produk/{idToko}", controllers.GetProduks).Methods("GET")
 	router.HandleFunc("/api/produk/{idToko}/{idProduk}", controllers.GetProduk).Methods("GET")
+	auth.HandleFunc("/api/produk/{idToko}", mw.AuthOwnerAdmin(controllers.CreateProduk)).Methods("POST")
+	auth.HandleFunc("/api/produk/{idToko}/{idProduk}", mw.AuthOwnerAdmin(controllers.UpdateProduk)).Methods("PUT")
 
 	router.HandleFunc("/api/grup-opsi/{idToko}", controllers.GetGrupOpsis).Methods("GET")
 	router.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}", controllers.GetGrupOpsi).Methods("GET")
+	auth.HandleFunc("/api/grup-opsi/{idToko}", mw.AuthOwnerAdmin(controllers.CreateGrupOpsi)).Methods("POST")
+	auth.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.UpdateGrupOpsi)).Methods("PUT")
+	auth.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.DeleteGrupOpsi)).Methods("DELETE")
+	auth.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}/{idProduk}", mw.AuthOwnerAdmin(controllers.SambungGrupOpsikeProduk)).Methods("POST")
+	auth.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}/{idProduk}", mw.AuthOwnerAdmin(controllers.PutusGrupOpsidiProduk)).Methods("DELETE")
 
-	router.HandleFunc("/api/grup-opsi-produk/{idToko}/{idProduk}", controllers.GetGrupOpsiProduk).Methods("GET")
+	auth.HandleFunc("/api/opsi/{idToko}/{idGrupOpsi}/{idOpsi}", mw.AuthOwnerAdmin(controllers.DeleteOpsi)).Methods("DELETE")
+
+	auth.HandleFunc("/api/grup-opsi-produk/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.GetGrupOpsiProduks)).Methods("GET")
+
+	auth.HandleFunc("/api/order/{idToko}/{idProduk}", controllers.CreateOrder).Methods("POST")
 
 	os.Setenv("PORT", "8080")
 	port := "8080"

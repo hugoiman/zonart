@@ -54,7 +54,7 @@ func (t Toko) CreateToko() (int, error) {
 		return 0, err
 	}
 
-	idInt64, err := exec.LastInsertId()
+	idInt64, _ := exec.LastInsertId()
 	idToko := int(idInt64)
 
 	defer con.Close()

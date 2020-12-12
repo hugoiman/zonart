@@ -3,9 +3,11 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // GetProduks is func
@@ -28,7 +30,6 @@ func GetProduk(w http.ResponseWriter, r *http.Request) {
 	idProduk := vars["idProduk"]
 	idToko := vars["idToko"]
 	var produk models.Produk
-	var gop models.GrupOpsi
 
 	dataProduk, err := produk.GetProduk(idToko, idProduk)
 	if err != nil {
@@ -36,12 +37,86 @@ func GetProduk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataGrupOpsiProduk := gop.GetGrupOpsiProduk(idToko, idProduk)
-	dataProduk.GrupOpsi = dataGrupOpsiProduk
-
 	message, _ := json.Marshal(dataProduk)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(message)
+}
+
+// CreateProduk is func
+func CreateProduk(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idToko := vars["idToko"]
+	var produk models.Produk
+
+	if err := json.NewDecoder(r.Body).Decode(&produk); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if err := validator.New().Struct(produk); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if produk.Cetak == false && produk.SoftCopy == false {
+		http.Error(w, "Gagal! Pilih setidaknya satu jenis pemesanan", http.StatusBadRequest)
+		return
+	}
+
+	produk.Status = true
+
+	idProduk, err := produk.CreateProduk(idToko)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Sukses! Produk telah ditambahkan.","idProduk":"` + strconv.Itoa(idProduk) + `"}`))
+}
+
+// UpdateProduk is func
+func UpdateProduk(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idToko := vars["idToko"]
+	idProduk := vars["idProduk"]
+	var produk models.Produk
+
+	if err := json.NewDecoder(r.Body).Decode(&produk); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if err := validator.New().Struct(produk); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if produk.Cetak == false && produk.SoftCopy == false {
+		http.Error(w, "Gagal! Pilih setidaknya satu jenis pemesanan", http.StatusBadRequest)
+		return
+	}
+
+	err := produk.UpdateProduk(idToko, idProduk)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Data produk berhasil diperbarui!"}`))
+}
+
+// DeleteProduk is func
+func DeleteProduk(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idToko := vars["idToko"]
+	idProduk := vars["idProduk"]
+	var produk models.Produk
+
+	err := produk.DeleteProduk(idToko, idProduk)
+	if err != nil {
+		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Sukses! Data telah dihapus!"}`))
 }

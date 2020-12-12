@@ -72,11 +72,7 @@ func CreateToko(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = pengirimanToko.InitializePengirimanToko(idToko)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	_ = pengirimanToko.InitializePengirimanToko(idToko)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -113,16 +109,12 @@ func UpdateToko(w http.ResponseWriter, r *http.Request) {
 
 	// update data pengiriman toko
 	pengirimanToko = toko.PengirimanToko
-	err = pengirimanToko.UpdatePengirimanToko(idToko)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	_ = pengirimanToko.UpdatePengirimanToko(idToko)
 
 	// update rekening toko
 	for x := range toko.Rekening {
 		rekening = toko.Rekening[x]
-		_ = rekening.UpdateRekening(idToko)
+		_ = rekening.CreateUpdateRekening(idToko)
 	}
 
 	w.Header().Set("Content-type", "application/json")

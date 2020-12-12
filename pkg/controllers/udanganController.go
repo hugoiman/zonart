@@ -12,6 +12,43 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// GetUndangans is func
+func GetUndangans(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idToko := vars["idToko"]
+	var undangan models.Undangan
+
+	dataUndangan := undangan.GetUndangans(idToko)
+	message, _ := json.Marshal(dataUndangan)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(message)
+}
+
+// GetUndangan is func
+func GetUndangan(w http.ResponseWriter, r *http.Request) {
+	user := context.Get(r, "user").(*MyClaims)
+	vars := mux.Vars(r)
+	idToko := vars["idToko"]
+	idUndangan := vars["idUndangan"]
+	idCustomer := strconv.Itoa(user.IDCustomer)
+
+	var undangan models.Undangan
+
+	dataUndangan, err := undangan.GetUndangan(idUndangan, idToko, idCustomer)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	message, _ := json.Marshal(dataUndangan)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(message)
+}
+
 // UndangKaryawan is func
 func UndangKaryawan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -50,12 +87,11 @@ func UndangKaryawan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	undangan.IDUndangan = dataUndangan.IDUndangan
-	undangan.IDToko, _ = strconv.Atoi(idToko)
 	undangan.IDCustomer = dataCustomer.IDCustomer
 	undangan.Status = "menunggu"
 	undangan.Date = time.Now().Format("2006-01-02")
 
-	err = undangan.UndangKaryawan()
+	err = undangan.UndangKaryawan(idToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

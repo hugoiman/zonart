@@ -1,33 +1,71 @@
 package models
 
+import "zonart/db"
+
 // Order is class
 type Order struct {
-	IDOrder          int             `json:"idOrder"`
-	IDToko           int             `json:"idToko"`
-	IDProduk         int             `json:"idProduk"`
-	IDCustomer       int             `json:"idCustomer"`
-	NamaToko         string          `json:"namaToko"`
-	SlugToko         string          `json:"slugToko"`
-	NamaProduk       string          `json:"namaProduk"`
-	NamaCustomer     string          `json:"namaCustomer"`
-	JenisPesanan     string          `json:"jenisPesanan"`
-	Catatan          string          `json:"catatan"`
-	TambahanWajah    int             `json:"tambahanWajah"`
-	TotalHargaWajah  int             `json:"totalHargaWajah"`
-	Pcs              string          `json:"pcs"`
-	StatusPesanan    string          `json:"statusPesanan"`
-	StatusPembayaran string          `json:"statusPembayaran"`
-	Total            int             `json:"total"`
-	Dibayar          int             `json:"dibayar"`
-	Tagihan          int             `json:"tagihan"`
-	RencanaPakai     string          `json:"rencanaPakai"`
-	Gambar           string          `json:"gambar"`
-	Hasil            string          `json:"hasil"`
-	CreatedAt        string          `json:"createdAt"`
-	Pengiriman       Pengiriman      `json:"pengiriman"`
-	Penangan         Penangan        `json:"penangan"`
-	TambahanBiaya    []TambahanBiaya `json:"tambahanBiaya"`
-	Pembayaran       []Pembayaran    `json:"pembayaran"`
-	OpsiOrder        []OpsiOrder     `json:"opsiOrder"`
-	Revisi           []Revisi        `json:"revisi"`
+	IDOrder                 int             `json:"idOrder"`    //y
+	IDToko                  int             `json:"idToko"`     //y
+	IDProduk                int             `json:"idProduk"`   //y
+	IDCustomer              int             `json:"idCustomer"` //y
+	NamaToko                string          `json:"namaToko"`
+	SlugToko                string          `json:"slugToko"`
+	NamaProduk              string          `json:"namaProduk"` //y
+	NamaCustomer            string          `json:"namaCustomer"`
+	JenisPesanan            string          `json:"jenisPesanan" validate:"required"` //y
+	HargaProduk             int             `json:"hargaProduk"`                      // getProduk then get harga produk cetak/softcopy //y
+	TambahanWajah           int             `json:"tambahanWajah"`                    //y
+	HargaWajah              int             `json:"hargaWajah"`                       //y
+	TotalHargaWajah         int             `json:"totalHargaWajah"`                  // get harga per wajah dari produk * tambahan wajah
+	Catatan                 string          `json:"catatan"`                          //y
+	Pcs                     int             `json:"pcs" validate:"required,min=1"`    //y
+	StatusPesanan           string          `json:"statusPesanan"`                    //y
+	StatusPembayaran        string          `json:"statusPembayaran"`                 //y
+	TotalHargaOpsi          int             `json:"totalHargaOpsi"`
+	TotalTambahanBiaya      int             `json:"totalTambayanBiaya"`
+	Total                   int             `json:"total"`                      // (harga produk * pcs) + total harga wajah + total harga opsi + tambahan biaya //y
+	Dibayar                 int             `json:"dibayar"`                    //y
+	Tagihan                 int             `json:"tagihan"`                    // total - dibayar //y
+	RencanaPakai            string          `json:"rencanaPakai"`               //y
+	WaktuPengerjaan         string          `json:"waktuPengerjaan"`            //y
+	Gambar                  string          `json:"gambar" validate:"required"` //y
+	Hasil                   string          `json:"hasil"`                      //y
+	TotalBeratOpsi          int             `json:"totalBeratOpsi"`
+	TotalBeratTambahanBiaya int             `json:"totalBeratTambahanBiaya"`
+	CreatedAt               string          `json:"createdAt"` //y
+	Pengiriman              Pengiriman      `json:"pengiriman"`
+	Penangan                Penangan        `json:"penangan"`
+	TambahanBiaya           []TambahanBiaya `json:"tambahanBiaya"`
+	Pembayaran              []Pembayaran    `json:"pembayaran"`
+	OpsiOrder               []OpsiOrder     `json:"opsiOrder"`
+	Revisi                  []Revisi        `json:"revisi"`
+}
+
+// CreateOrder is func
+func (o Order) CreateOrder(idToko, idProduk string) (int, error) {
+	con := db.Connect()
+	query := "INSERT INTO order (idToko, idProduk, idCustomer, namaProduk, jenisPesanan, hargaProduk, tambahanWajah, hargaWajah, catatan, pcs, statusPesanan, statusPembayaran, total, dibayar, tagihan, rencanaPakai, gambar, createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	exec, err := con.Exec(query, idToko, idProduk, o.IDCustomer, o.NamaProduk, o.JenisPesanan, o.HargaProduk, o.TambahanWajah, o.HargaWajah, o.Catatan, o.Pcs, o.StatusPesanan, o.StatusPembayaran, o.Total, o.Dibayar, o.Tagihan, o.RencanaPakai, o.Gambar, o.CreatedAt)
+
+	if err != nil {
+		return 0, err
+	}
+
+	idInt64, _ := exec.LastInsertId()
+	idOrder := int(idInt64)
+
+	defer con.Close()
+
+	return idOrder, err
+}
+
+// DeleteOrder is func
+func (o Order) DeleteOrder(idOrder string) error {
+	con := db.Connect()
+	query := "DELETE FROM order WHERE idOrder = ?"
+	_, err := con.Exec(query, idOrder)
+
+	defer con.Close()
+
+	return err
 }

@@ -18,6 +18,36 @@ type Undangan struct {
 	Date         string `json:"date"`
 }
 
+// Undangans is list of undangan
+type Undangans struct {
+	Undangans []Undangan `json:"undangan"`
+}
+
+// GetUndangans is func
+func (u Undangan) GetUndangans(idToko string) Undangans {
+	con := db.Connect()
+	query := "SELECT a.idUndangan, a.idToko, a.idCustomer, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
+		"JOIN toko b ON a.idToko = b.idToko " +
+		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idToko = ?"
+	rows, _ := con.Query(query, idToko)
+
+	var tgl time.Time
+	var undangans Undangans
+
+	for rows.Next() {
+		rows.Scan(
+			&u.IDUndangan, &u.IDToko, &u.IDCustomer, &u.Posisi, &u.Status, &u.NamaToko, &u.NamaCustomer, &u.Email, &tgl,
+		)
+
+		u.Date = tgl.Format("02 Jan 2006")
+		undangans.Undangans = append(undangans.Undangans, u)
+	}
+
+	defer con.Close()
+
+	return undangans
+}
+
 // GetUndangan is func
 func (u Undangan) GetUndangan(idUndangan, idToko, idCustomer string) (Undangan, error) {
 	con := db.Connect()
@@ -38,10 +68,10 @@ func (u Undangan) GetUndangan(idUndangan, idToko, idCustomer string) (Undangan, 
 }
 
 // UndangKaryawan is func
-func (u Undangan) UndangKaryawan() error {
+func (u Undangan) UndangKaryawan(idToko string) error {
 	con := db.Connect()
 	query := "INSERT INTO undangan (idUndangan, idToko, idCustomer, posisi, status, date) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE posisi = ?, status = ?, date = ?"
-	_, err := con.Exec(query, u.IDUndangan, u.IDToko, u.IDCustomer, u.Posisi, u.Status, u.Date, u.Posisi, u.Status, u.Date)
+	_, err := con.Exec(query, u.IDUndangan, idToko, u.IDCustomer, u.Posisi, u.Status, u.Date, u.Posisi, u.Status, u.Date)
 
 	defer con.Close()
 
