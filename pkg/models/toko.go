@@ -7,23 +7,23 @@ import (
 
 // Toko is class
 type Toko struct {
-	IDToko         int            `json:"idToko"`
-	IDOwner        int            `json:"idOwner"`
-	NamaToko       string         `json:"namaToko" validate:"required"`
-	EmailToko      string         `json:"emailToko" validate:"email"`
-	Deskripsi      string         `json:"deskripsi"`
-	Alamat         string         `json:"alamat"`
-	Kota           string         `json:"kota" validate:"required"`
-	Telp           string         `json:"telp"`
-	Whatsapp       string         `json:"whatsapp"`
-	Instagram      string         `json:"instagram"`
-	Website        string         `json:"website"`
-	Slug           string         `json:"slug" validate:"required"`
-	Foto           string         `json:"foto"`
-	SetKaryawan    bool           `json:"setKaryawan"`
-	CreatedAt      string         `json:"createdAt"`
-	PengirimanToko PengirimanToko `json:"pengirimanToko"`
-	Rekening       []Rekening     `json:"rekening"`
+	IDToko             int                  `json:"idToko"`
+	IDOwner            int                  `json:"idOwner"`
+	NamaToko           string               `json:"namaToko" validate:"required"`
+	EmailToko          string               `json:"emailToko" validate:"email"`
+	Deskripsi          string               `json:"deskripsi"`
+	Alamat             string               `json:"alamat"`
+	Kota               string               `json:"kota" validate:"required"`
+	Telp               string               `json:"telp"`
+	Whatsapp           string               `json:"whatsapp"`
+	Instagram          string               `json:"instagram"`
+	Website            string               `json:"website"`
+	Slug               string               `json:"slug" validate:"required"`
+	Foto               string               `json:"foto"`
+	SetKaryawan        bool                 `json:"setKaryawan"`
+	CreatedAt          string               `json:"createdAt"`
+	JasaPengirimanToko []JasaPengirimanToko `json:"jasaPengirimanToko"`
+	Rekening           []Rekening           `json:"rekening"`
 }
 
 // GetToko is func
@@ -38,6 +38,14 @@ func (t Toko) GetToko(id string) (Toko, error) {
 		&t.Telp, &t.Whatsapp, &t.Instagram, &t.Website, &t.Slug, &t.SetKaryawan, &createdAt)
 
 	t.CreatedAt = createdAt.Format("02 Jan 2006")
+
+	var jpt JasaPengirimanToko
+	dataJasaPengirimanToko := jpt.GetJasaPengirimanToko(t.IDToko)
+	t.JasaPengirimanToko = dataJasaPengirimanToko
+
+	var r Rekening
+	dataRekeningToko := r.GetRekening(id)
+	t.Rekening = dataRekeningToko
 
 	defer con.Close()
 

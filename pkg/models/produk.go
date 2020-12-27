@@ -8,9 +8,9 @@ import (
 type Produk struct {
 	IDProduk      int        `json:"idProduk"`
 	IDToko        int        `json:"idToko"`
+	NamaProduk    string     `json:"namaProduk" validate:"required"`
 	Cetak         bool       `json:"cetak"`
 	SoftCopy      bool       `json:"softCopy"`
-	NamaProduk    string     `json:"namaProduk" validate:"required"`
 	Gambar        string     `json:"gambar" validate:"required"`
 	Deskripsi     string     `json:"deskripsi"`
 	HargaCetak    int        `json:"hargaCetak"`

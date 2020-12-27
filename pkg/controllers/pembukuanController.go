@@ -23,33 +23,6 @@ func GetPembukuans(w http.ResponseWriter, r *http.Request) {
 	w.Write(message)
 }
 
-// CreatePemasukan is func
-func CreatePemasukan(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idToko := vars["idToko"]
-	var pembukuan models.Pembukuan
-
-	if err := json.NewDecoder(r.Body).Decode(&pembukuan); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if err := validator.New().Struct(pembukuan); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	pembukuan.Jenis = "pemasukan"
-
-	err := pembukuan.CreatePembukuan(idToko)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Pemasukan telah ditambahkan."}`))
-}
-
 // CreatePengeluaran is func
 func CreatePengeluaran(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

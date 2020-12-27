@@ -25,3 +25,24 @@ func (oo OpsiOrder) CreateOpsiOrder(idOrder string) error {
 
 	return err
 }
+
+// GetOpsiOrder is func
+func (oo OpsiOrder) GetOpsiOrder(idOrder string) []OpsiOrder {
+	con := db.Connect()
+	var opsiOrders []OpsiOrder
+
+	query := "SELECT idOpsiOrder, idOrder, namaGrup, opsi, harga, berat, perProduk FROM opsiOrder WHERE idOrder = ?"
+
+	rows, _ := con.Query(query, idOrder)
+	for rows.Next() {
+		rows.Scan(
+			&oo.IDOpsiOrder, &oo.IDOrder, &oo.NamaGrup, &oo.Opsi, &oo.Harga, &oo.Berat, &oo.PerProduk,
+		)
+
+		opsiOrders = append(opsiOrders, oo)
+	}
+
+	defer con.Close()
+
+	return opsiOrders
+}

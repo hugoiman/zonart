@@ -13,9 +13,9 @@ type Customer struct {
 }
 
 // Customers is func
-type Customers struct {
-	Customers []Customer `json:"customer"`
-}
+// type Customers struct {
+// 	Customers []Customer `json:"customer"`
+// }
 
 // GetCustomer is func
 func (c Customer) GetCustomer(id string) (Customer, error) {
@@ -30,27 +30,27 @@ func (c Customer) GetCustomer(id string) (Customer, error) {
 	return c, err
 }
 
-// GetCustomers is func
-func (c Customer) GetCustomers() Customers {
-	con := db.Connect()
-	query := "SELECT idCustomer, username, email, nama FROM customer"
-	rows, _ := con.Query(query)
+// // GetCustomers is func
+// func (c Customer) GetCustomers() Customers {
+// 	con := db.Connect()
+// 	query := "SELECT idCustomer, username, email, nama FROM customer"
+// 	rows, _ := con.Query(query)
 
-	var customer Customer
-	var customers Customers
+// 	var customer Customer
+// 	var customers Customers
 
-	for rows.Next() {
-		rows.Scan(
-			&customer.IDCustomer, &customer.Username, &customer.Email, &customer.Nama,
-		)
+// 	for rows.Next() {
+// 		rows.Scan(
+// 			&customer.IDCustomer, &customer.Username, &customer.Email, &customer.Nama,
+// 		)
 
-		customers.Customers = append(customers.Customers, customer)
-	}
+// 		customers.Customers = append(customers.Customers, customer)
+// 	}
 
-	defer con.Close()
+// 	defer con.Close()
 
-	return customers
-}
+// 	return customers
+// }
 
 // Register is func
 func (c Customer) Register(username, email, nama, password string) error {

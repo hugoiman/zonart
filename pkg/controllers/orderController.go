@@ -12,6 +12,46 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// GetOrder is get detail order customer
+func GetOrder(w http.ResponseWriter, r *http.Request) {
+	user := context.Get(r, "user").(*MyClaims)
+	vars := mux.Vars(r)
+	idOrder := vars["idOrder"]
+	var order models.Order
+
+	dataOrder, err := order.GetOrder(idOrder, strconv.Itoa(user.IDCustomer))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	message, _ := json.Marshal(dataOrder)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(message)
+}
+
+// GetOrderToko is get detail order toko
+func GetOrderToko(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idOrder := vars["idOrder"]
+	idToko := vars["idToko"]
+	var order models.Order
+
+	dataOrder, err := order.GetOrderToko(idOrder, idToko)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	message, _ := json.Marshal(dataOrder)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(message)
+}
+
 // CreateOrder is func
 func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
@@ -19,20 +59,12 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	idToko := vars["idToko"]
 	idProduk := vars["idProduk"]
-	idCustomer := user.IDCustomer
 
 	var order models.Order
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(order); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	var produk models.Produk
-	dataProduk, err := produk.GetProduk(idToko, idProduk)
-	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -44,17 +76,24 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Cek batas min & max yg diperbolehkan grupOpsi
+	var produk models.Produk
+	dataProduk, err := produk.GetProduk(idToko, idProduk)
+	if err != nil {
+		http.Error(w, "Gagal! Produk tidak ditemukan", http.StatusBadRequest)
+		return
+	}
+
 	for _, vGrupOpsi := range dataProduk.GrupOpsi {
 		if totalOpsiGrup[vGrupOpsi.IDGrupOpsi] < vGrupOpsi.Min {
 			http.Error(w, "Gagal! "+vGrupOpsi.NamaGrup+" kurang dari batas minimal", http.StatusBadRequest)
 			return
 		} else if totalOpsiGrup[vGrupOpsi.IDGrupOpsi] > vGrupOpsi.Max {
-			http.Error(w, "Gagal! "+vGrupOpsi.NamaGrup+" melebihi batas maximal", http.StatusBadRequest)
+			http.Error(w, "Gagal! "+vGrupOpsi.NamaGrup+" melebihi batas maksimal", http.StatusBadRequest)
 			return
 		}
 	}
 
-	// store dataGrupOpsiProduk in var bertipe multidimensi map > map[idGrupOpsi]GrupOpsi
+	// simpan dataGrupOpsiProduk in var map
 	type grupOpsiProduk models.GrupOpsi
 	var dataGop = map[int]grupOpsiProduk{}
 	for _, vGrupOpsiProduk := range dataProduk.GrupOpsi {
@@ -67,7 +106,7 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// store dataOpsiProduk in var bertipe multidimensi map > map[idGrupOpsi]map[idOpsi]Opsi
+	// simpan dataOpsiProduk in var bertipe multidimensi map -> map[idGrupOpsi]map[idOpsi]Opsi
 	type opsiProduk models.Opsi
 	var dataOpsiProduk = map[int]map[int]opsiProduk{}
 	for _, vGOP := range dataProduk.GrupOpsi {
@@ -108,7 +147,8 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	order.IDCustomer = idCustomer
+	order.IDCustomer = user.IDCustomer
+	order.NamaProduk = dataProduk.NamaProduk
 	order.StatusPesanan = "menunggu konfirmasi"
 	order.StatusPembayaran = "-"
 	order.Dibayar = 0
@@ -132,24 +172,38 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	order.Pengiriman.Berat = order.TotalBeratOpsi
 
-	if order.JenisPesanan == "cetak" {
-		var toko models.Toko
-		dataToko, _ := toko.GetToko(idToko)
-		ongkir := GetOngkir(dataToko.Kota, order.Pengiriman.Kota, order.Pengiriman.Kurir, order.Pengiriman.Berat)
-		order.Pengiriman.Ongkir = ongkir
-		order.HargaProduk = dataProduk.HargaCetak
-	} else if order.JenisPesanan == "soft copy" {
+	// get ongkir dan set harga produk
+	var rj RajaOngkir
+	var toko models.Toko
+	dataToko, _ := toko.GetToko(idToko)
+
+	asal, _ := rj.GetIDKota(dataToko.Kota)
+	tujuan, _ := rj.GetIDKota(order.Pengiriman.Kota)
+	ongkir, estimasi, ok := rj.GetOngkir(asal, tujuan, order.Pengiriman.KodeKurir, order.Pengiriman.Service, strconv.Itoa(order.Pengiriman.Berat))
+	order.Pengiriman.Ongkir = ongkir
+	order.Pengiriman.Estimasi = estimasi
+
+	// simpan harga produk
+	if order.JenisPesanan == "soft copy" {
 		order.HargaProduk = dataProduk.HargaSoftCopy
+	} else if order.JenisPesanan == "cetak" && ok {
+		order.HargaProduk = dataProduk.HargaCetak
+	} else if order.JenisPesanan == "cetak" && !ok {
+		http.Error(w, "Gagal! Terjadi kesalahan. Mohon periksa data pengiriman.", http.StatusBadRequest)
+		return
 	}
 
-	order.Total = (order.HargaProduk * order.Pcs) + order.TotalHargaWajah + order.TotalHargaOpsi + order.TotalTambahanBiaya
+	// hitung total belanja
+	order.Total = (order.HargaProduk * order.Pcs) + order.TotalHargaWajah + order.TotalHargaOpsi + order.TotalTambahanBiaya + order.Pengiriman.Ongkir
 
+	// buat order
 	idOrder, err := order.CreateOrder(idToko, idProduk)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// add opsi order
 	for _, vOpsiOrder := range order.OpsiOrder {
 		err = vOpsiOrder.CreateOpsiOrder(strconv.Itoa(idOrder))
 		if err != nil {
@@ -159,11 +213,41 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = order.Pengiriman.CreatePengiriman(strconv.Itoa(idOrder))
-	if err != nil {
-		_ = order.DeleteOrder(strconv.Itoa(idOrder))
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	// Simpan data pengiriman
+	if order.JenisPesanan == "cetak" {
+		err = order.Pengiriman.CreatePengiriman(strconv.Itoa(idOrder))
+		if err != nil {
+			_ = order.DeleteOrder(strconv.Itoa(idOrder))
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	// send notif to admin/owner
+	penerima := []int{}
+	penerima = append(penerima, dataToko.IDOwner)
+
+	var karyawan models.Karyawan
+	dataKaryawan := karyawan.GetKaryawans(idToko)
+	for _, vKaryawan := range dataKaryawan.Karyawans {
+		if vKaryawan.Posisi == "admin" {
+			penerima = append(penerima, vKaryawan.IDCustomer)
+		}
+	}
+
+	var customer models.Customer
+	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
+
+	var notif models.Notifikasi
+	notif.Pengirim = dataCustomer.Nama
+	notif.Judul = "Pesanan Baru"
+	notif.Pesan = notif.Pengirim + " telah memesan produk " + order.NamaProduk
+	notif.Link = "/order/" + strconv.Itoa(idOrder)
+	notif.CreatedAt = order.CreatedAt
+
+	for _, vPenerima := range penerima {
+		notif.IDPenerima = vPenerima
+		_ = notif.CreateNotifikasi()
 	}
 
 	message, _ := json.Marshal(order)
@@ -174,6 +258,26 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetOngkir is setter
-func GetOngkir(asal, tujuan, kurir string, berat int) int {
-	return 10000
-}
+// func GetOngkir(asal, tujuan, kurir string, berat int) (int, error) {
+// 	if kurir == "cod" {
+// 		return 15000, nil
+// 	}
+// 	return 10000, nil
+// }
+
+// KonfirmasiOrder,
+
+// KonfirmasiOrder is func
+// func KonfirmasiOrder(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+
+// 	idToko := vars["idToko"]
+// 	idOrder := vars["idOrder"]
+
+// 	dataOrder, err := order.GetOrder(idOrder)
+
+// 	w.Header().Set("Content-type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write([]byte(`{"message":"Sukses!"}`))
+
+// }

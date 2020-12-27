@@ -35,29 +35,16 @@ func SambungGrupOpsikeProduk(w http.ResponseWriter, r *http.Request) {
 	var grupOpsi models.GrupOpsi
 	var gop models.GrupOpsiProduk
 
-	_, err := produk.GetProduk(idToko, idProduk)
-	if err != nil {
-		http.Error(w, "Gagal! Produk tidak tidak ditemukan.", http.StatusBadRequest)
-		return
-	}
-
-	_, err = grupOpsi.GetGrupOpsi(idToko, idGrupOpsi)
-	if err != nil {
-		http.Error(w, "Gagal! Grup opsi tidak ditemukan.", http.StatusBadRequest)
+	_, errP := produk.GetProduk(idToko, idProduk)        // produk not found
+	_, errGo := grupOpsi.GetGrupOpsi(idToko, idGrupOpsi) // grup opsi tidak ditemukan
+	if errP != nil || errGo != nil {
+		http.Error(w, "Gagal! Terjadi kesalahan.", http.StatusBadRequest)
 		return
 	}
 
 	isAny := gop.CheckSambunganGrupOpsi(idProduk, idGrupOpsi)
-	if isAny == true {
-		w.Header().Set("Content-type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message":"Sukses! Telah tersambungkan."}`))
-	}
-
-	err = gop.SambungGrupOpsikeProduk(idProduk, idGrupOpsi)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	if isAny == false {
+		_ = gop.SambungGrupOpsikeProduk(idProduk, idGrupOpsi)
 	}
 
 	w.Header().Set("Content-type", "application/json")

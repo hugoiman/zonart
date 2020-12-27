@@ -14,14 +14,14 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// MySigningKey is signature
-var MySigningKey = mw.MySigningKey
-
 // MyClaims is credential
 type MyClaims = mw.MyClaims
 
+// AuthController is class
+type AuthController struct{}
+
 // Login is func
-func Login(w http.ResponseWriter, r *http.Request) {
+func (auth AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	var login models.Auth
 	if err := json.NewDecoder(r.Body).Decode(&login); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -51,7 +51,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := CreateToken(data)
+	token := AuthController{}.CreateToken(data)
 
 	type M map[string]interface{}
 	message, _ := json.Marshal(M{"token": token})
@@ -62,7 +62,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateToken is Generate token
-func CreateToken(customer models.Customer) string {
+func (auth AuthController) CreateToken(customer models.Customer) string {
+	var mySigningKey = mw.MySigningKey
 	claims := MyClaims{
 		IDCustomer: customer.IDCustomer,
 		Username:   customer.Username,
@@ -72,13 +73,13 @@ func CreateToken(customer models.Customer) string {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, _ := token.SignedString(MySigningKey)
+	tokenString, _ := token.SignedString(mySigningKey)
 
 	return tokenString
 }
 
 // ResetPassword is func
-func ResetPassword(w http.ResponseWriter, r *http.Request) {
+func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var dataJSON map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&dataJSON)
 

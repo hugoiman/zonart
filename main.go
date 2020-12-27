@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	mw "zonart/middleware"
+	"zonart/middleware"
 	"zonart/pkg/controllers"
 
 	"github.com/gorilla/handlers"
@@ -17,61 +17,83 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	origins := handlers.AllowedOrigins([]string{"*"})
 
-	auth := router.PathPrefix("").Subrouter()
-	auth.Use(mw.AuthToken)
+	api := router.PathPrefix("").Subrouter()
 
-	router.HandleFunc("/api/login", controllers.Login).Methods("POST")
-	router.HandleFunc("/api/register", controllers.Register).Methods("POST")
-	router.HandleFunc("/api/reset-password", controllers.ResetPassword).Methods("POST")
+	// Instansiasi Class Controller
+	var mw middleware.MiddleWare
+	var auth controllers.AuthController
+	var btc controllers.BiayaTambahanController
+	var cc controllers.CustomerController
 
-	auth.HandleFunc("/api/customer", controllers.GetCustomer).Methods("GET")
-	auth.HandleFunc("/api/customer", controllers.UpdateProfil).Methods("PUT")
-	auth.HandleFunc("/api/change-password", controllers.ChangePassword).Methods("PUT")
-	// auth.HandleFunc("/api/customers", controllers.GetCustomers).Methods("GET")
+	api.Use(mw.AuthToken)
+
+	router.HandleFunc("/api/login", auth.Login).Methods("POST")
+	router.HandleFunc("/api/register", cc.Register).Methods("POST")
+	router.HandleFunc("/api/reset-password", auth.ResetPassword).Methods("POST")
+
+	api.HandleFunc("/api/customer", cc.GetCustomer).Methods("GET")
+	api.HandleFunc("/api/customer", cc.UpdateProfil).Methods("PUT")
+	api.HandleFunc("/api/change-password", cc.ChangePassword).Methods("PUT")
+	// api.HandleFunc("/api/customers", controllers.GetCustomers).Methods("GET")
 
 	router.HandleFunc("/api/toko/{id}", controllers.GetToko).Methods("GET")
-	auth.HandleFunc("/api/toko", controllers.CreateToko).Methods("POST")
-	auth.HandleFunc("/api/toko/{idToko}", mw.AuthOwner(controllers.UpdateToko)).Methods("PUT")
+	api.HandleFunc("/api/toko", controllers.CreateToko).Methods("POST")
+	api.HandleFunc("/api/toko/{idToko}", mw.AuthOwner(controllers.UpdateToko)).Methods("PUT")
 	// GetMyListToko
 
 	router.HandleFunc("/api/galeri/{idToko}", controllers.GetGaleris).Methods("GET")
-	auth.HandleFunc("/api/galeri/{idToko}", mw.AuthOwnerAdmin(controllers.CreateGaleri)).Methods("POST")
-	auth.HandleFunc("/api/galeri/{idToko}/{idGaleri}", mw.AuthOwnerAdmin(controllers.DeleteGaleri)).Methods("DELETE")
+	api.HandleFunc("/api/galeri/{idToko}", mw.AuthOwnerAdmin(controllers.CreateGaleri)).Methods("POST")
+	api.HandleFunc("/api/galeri/{idToko}/{idGaleri}", mw.AuthOwnerAdmin(controllers.DeleteGaleri)).Methods("DELETE")
 
 	router.HandleFunc("/api/faq/{idToko}", controllers.GetFaqs).Methods("GET")
 	router.HandleFunc("/api/faq/{idToko}/{idFaq}", controllers.GetFaq).Methods("GET")
-	auth.HandleFunc("/api/faq/{idToko}", mw.AuthOwnerAdmin(controllers.CreateFaq)).Methods("POST")
-	auth.HandleFunc("/api/faq/{idToko}/{idFaq}", mw.AuthOwnerAdmin(controllers.DeleteFaq)).Methods("DELETE")
+	api.HandleFunc("/api/faq/{idToko}", mw.AuthOwnerAdmin(controllers.CreateFaq)).Methods("POST")
+	api.HandleFunc("/api/faq/{idToko}/{idFaq}", mw.AuthOwnerAdmin(controllers.DeleteFaq)).Methods("DELETE")
 
-	auth.HandleFunc("/api/karyawan/{idToko}", mw.AuthOwnerAdmin(controllers.GetKaryawans)).Methods("GET")
-	auth.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", mw.AuthOwner(controllers.GetKaryawan)).Methods("GET")
-	auth.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", mw.AuthOwner(controllers.UpdateKaryawan)).Methods("PUT")
+	api.HandleFunc("/api/karyawan/{idToko}", mw.AuthOwnerAdmin(controllers.GetKaryawans)).Methods("GET")
+	api.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", mw.AuthOwner(controllers.GetKaryawan)).Methods("GET")
+	api.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", mw.AuthOwner(controllers.UpdateKaryawan)).Methods("PUT")
 
-	auth.HandleFunc("/api/undangan/{idToko}", mw.AuthOwner(controllers.GetUndangans)).Methods("GET")
-	auth.HandleFunc("/api/undangan/{idToko}/{idUndangan}", controllers.GetUndangan).Methods("GET")
-	auth.HandleFunc("/api/undangan/{idToko}", mw.AuthOwner(controllers.UndangKaryawan)).Methods("POST")
-	auth.HandleFunc("/api/undangan-tolak/{idToko}/{idUndangan}", controllers.TolakUndangan).Methods("POST")
-	auth.HandleFunc("/api/undangan-terima/{idToko}/{idUndangan}", controllers.TerimaUndangan).Methods("POST")
-	auth.HandleFunc("/api/undangan-batal/{idToko}/{idUndangan}/{idCustomer}", mw.AuthOwner(controllers.BatalkanUndangan)).Methods("POST")
+	api.HandleFunc("/api/undangan/{idToko}", mw.AuthOwner(controllers.GetUndangans)).Methods("GET")
+	api.HandleFunc("/api/undangan/{idToko}/{idUndangan}", controllers.GetUndangan).Methods("GET")
+	api.HandleFunc("/api/undangan/{idToko}", mw.AuthOwner(controllers.UndangKaryawan)).Methods("POST")
+	api.HandleFunc("/api/undangan-tolak/{idToko}/{idUndangan}", controllers.TolakUndangan).Methods("POST")
+	api.HandleFunc("/api/undangan-terima/{idToko}/{idUndangan}", controllers.TerimaUndangan).Methods("POST")
+	api.HandleFunc("/api/undangan-batal/{idToko}/{idUndangan}/{idCustomer}", mw.AuthOwner(controllers.BatalkanUndangan)).Methods("POST")
 
 	router.HandleFunc("/api/produk/{idToko}", controllers.GetProduks).Methods("GET")
 	router.HandleFunc("/api/produk/{idToko}/{idProduk}", controllers.GetProduk).Methods("GET")
-	auth.HandleFunc("/api/produk/{idToko}", mw.AuthOwnerAdmin(controllers.CreateProduk)).Methods("POST")
-	auth.HandleFunc("/api/produk/{idToko}/{idProduk}", mw.AuthOwnerAdmin(controllers.UpdateProduk)).Methods("PUT")
+	api.HandleFunc("/api/produk/{idToko}", mw.AuthOwnerAdmin(controllers.CreateProduk)).Methods("POST")
+	api.HandleFunc("/api/produk/{idToko}/{idProduk}", mw.AuthOwnerAdmin(controllers.UpdateProduk)).Methods("PUT")
 
 	router.HandleFunc("/api/grup-opsi/{idToko}", controllers.GetGrupOpsis).Methods("GET")
 	router.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}", controllers.GetGrupOpsi).Methods("GET")
-	auth.HandleFunc("/api/grup-opsi/{idToko}", mw.AuthOwnerAdmin(controllers.CreateGrupOpsi)).Methods("POST")
-	auth.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.UpdateGrupOpsi)).Methods("PUT")
-	auth.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.DeleteGrupOpsi)).Methods("DELETE")
-	auth.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}/{idProduk}", mw.AuthOwnerAdmin(controllers.SambungGrupOpsikeProduk)).Methods("POST")
-	auth.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}/{idProduk}", mw.AuthOwnerAdmin(controllers.PutusGrupOpsidiProduk)).Methods("DELETE")
+	api.HandleFunc("/api/grup-opsi/{idToko}", mw.AuthOwnerAdmin(controllers.CreateGrupOpsi)).Methods("POST")
+	api.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.UpdateGrupOpsi)).Methods("PUT")
+	api.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.DeleteGrupOpsi)).Methods("DELETE")
+	api.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}/{idProduk}", mw.AuthOwnerAdmin(controllers.SambungGrupOpsikeProduk)).Methods("POST")
+	api.HandleFunc("/api/grup-opsi/{idToko}/{idGrupOpsi}/{idProduk}", mw.AuthOwnerAdmin(controllers.PutusGrupOpsidiProduk)).Methods("DELETE")
 
-	auth.HandleFunc("/api/opsi/{idToko}/{idGrupOpsi}/{idOpsi}", mw.AuthOwnerAdmin(controllers.DeleteOpsi)).Methods("DELETE")
+	api.HandleFunc("/api/opsi/{idToko}/{idGrupOpsi}/{idOpsi}", mw.AuthOwnerAdmin(controllers.DeleteOpsi)).Methods("DELETE")
 
-	auth.HandleFunc("/api/grup-opsi-produk/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.GetGrupOpsiProduks)).Methods("GET")
+	api.HandleFunc("/api/grup-opsi-produk/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(controllers.GetGrupOpsiProduks)).Methods("GET")
 
-	auth.HandleFunc("/api/order/{idToko}/{idProduk}", controllers.CreateOrder).Methods("POST")
+	// my list order customer
+	// api.HandleFunc("/api/order", controllers.GetOrders).Methods("GET")
+	// detail order customer
+	api.HandleFunc("/api/order/{idOrder}", controllers.GetOrder).Methods("GET")
+	// detail order toko
+	api.HandleFunc("/api/order/{idToko}/{idOrder}", controllers.GetOrderToko).Methods("GET")
+	// list order toko
+	// api.HandleFunc("/api/orders/{idToko}", controllers.GetOrder).Methods("GET")
+	// list order editor
+	// api.HandleFunc("/api/orders/{idToko}", controllers.GetOrder).Methods("GET")
+	api.HandleFunc("/api/order/{idToko}/{idProduk}", controllers.CreateOrder).Methods("POST")
+
+	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(btc.CreateBiayaTambahans)).Methods("POST")
+	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}/{idBiayaTambahan}", mw.AuthOwnerAdmin(btc.DeleteBiayaTambahan)).Methods("DELETE")
+
+	api.HandleFunc("/api/penangan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(controllers.SetPenangan)).Methods("POST")
 
 	os.Setenv("PORT", "8080")
 	port := "8080"

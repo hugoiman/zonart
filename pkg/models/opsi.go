@@ -11,15 +11,16 @@ type Opsi struct {
 	Harga      int    `json:"harga"`
 	Berat      int    `json:"berat"`
 	PerProduk  bool   `json:"perProduk"`
+	Status     bool   `json:"status"`
 }
 
 // GetOpsi is func
 func (opsi Opsi) GetOpsi(idGrupOpsi, idOpsi string) (Opsi, error) {
 	con := db.Connect()
-	query := "SELECT idOpsi, idGrupOpsi, opsi, harga, berat, perProduk FROM opsi WHERE idGrupOpsi = ? AND idOpsi = ?"
+	query := "SELECT idOpsi, idGrupOpsi, opsi, harga, berat, perProduk, status FROM opsi WHERE idGrupOpsi = ? AND idOpsi = ?"
 
 	err := con.QueryRow(query, idGrupOpsi, idOpsi).Scan(
-		&opsi.IDOpsi, &opsi.IDGrupOpsi, &opsi.Opsi, &opsi.Harga, &opsi.Berat, &opsi.PerProduk)
+		&opsi.IDOpsi, &opsi.IDGrupOpsi, &opsi.Opsi, &opsi.Harga, &opsi.Berat, &opsi.PerProduk, &opsi.Status)
 
 	defer con.Close()
 	return opsi, err
@@ -28,14 +29,14 @@ func (opsi Opsi) GetOpsi(idGrupOpsi, idOpsi string) (Opsi, error) {
 // GetOpsis is func
 func (opsi Opsi) GetOpsis(idGrupOpsi string) []Opsi {
 	con := db.Connect()
-	query := "SELECT idOpsi, idGrupOpsi, opsi, harga, berat, perProduk FROM opsi WHERE idGrupOpsi = ?"
+	query := "SELECT idOpsi, idGrupOpsi, opsi, harga, berat, perProduk, status FROM opsi WHERE idGrupOpsi = ?"
 	rows, _ := con.Query(query, idGrupOpsi)
 
 	var opsis []Opsi
 
 	for rows.Next() {
 		rows.Scan(
-			&opsi.IDOpsi, &opsi.IDGrupOpsi, &opsi.Opsi, &opsi.Harga, &opsi.Berat, &opsi.PerProduk,
+			&opsi.IDOpsi, &opsi.IDGrupOpsi, &opsi.Opsi, &opsi.Harga, &opsi.Berat, &opsi.PerProduk, &opsi.Status,
 		)
 
 		opsis = append(opsis, opsi)
@@ -49,8 +50,8 @@ func (opsi Opsi) GetOpsis(idGrupOpsi string) []Opsi {
 // CreateUpdateOpsi is func
 func (opsi Opsi) CreateUpdateOpsi(idGrupOpsi string) error {
 	con := db.Connect()
-	query := "INSERT INTO opsi (idOpsi, idGrupOpsi, opsi, harga, berat, perProduk) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE opsi = ?, harga = ?, berat = ?, perProduk = ?"
-	_, err := con.Exec(query, opsi.IDOpsi, idGrupOpsi, opsi.Opsi, opsi.Harga, opsi.Berat, opsi.PerProduk, opsi.Opsi, opsi.Harga, opsi.Berat, opsi.PerProduk)
+	query := "INSERT INTO opsi (idOpsi, idGrupOpsi, opsi, harga, berat, perProduk, status) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE opsi = ?, harga = ?, berat = ?, perProduk = ?, status = ?"
+	_, err := con.Exec(query, opsi.IDOpsi, idGrupOpsi, opsi.Opsi, opsi.Harga, opsi.Berat, opsi.PerProduk, opsi.Status, opsi.Opsi, opsi.Harga, opsi.Berat, opsi.PerProduk, opsi.Status)
 
 	defer con.Close()
 

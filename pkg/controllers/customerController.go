@@ -13,8 +13,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// CustomerController is class
+type CustomerController struct{}
+
 // GetCustomer is func
-func GetCustomer(w http.ResponseWriter, r *http.Request) {
+func (cc CustomerController) GetCustomer(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	var customer models.Customer
 
@@ -35,24 +38,8 @@ func GetCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Write(message)
 }
 
-// GetCustomers is func
-func GetCustomers(w http.ResponseWriter, r *http.Request) {
-	var customer models.Customer
-	data := customer.GetCustomers()
-	message, err := json.Marshal(data)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(message)
-}
-
 // Register is func
-func Register(w http.ResponseWriter, r *http.Request) {
+func (cc CustomerController) Register(w http.ResponseWriter, r *http.Request) {
 	var customer models.Customer
 
 	data := struct {
@@ -86,7 +73,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateProfil is func
-func UpdateProfil(w http.ResponseWriter, r *http.Request) {
+func (cc CustomerController) UpdateProfil(w http.ResponseWriter, r *http.Request) {
 	var customer models.Customer
 	user := context.Get(r, "user").(*MyClaims)
 
@@ -110,7 +97,7 @@ func UpdateProfil(w http.ResponseWriter, r *http.Request) {
 }
 
 // ChangePassword is func
-func ChangePassword(w http.ResponseWriter, r *http.Request) {
+func (cc CustomerController) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	var customer models.Customer
 	user := context.Get(r, "user").(*MyClaims)
 

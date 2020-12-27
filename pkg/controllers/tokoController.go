@@ -17,20 +17,12 @@ func GetToko(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	var toko models.Toko
-	var pengirimanToko models.PengirimanToko
-	var rekeningToko models.Rekening
 
 	dataToko, err := toko.GetToko(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	dataPengirimanToko := pengirimanToko.GetPengirimanToko(id)
-	dataToko.PengirimanToko = dataPengirimanToko
-
-	dataRekeningToko := rekeningToko.GetRekening(id)
-	dataToko.Rekening = dataRekeningToko
 
 	message, err := json.Marshal(dataToko)
 	if err != nil {
@@ -47,7 +39,7 @@ func GetToko(w http.ResponseWriter, r *http.Request) {
 func CreateToko(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	var toko models.Toko
-	var pengirimanToko models.PengirimanToko
+	var rj RajaOngkir
 	regexSlug := regexp.MustCompile(`^([a-z])([a-z0-9-]{1,48})([a-z0-9])$`)
 
 	if err := json.NewDecoder(r.Body).Decode(&toko); err != nil {
@@ -59,6 +51,9 @@ func CreateToko(w http.ResponseWriter, r *http.Request) {
 	} else if !regexSlug.MatchString(toko.Slug) {
 		http.Error(w, "Gagal! Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
 		return
+	} else if _, ok := rj.GetIDKota(toko.Kota); !ok {
+		http.Error(w, "Gagal! Kota tidak ditemukan", http.StatusBadRequest)
+		return
 	}
 
 	toko.IDOwner = user.IDCustomer
@@ -66,13 +61,11 @@ func CreateToko(w http.ResponseWriter, r *http.Request) {
 	toko.SetKaryawan = false
 	toko.CreatedAt = time.Now().Format("2006-01-02")
 
-	idToko, err := toko.CreateToko()
+	_, err := toko.CreateToko()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	_ = pengirimanToko.InitializePengirimanToko(idToko)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -85,8 +78,8 @@ func UpdateToko(w http.ResponseWriter, r *http.Request) {
 	idToko := vars["idToko"]
 
 	var toko models.Toko
-	var pengirimanToko models.PengirimanToko
 	var rekening models.Rekening
+	var jpt models.JasaPengirimanToko
 	regexSlug := regexp.MustCompile(`^([a-z])([a-z0-9-]{1,48})([a-z0-9])$`)
 
 	if err := json.NewDecoder(r.Body).Decode(&toko); err != nil {
@@ -108,8 +101,10 @@ func UpdateToko(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update data pengiriman toko
-	pengirimanToko = toko.PengirimanToko
-	_ = pengirimanToko.UpdatePengirimanToko(idToko)
+	for k := range toko.JasaPengirimanToko {
+		jpt = toko.JasaPengirimanToko[k]
+		_ = jpt.CreateUpdatePengirimanToko(idToko)
+	}
 
 	// update rekening toko
 	for x := range toko.Rekening {

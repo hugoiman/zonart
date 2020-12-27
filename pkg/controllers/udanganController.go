@@ -116,19 +116,12 @@ func TolakUndangan(w http.ResponseWriter, r *http.Request) {
 	var undangan models.Undangan
 
 	dataUndangan, err := undangan.GetUndangan(idUndangan, idToko, idCustomer)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if dataUndangan.Status != "menunggu" {
-		http.Error(w, "Gagal! Undangan sudah tidak tersedia.", http.StatusBadRequest)
+	if err != nil || dataUndangan.Status != "menunggu" {
+		http.Error(w, "Undangan tidak tersedia", http.StatusBadRequest)
 		return
 	}
 
-	err = undangan.TolakUndangan(idUndangan, idToko, idCustomer)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	_ = undangan.TolakUndangan(idUndangan, idToko, idCustomer)
 
 	// send notif owner
 
@@ -152,11 +145,8 @@ func TerimaUndangan(w http.ResponseWriter, r *http.Request) {
 
 	dataCustomer, _ := customer.GetCustomer(idCustomer)
 	dataUndangan, err := undangan.GetUndangan(idUndangan, idToko, idCustomer)
-	if err != nil {
-		http.Error(w, "Undangan tidak ditemukan", http.StatusBadRequest)
-		return
-	} else if dataUndangan.Status != "menunggu" {
-		http.Error(w, "Gagal! Undangan sudah tidak tersedia.", http.StatusBadRequest)
+	if err != nil || dataUndangan.Status != "menunggu" {
+		http.Error(w, "Undangan tidak tersedia", http.StatusBadRequest)
 		return
 	}
 
@@ -170,11 +160,7 @@ func TerimaUndangan(w http.ResponseWriter, r *http.Request) {
 	karyawan.Status = "aktif"
 	karyawan.Bergabung = time.Now().Format("2006-01-02")
 
-	err = karyawan.CreateKaryawan()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	_ = karyawan.CreateKaryawan()
 
 	_ = undangan.TerimaUndangan(idUndangan, idToko, idCustomer)
 
