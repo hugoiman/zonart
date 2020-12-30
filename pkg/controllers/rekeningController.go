@@ -7,8 +7,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// RekeningController is class
+type RekeningController struct{}
+
 // DeleteRekening is func
-func DeleteRekening(w http.ResponseWriter, r *http.Request) {
+func (rc RekeningController) DeleteRekening(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idRekening := vars["idRekening"]

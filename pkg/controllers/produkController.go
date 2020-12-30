@@ -10,8 +10,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// ProdukController is class
+type ProdukController struct{}
+
 // GetProduks is func
-func GetProduks(w http.ResponseWriter, r *http.Request) {
+func (pc ProdukController) GetProduks(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var produk models.Produk
@@ -25,7 +28,7 @@ func GetProduks(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetProduk is func
-func GetProduk(w http.ResponseWriter, r *http.Request) {
+func (pc ProdukController) GetProduk(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idProduk := vars["idProduk"]
 	idToko := vars["idToko"]
@@ -45,7 +48,7 @@ func GetProduk(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateProduk is func
-func CreateProduk(w http.ResponseWriter, r *http.Request) {
+func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var produk models.Produk
@@ -75,7 +78,7 @@ func CreateProduk(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateProduk is func
-func UpdateProduk(w http.ResponseWriter, r *http.Request) {
+func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idProduk := vars["idProduk"]
@@ -104,7 +107,7 @@ func UpdateProduk(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteProduk is func
-func DeleteProduk(w http.ResponseWriter, r *http.Request) {
+func (pc ProdukController) DeleteProduk(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idProduk := vars["idProduk"]

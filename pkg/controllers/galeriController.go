@@ -9,8 +9,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// GaleriController is class
+type GaleriController struct{}
+
 // GetGaleris is func
-func GetGaleris(w http.ResponseWriter, r *http.Request) {
+func (gc GaleriController) GetGaleris(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var galeri models.Galeri
@@ -24,7 +27,7 @@ func GetGaleris(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateGaleri is func
-func CreateGaleri(w http.ResponseWriter, r *http.Request) {
+func (gc GaleriController) CreateGaleri(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var galeri models.Galeri
@@ -49,7 +52,7 @@ func CreateGaleri(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteGaleri is func
-func DeleteGaleri(w http.ResponseWriter, r *http.Request) {
+func (gc GaleriController) DeleteGaleri(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idGaleri := vars["idGaleri"]

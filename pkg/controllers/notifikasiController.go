@@ -10,8 +10,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// NotifikasiController is class
+type NotifikasiController struct{}
+
 // GetNotifikasis is func
-func GetNotifikasis(w http.ResponseWriter, r *http.Request) {
+func (nc NotifikasiController) GetNotifikasis(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	idPenerima := user.IDCustomer
 	var notifikasi models.Notifikasi
@@ -25,7 +28,7 @@ func GetNotifikasis(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReadNotifikasi is func
-func ReadNotifikasi(w http.ResponseWriter, r *http.Request) {
+func (nc NotifikasiController) ReadNotifikasi(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	vars := mux.Vars(r)
 

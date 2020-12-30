@@ -9,8 +9,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// KaryawanController is class
+type KaryawanController struct{}
+
 // GetKaryawans is func
-func GetKaryawans(w http.ResponseWriter, r *http.Request) {
+func (kc KaryawanController) GetKaryawans(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var karyawan models.Karyawan
@@ -24,7 +27,7 @@ func GetKaryawans(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetKaryawan is func
-func GetKaryawan(w http.ResponseWriter, r *http.Request) {
+func (kc KaryawanController) GetKaryawan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idKaryawan := vars["idKaryawan"]
 	idToko := vars["idToko"]
@@ -44,7 +47,7 @@ func GetKaryawan(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateKaryawan is func
-func UpdateKaryawan(w http.ResponseWriter, r *http.Request) {
+func (kc KaryawanController) UpdateKaryawan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idKaryawan := vars["idKaryawan"]

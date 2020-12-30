@@ -12,8 +12,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// OrderController is class
+type OrderController struct{}
+
 // GetOrder is get detail order customer
-func GetOrder(w http.ResponseWriter, r *http.Request) {
+func (oc OrderController) GetOrder(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
@@ -33,7 +36,7 @@ func GetOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetOrderToko is get detail order toko
-func GetOrderToko(w http.ResponseWriter, r *http.Request) {
+func (oc OrderController) GetOrderToko(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
 	idToko := vars["idToko"]
@@ -53,7 +56,7 @@ func GetOrderToko(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateOrder is func
-func CreateOrder(w http.ResponseWriter, r *http.Request) {
+func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	vars := mux.Vars(r)
 

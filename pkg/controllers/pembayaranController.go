@@ -11,8 +11,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// PembayaranController is class
+type PembayaranController struct{}
+
 // CreatePembayaran is func
-func CreatePembayaran(w http.ResponseWriter, r *http.Request) {
+func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
@@ -71,7 +74,7 @@ func CreatePembayaran(w http.ResponseWriter, r *http.Request) {
 }
 
 // KonfirmasiPembayaran is func
-func KonfirmasiPembayaran(w http.ResponseWriter, r *http.Request) {
+func (pc PembayaranController) KonfirmasiPembayaran(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idPembayaran := vars["idPembayaran"]
 	idOrder := vars["idOrder"]

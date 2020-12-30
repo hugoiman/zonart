@@ -7,8 +7,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// OpsiController is class
+type OpsiController struct{}
+
 // DeleteOpsi is func
-func DeleteOpsi(w http.ResponseWriter, r *http.Request) {
+func (oc OpsiController) DeleteOpsi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idGrupOpsi := vars["idGrupOpsi"]

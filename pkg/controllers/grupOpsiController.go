@@ -10,8 +10,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// GrupOpsiController is class
+type GrupOpsiController struct{}
+
 // GetGrupOpsis is func
-func GetGrupOpsis(w http.ResponseWriter, r *http.Request) {
+func (goc GrupOpsiController) GetGrupOpsis(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var grupOpsi models.GrupOpsi
@@ -25,7 +28,7 @@ func GetGrupOpsis(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetGrupOpsi is func
-func GetGrupOpsi(w http.ResponseWriter, r *http.Request) {
+func (goc GrupOpsiController) GetGrupOpsi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idGrupOpsi := vars["idGrupOpsi"]
 	idToko := vars["idToko"]
@@ -45,7 +48,7 @@ func GetGrupOpsi(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateGrupOpsi is func
-func CreateGrupOpsi(w http.ResponseWriter, r *http.Request) {
+func (goc GrupOpsiController) CreateGrupOpsi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var grupOpsi models.GrupOpsi
@@ -74,7 +77,7 @@ func CreateGrupOpsi(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Gagal! Maksimal jumlah memilih melebihi batas jumlah opsi", http.StatusBadRequest)
 		return
 	} else if grupOpsi.Min > grupOpsi.Max {
-		http.Error(w, "Gagal! Minimal jumlah memilih harus kurang dari samadengan maksimal memilih", http.StatusBadRequest)
+		http.Error(w, "Gagal! Minimal jumlah memilih harus kurang dari samadengan maksimal jumlah memilih", http.StatusBadRequest)
 		return
 	}
 
@@ -99,7 +102,7 @@ func CreateGrupOpsi(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateGrupOpsi is func
-func UpdateGrupOpsi(w http.ResponseWriter, r *http.Request) {
+func (goc GrupOpsiController) UpdateGrupOpsi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idGrupOpsi := vars["idGrupOpsi"]
@@ -149,7 +152,7 @@ func UpdateGrupOpsi(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteGrupOpsi is func
-func DeleteGrupOpsi(w http.ResponseWriter, r *http.Request) {
+func (goc GrupOpsiController) DeleteGrupOpsi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idGrupOpsi := vars["idGrupOpsi"]

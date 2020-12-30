@@ -11,8 +11,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// PenanganController is class
+type PenanganController struct{}
+
 // SetPenangan is func
-func SetPenangan(w http.ResponseWriter, r *http.Request) {
+func (pc PenanganController) SetPenangan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idOrder := vars["idOrder"]

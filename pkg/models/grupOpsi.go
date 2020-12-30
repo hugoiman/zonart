@@ -12,7 +12,7 @@ type GrupOpsi struct {
 	NamaGrup        string `json:"namaGrup" validate:"required"`
 	Required        bool   `json:"required"`
 	Min             int    `json:"min"`
-	Max             int    `json:"max" validate:"required"`
+	Max             int    `json:"max"`
 	SpesificRequest bool   `json:"spesificRequest"`
 	Opsi            []Opsi `json:"opsi" validate:"dive"`
 }

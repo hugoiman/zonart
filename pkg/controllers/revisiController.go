@@ -9,8 +9,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// RevisiController is class
+type RevisiController struct{}
+
 // CreateRevisi is func
-func CreateRevisi(w http.ResponseWriter, r *http.Request) {
+func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
 	var revisi models.Revisi

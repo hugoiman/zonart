@@ -9,8 +9,12 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// FaqController is class
+type FaqController struct {
+}
+
 // GetFaqs is func
-func GetFaqs(w http.ResponseWriter, r *http.Request) {
+func (fc FaqController) GetFaqs(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var faq models.Faq
@@ -24,7 +28,7 @@ func GetFaqs(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetFaq is func
-func GetFaq(w http.ResponseWriter, r *http.Request) {
+func (fc FaqController) GetFaq(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idFaq := vars["idFaq"]
 	idToko := vars["idToko"]
@@ -44,7 +48,7 @@ func GetFaq(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateFaq is func
-func CreateFaq(w http.ResponseWriter, r *http.Request) {
+func (fc FaqController) CreateFaq(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var faq models.Faq
@@ -69,7 +73,7 @@ func CreateFaq(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteFaq is func
-func DeleteFaq(w http.ResponseWriter, r *http.Request) {
+func (fc FaqController) DeleteFaq(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idFaq := vars["idFaq"]

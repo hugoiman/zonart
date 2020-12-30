@@ -12,8 +12,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// UndanganController is class
+type UndanganController struct{}
+
 // GetUndangans is func
-func GetUndangans(w http.ResponseWriter, r *http.Request) {
+func (uc UndanganController) GetUndangans(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var undangan models.Undangan
@@ -27,7 +30,7 @@ func GetUndangans(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUndangan is func
-func GetUndangan(w http.ResponseWriter, r *http.Request) {
+func (uc UndanganController) GetUndangan(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
@@ -50,7 +53,7 @@ func GetUndangan(w http.ResponseWriter, r *http.Request) {
 }
 
 // UndangKaryawan is func
-func UndangKaryawan(w http.ResponseWriter, r *http.Request) {
+func (uc UndanganController) UndangKaryawan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 
@@ -105,7 +108,7 @@ func UndangKaryawan(w http.ResponseWriter, r *http.Request) {
 }
 
 // TolakUndangan is func
-func TolakUndangan(w http.ResponseWriter, r *http.Request) {
+func (uc UndanganController) TolakUndangan(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 
 	vars := mux.Vars(r)
@@ -131,7 +134,7 @@ func TolakUndangan(w http.ResponseWriter, r *http.Request) {
 }
 
 // TerimaUndangan is func
-func TerimaUndangan(w http.ResponseWriter, r *http.Request) {
+func (uc UndanganController) TerimaUndangan(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 
 	vars := mux.Vars(r)
@@ -172,7 +175,7 @@ func TerimaUndangan(w http.ResponseWriter, r *http.Request) {
 }
 
 // BatalkanUndangan is func
-func BatalkanUndangan(w http.ResponseWriter, r *http.Request) {
+func (uc UndanganController) BatalkanUndangan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idUndangan := vars["idUndangan"]

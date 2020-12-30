@@ -50,7 +50,7 @@ func (opsi Opsi) GetOpsis(idGrupOpsi string) []Opsi {
 // CreateUpdateOpsi is func
 func (opsi Opsi) CreateUpdateOpsi(idGrupOpsi string) error {
 	con := db.Connect()
-	query := "INSERT INTO opsi (idOpsi, idGrupOpsi, opsi, harga, berat, perProduk, status) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE opsi = ?, harga = ?, berat = ?, perProduk = ?, status = ?"
+	query := "INSERT INTO opsi (idOpsi, idGrupOpsi, opsi, harga, berat, perProduk, status) VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE opsi = ?, harga = ?, berat = ?, perProduk = ?, status = ?"
 	_, err := con.Exec(query, opsi.IDOpsi, idGrupOpsi, opsi.Opsi, opsi.Harga, opsi.Berat, opsi.PerProduk, opsi.Status, opsi.Opsi, opsi.Harga, opsi.Berat, opsi.PerProduk, opsi.Status)
 
 	defer con.Close()

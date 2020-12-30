@@ -12,8 +12,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// TokoController is class
+type TokoController struct{}
+
 // GetToko is func
-func GetToko(w http.ResponseWriter, r *http.Request) {
+func (tc TokoController) GetToko(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	var toko models.Toko
@@ -36,7 +39,7 @@ func GetToko(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateToko is func
-func CreateToko(w http.ResponseWriter, r *http.Request) {
+func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	var toko models.Toko
 	var rj RajaOngkir
@@ -73,7 +76,7 @@ func CreateToko(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateToko is func
-func UpdateToko(w http.ResponseWriter, r *http.Request) {
+func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 

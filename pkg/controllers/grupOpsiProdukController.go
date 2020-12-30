@@ -8,8 +8,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// GrupOpsiProdukController is class
+type GrupOpsiProdukController struct{}
+
 // GetGrupOpsiProduks is get all produk in a grup opsi
-func GetGrupOpsiProduks(w http.ResponseWriter, r *http.Request) {
+func (gopc GrupOpsiProdukController) GetGrupOpsiProduks(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idGrupOpsi := vars["idGrupOpsi"]
@@ -25,7 +28,7 @@ func GetGrupOpsiProduks(w http.ResponseWriter, r *http.Request) {
 }
 
 // SambungGrupOpsikeProduk is func
-func SambungGrupOpsikeProduk(w http.ResponseWriter, r *http.Request) {
+func (gopc GrupOpsiProdukController) SambungGrupOpsikeProduk(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idProduk := vars["idProduk"]
@@ -53,7 +56,7 @@ func SambungGrupOpsikeProduk(w http.ResponseWriter, r *http.Request) {
 }
 
 // PutusGrupOpsidiProduk is func
-func PutusGrupOpsidiProduk(w http.ResponseWriter, r *http.Request) {
+func (gopc GrupOpsiProdukController) PutusGrupOpsidiProduk(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idProduk := vars["idProduk"]

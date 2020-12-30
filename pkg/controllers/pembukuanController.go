@@ -9,8 +9,11 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// PembukuanController is class
+type PembukuanController struct{}
+
 // GetPembukuans is func
-func GetPembukuans(w http.ResponseWriter, r *http.Request) {
+func (pc PembukuanController) GetPembukuans(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var pembukuan models.Pembukuan
@@ -24,7 +27,7 @@ func GetPembukuans(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreatePengeluaran is func
-func CreatePengeluaran(w http.ResponseWriter, r *http.Request) {
+func (pc PembukuanController) CreatePengeluaran(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var pembukuan models.Pembukuan
@@ -51,7 +54,7 @@ func CreatePengeluaran(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeletePengeluaran is func
-func DeletePengeluaran(w http.ResponseWriter, r *http.Request) {
+func (pc PembukuanController) DeletePengeluaran(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idPembukuan := vars["idPembukuan"]
