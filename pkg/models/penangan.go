@@ -6,7 +6,7 @@ import "zonart/db"
 type Penangan struct {
 	IDPenangan   int    `json:"idPenangan"`
 	IDOrder      int    `json:"idOrder"`
-	IDKaryawan   int    `json:"idKaryawan" validate:"required"`
+	IDKaryawan   int    `json:"idKaryawan"`
 	NamaKaryawan string `json:"namaKaryawan"`
 }
 

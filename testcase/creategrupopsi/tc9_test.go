@@ -13,14 +13,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// jumlah opsi = 0 -> response sukses
-func Test_TC9(t *testing.T) {
+// berhasil menyimpan data -> response success
+func Test_TC11(t *testing.T) {
 	body := map[string]interface{}{
-		"namaGrup":        "Pakaian",
+		"namaGrup":        "Pakaians",
 		"required":        true,
 		"min":             1,
-		"max":             1,
+		"max":             2,
 		"spesificRequest": true,
+		"opsi": []map[string]interface{}{
+			{
+				"opsi":      "Kemeja",
+				"harga":     0,
+				"berat":     0,
+				"perProduk": false,
+				"status":    true,
+			},
+			{
+				"opsi":      "Jas",
+				"harga":     0,
+				"berat":     0,
+				"perProduk": false,
+				"status":    true,
+			},
+		},
 	}
 
 	payload, _ := json.Marshal(body)
@@ -43,5 +59,5 @@ func Test_TC9(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v", response.Body)
 
-	assert.Equal(t, response.Code, http.StatusOK, "Seharusnya berhasil menyimpan data opsi pada database")
+	assert.Equal(t, response.Code, http.StatusOK, "Seharusnya berhasil menyimpan grup opsi dan opsi pada database")
 }

@@ -32,7 +32,7 @@ func Test_TestCase5(t *testing.T) {
 	context.Set(request, "user", &mw.MyClaims{IDCustomer: 3, Username: "asdf"})
 
 	handler.ServeHTTP(response, request)
-	t.Logf("response message:  %v", response.Code)
+	t.Logf("response message:  %v", response.Body)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya slug tidak unik!")
+	assert.NotEqual(t, response.Code, http.StatusBadRequest, "Seharusnya slug tidak unik!")
 }

@@ -97,6 +97,14 @@ func (grupOpsi GrupOpsi) CreateGrupOpsi(idToko string) (int, error) {
 	idInt64, _ := exec.LastInsertId()
 	idGrupOpsi := int(idInt64)
 
+	for _, vOpsi := range grupOpsi.Opsi {
+		err = vOpsi.CreateUpdateOpsi(strconv.Itoa(idGrupOpsi))
+		if err != nil {
+			_ = grupOpsi.DeleteGrupOpsi(idToko, strconv.Itoa(idGrupOpsi))
+			return idGrupOpsi, err
+		}
+	}
+
 	defer con.Close()
 
 	return idGrupOpsi, err

@@ -87,15 +87,6 @@ func (goc GrupOpsiController) CreateGrupOpsi(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	for _, v := range grupOpsi.Opsi {
-		err = v.CreateUpdateOpsi(strconv.Itoa(idGrupOpsi))
-		if err != nil {
-			_ = grupOpsi.DeleteGrupOpsi(idToko, strconv.Itoa(idGrupOpsi))
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-	}
-
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message":"Sukses! GrupOpsi telah ditambahkan.","idGrupOpsi":"` + strconv.Itoa(idGrupOpsi) + `"}`))

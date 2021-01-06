@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	"github.com/tidwall/gjson"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -72,11 +73,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get total opsi yg dipilih berdasarkan grupOpsi
-	var totalOpsiGrup = make(map[int]int)
-	for _, v := range order.OpsiOrder {
-		totalOpsiGrup[v.IDGrupOpsi]++
-	}
+	grupOpsi, _ := json.Marshal(order)
 
 	// Cek batas min & max yg diperbolehkan grupOpsi
 	var produk models.Produk
@@ -87,66 +84,46 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, vGrupOpsi := range dataProduk.GrupOpsi {
-		if totalOpsiGrup[vGrupOpsi.IDGrupOpsi] < vGrupOpsi.Min {
+		totalOpsiGrup := gjson.Get(string(grupOpsi), "opsiOrder.#(idGrupOpsi=="+strconv.Itoa(vGrupOpsi.IDGrupOpsi)+")#").Array()
+		if len(totalOpsiGrup) < vGrupOpsi.Min {
 			http.Error(w, "Gagal! "+vGrupOpsi.NamaGrup+" kurang dari batas minimal", http.StatusBadRequest)
 			return
-		} else if totalOpsiGrup[vGrupOpsi.IDGrupOpsi] > vGrupOpsi.Max {
+		} else if len(totalOpsiGrup) > vGrupOpsi.Max {
 			http.Error(w, "Gagal! "+vGrupOpsi.NamaGrup+" melebihi batas maksimal", http.StatusBadRequest)
 			return
 		}
 	}
 
-	// simpan dataGrupOpsiProduk in var map
-	type grupOpsiProduk models.GrupOpsi
-	var dataGop = map[int]grupOpsiProduk{}
-	for _, vGrupOpsiProduk := range dataProduk.GrupOpsi {
-		dataGop[vGrupOpsiProduk.IDGrupOpsi] = grupOpsiProduk{
-			NamaGrup:        vGrupOpsiProduk.NamaGrup,
-			Required:        vGrupOpsiProduk.Required,
-			Min:             vGrupOpsiProduk.Min,
-			Max:             vGrupOpsiProduk.Max,
-			SpesificRequest: vGrupOpsiProduk.SpesificRequest,
-		}
-	}
-
-	// simpan dataOpsiProduk in var bertipe multidimensi map -> map[idGrupOpsi]map[idOpsi]Opsi
-	type opsiProduk models.Opsi
-	var dataOpsiProduk = map[int]map[int]opsiProduk{}
-	for _, vGOP := range dataProduk.GrupOpsi {
-		dataOpsiProduk[vGOP.IDGrupOpsi] = map[int]opsiProduk{}
-		for _, vOpsi := range vGOP.Opsi {
-			dataOpsiProduk[vGOP.IDGrupOpsi][vOpsi.IDOpsi] = opsiProduk{
-				NamaGrup:  vGOP.NamaGrup,
-				Opsi:      vOpsi.Opsi,
-				Harga:     vOpsi.Harga,
-				Berat:     vOpsi.Berat,
-				PerProduk: vOpsi.PerProduk,
-			}
-		}
-	}
+	dtProduk, _ := json.Marshal(dataProduk)
 
 	// Input detail(namaGrup, opsi, harga, berat, perProduk) ke OpsiOrder
 	for k, v := range order.OpsiOrder {
-		if _, isExist := dataGop[v.IDGrupOpsi]; !isExist {
+		dataGop := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+")#").Array()
+		namaGrup := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").namaGrup").String()
+		spesificRequest := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").spesificRequest").Bool()
+		dataOpsiProduk := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+")#.opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+")").Array()
+		if len(dataGop) == 0 {
 			http.Error(w, "Grup Opsi tidak ditemukan.", http.StatusBadRequest)
 			return
-		} else if _, isExist := dataOpsiProduk[v.IDGrupOpsi][v.IDOpsi]; !isExist && dataGop[v.IDGrupOpsi].SpesificRequest == false {
+		} else if len(dataOpsiProduk) == 0 && spesificRequest == false {
 			http.Error(w, "Spesific Request tidak diizinkan.", http.StatusBadRequest)
 			return
-		} else if _, isExist := dataOpsiProduk[v.IDGrupOpsi][v.IDOpsi]; !isExist && dataGop[v.IDGrupOpsi].SpesificRequest == true {
-			order.OpsiOrder[k].NamaGrup = dataGop[v.IDGrupOpsi].NamaGrup
+		} else if len(dataOpsiProduk) == 0 && spesificRequest == true {
+			order.OpsiOrder[k].NamaGrup = namaGrup
 			order.OpsiOrder[k].Harga = 0
 			order.OpsiOrder[k].Berat = 0
 			order.OpsiOrder[k].PerProduk = false
-			dataGop[v.IDGrupOpsi] = grupOpsiProduk{
-				SpesificRequest: false,
-			}
 		} else {
-			order.OpsiOrder[k].NamaGrup = dataGop[v.IDGrupOpsi].NamaGrup
-			order.OpsiOrder[k].Opsi = dataOpsiProduk[v.IDGrupOpsi][v.IDOpsi].Opsi
-			order.OpsiOrder[k].Harga = dataOpsiProduk[v.IDGrupOpsi][v.IDOpsi].Harga
-			order.OpsiOrder[k].Berat = dataOpsiProduk[v.IDGrupOpsi][v.IDOpsi].Berat
-			order.OpsiOrder[k].PerProduk = dataOpsiProduk[v.IDGrupOpsi][v.IDOpsi].PerProduk
+			opsi := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+").opsi").String()
+			harga := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+").harga").Int()
+			berat := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+").berat").Int()
+			perProduk := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+").perProduk").Bool()
+
+			order.OpsiOrder[k].NamaGrup = namaGrup
+			order.OpsiOrder[k].Opsi = opsi
+			order.OpsiOrder[k].Harga = int(harga)
+			order.OpsiOrder[k].Berat = int(berat)
+			order.OpsiOrder[k].PerProduk = perProduk
 		}
 	}
 
@@ -163,35 +140,27 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	order.TotalHargaWajah = order.TambahanWajah * order.HargaWajah
 
 	// Total Harga Opsi
-	for _, valueOpsi := range order.OpsiOrder {
-		if valueOpsi.PerProduk == false {
-			order.TotalHargaOpsi += valueOpsi.Harga
-		} else {
-			order.TotalHargaOpsi += valueOpsi.Harga * order.Pcs
-		}
+	oc.HitungHargaBeratOpsi(&order)
 
-		order.TotalBeratOpsi += valueOpsi.Berat
-	}
-
-	order.Pengiriman.Berat = order.TotalBeratOpsi
-
-	// get ongkir dan set harga produk
+	// get ongkir, estimasi, jenis kurir dan set harga produk
 	var rj RajaOngkir
 	var toko models.Toko
 	dataToko, _ := toko.GetToko(idToko)
 
+	order.Pengiriman.Berat = (dataProduk.Berat * order.Pcs) + order.TotalBeratOpsi
 	asal, _ := rj.GetIDKota(dataToko.Kota)
 	tujuan, _ := rj.GetIDKota(order.Pengiriman.Kota)
-	ongkir, estimasi, ok := rj.GetOngkir(asal, tujuan, order.Pengiriman.KodeKurir, order.Pengiriman.Service, strconv.Itoa(order.Pengiriman.Berat))
-	order.Pengiriman.Ongkir = ongkir
-	order.Pengiriman.Estimasi = estimasi
+	ongkir, estimasi, kurir, ok := rj.GetOngkir(asal, tujuan, order.Pengiriman.KodeKurir, order.Pengiriman.Service, strconv.Itoa(order.Pengiriman.Berat))
+	order.Pengiriman.Kurir = kurir
 
 	// simpan harga produk
 	if order.JenisPesanan == "soft copy" {
 		order.HargaProduk = dataProduk.HargaSoftCopy
 	} else if order.JenisPesanan == "cetak" && ok {
 		order.HargaProduk = dataProduk.HargaCetak
-	} else if order.JenisPesanan == "cetak" && !ok {
+		order.Pengiriman.Ongkir = ongkir
+		order.Pengiriman.Estimasi = estimasi
+	} else {
 		http.Error(w, "Gagal! Terjadi kesalahan. Mohon periksa data pengiriman.", http.StatusBadRequest)
 		return
 	}
@@ -202,62 +171,49 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	// buat order
 	idOrder, err := order.CreateOrder(idToko, idProduk)
 	if err != nil {
+		_ = order.DeleteOrder(strconv.Itoa(idOrder))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// add opsi order
-	for _, vOpsiOrder := range order.OpsiOrder {
-		err = vOpsiOrder.CreateOpsiOrder(strconv.Itoa(idOrder))
-		if err != nil {
-			_ = order.DeleteOrder(strconv.Itoa(idOrder))
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-	}
-
-	// Simpan data pengiriman
-	if order.JenisPesanan == "cetak" {
-		err = order.Pengiriman.CreatePengiriman(strconv.Itoa(idOrder))
-		if err != nil {
-			_ = order.DeleteOrder(strconv.Itoa(idOrder))
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-	}
-
-	// send notif to admin/owner
+	// send notif to admin & owner
 	penerima := []int{}
 	penerima = append(penerima, dataToko.IDOwner)
 
 	var karyawan models.Karyawan
-	dataKaryawan := karyawan.GetKaryawans(idToko)
-	for _, vKaryawan := range dataKaryawan.Karyawans {
-		if vKaryawan.Posisi == "admin" {
-			penerima = append(penerima, vKaryawan.IDCustomer)
-		}
-	}
+	admins := karyawan.GetAdmins(idToko)
+	penerima = append(penerima, admins...)
 
 	var customer models.Customer
 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
 	var notif models.Notifikasi
+
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Pesanan Baru"
 	notif.Pesan = notif.Pengirim + " telah memesan produk " + order.NamaProduk
 	notif.Link = "/order/" + strconv.Itoa(idOrder)
 	notif.CreatedAt = order.CreatedAt
 
-	for _, vPenerima := range penerima {
-		notif.IDPenerima = vPenerima
-		_ = notif.CreateNotifikasi()
-	}
-
-	message, _ := json.Marshal(order)
+	notif.CreateNotifikasi(penerima)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"message":"Sukses! Mohon tunggu konfirmasi kami. Terimakasih.","idOrder":"` + strconv.Itoa(idOrder) + `"}`))
+}
+
+// HitungHargaBeratOpsi is func
+func (oc OrderController) HitungHargaBeratOpsi(o *models.Order) {
+	for _, valueOpsi := range o.OpsiOrder {
+		if valueOpsi.PerProduk == false {
+			o.TotalHargaOpsi += valueOpsi.Harga
+			o.TotalBeratOpsi += valueOpsi.Berat
+		} else {
+			o.TotalHargaOpsi += valueOpsi.Harga * o.Pcs
+			o.TotalBeratOpsi += valueOpsi.Berat * o.Pcs
+		}
+
+	}
 }
 
 // GetOngkir is setter

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -37,27 +36,28 @@ func (rj RajaOngkir) GetIDKota(kota string) (string, bool) {
 }
 
 // GetOngkir is func
-func (rj RajaOngkir) GetOngkir(asal, tujuan, kurir, service, berat string) (int, string, bool) {
+func (rj RajaOngkir) GetOngkir(asal, tujuan, kodeKurir, service, berat string) (int, string, string, bool) {
 	url := baseURL + "/cost"
-	payload := strings.NewReader("origin=" + asal + "&destination=" + tujuan + "&weight=" + berat + "&courier=" + kurir)
+	payload := strings.NewReader("origin=" + asal + "&destination=" + tujuan + "&weight=" + berat + "&courier=" + kodeKurir)
 	req, _ := http.NewRequest("POST", url, payload)
 
 	req.Header.Add("key", apiKey)
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println(err.Error())
+		return 0, "", "", false
 	}
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 
-	ongkir := gjson.Get(string(body), "rajaongkir.results.0.costs.#(service=="+service+").cost.0.value")
-	estimasi := gjson.Get(string(body), "rajaongkir.results.0.costs.#(service=="+service+").cost.0.etd")
+	ongkir := gjson.Get(string(body), "rajaongkir.results.0.costs.#(service=="+service+").cost.0.value").Int()
+	kurir := gjson.Get(string(body), "rajaongkir.results.#(code=="+kodeKurir+").name").String()
+	estimasi := gjson.Get(string(body), "rajaongkir.results.0.costs.#(service=="+service+").cost.0.etd").String()
 
-	if ongkir.Str == "" || estimasi.Str == "" {
-		return 0, "", false
+	if estimasi == "" {
+		return 0, "", "", false
 	}
 
-	return int(ongkir.Int()), estimasi.Str, true
+	return int(ongkir), estimasi, kurir, true
 }

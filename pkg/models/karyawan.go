@@ -102,3 +102,23 @@ func (k Karyawan) CreateKaryawan() error {
 
 	return err
 }
+
+// GetAdmins is func
+func (k Karyawan) GetAdmins(idToko string) []int {
+	con := db.Connect()
+	query := "SELECT idCustomer FROM karyawan WHERE idToko = ? AND posisi = 'admin' AND status = 'aktif'"
+	rows, _ := con.Query(query, idToko)
+
+	admin := []int{}
+	for rows.Next() {
+		rows.Scan(
+			&k.IDCustomer,
+		)
+
+		admin = append(admin, k.IDCustomer)
+	}
+
+	defer con.Close()
+
+	return admin
+}

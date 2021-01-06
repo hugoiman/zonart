@@ -49,12 +49,8 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	penerima = append(penerima, dataToko.IDOwner)
 
 	var karyawan models.Karyawan
-	dataKaryawan := karyawan.GetKaryawans(strconv.Itoa(dataToko.IDToko))
-	for _, vKaryawan := range dataKaryawan.Karyawans {
-		if vKaryawan.Posisi == "admin" {
-			penerima = append(penerima, vKaryawan.IDCustomer)
-		}
-	}
+	admins := karyawan.GetAdmins(strconv.Itoa(dataOrder.IDToko))
+	penerima = append(penerima, admins...)
 
 	var notif models.Notifikasi
 	notif.Pengirim = dataCustomer.Nama
@@ -62,11 +58,7 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	notif.Pesan = notif.Pengirim + " telah melakukan pembayaran Rp " + strconv.Itoa(pembayaran.Nominal) + ". No invoice:" + idOrder
 	notif.Link = "/order/" + idOrder
 	notif.CreatedAt = order.CreatedAt
-
-	for _, vPenerima := range penerima {
-		notif.IDPenerima = vPenerima
-		_ = notif.CreateNotifikasi()
-	}
+	notif.CreateNotifikasi(penerima)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

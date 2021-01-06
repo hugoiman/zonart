@@ -88,7 +88,7 @@ func (mw MiddleWare) AuthOwnerAdmin(next http.HandlerFunc) http.HandlerFunc {
 		// }
 
 		dataKaryawan, err := karyawan.AuthKaryawan(idToko, strconv.Itoa(user.IDCustomer))
-		if err != nil || (user.IDCustomer != dataToko.IDOwner && (dataKaryawan.Posisi != "admin" || dataKaryawan.Status != "aktif")) {
+		if user.IDCustomer != dataToko.IDOwner && (dataKaryawan.Posisi != "admin" || dataKaryawan.Status != "aktif" || err != nil) {
 			http.Error(w, "Gagal! Anda tidak memiliki hak akses.", http.StatusForbidden)
 			return
 		}

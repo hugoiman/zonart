@@ -46,14 +46,15 @@ func (n Notifikasi) GetNotifikasis(idCustomer string) Notifikasis {
 }
 
 // CreateNotifikasi is func
-func (n Notifikasi) CreateNotifikasi() error {
+func (n Notifikasi) CreateNotifikasi(penerima []int) {
 	con := db.Connect()
 	query := "INSERT INTO notifikasi (idPenerima, pengirim, judul, pesan, link, createdAt) VALUES (?,?,?,?,?,?)"
-	_, err := con.Exec(query, n.IDPenerima, n.Pengirim, n.Judul, n.Pesan, n.Link, n.CreatedAt)
+
+	for _, vID := range penerima {
+		_, _ = con.Exec(query, vID, n.Pengirim, n.Judul, n.Pesan, n.Link, n.CreatedAt)
+	}
 
 	defer con.Close()
-
-	return err
 }
 
 // ReadNotifikasi is func

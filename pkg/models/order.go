@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strconv"
 	"time"
 	"zonart/db"
 )
@@ -122,6 +123,20 @@ func (o Order) CreateOrder(idToko, idProduk string) (int, error) {
 
 	idInt64, _ := exec.LastInsertId()
 	idOrder := int(idInt64)
+
+	for _, vOpsiOrder := range o.OpsiOrder {
+		err = vOpsiOrder.CreateOpsiOrder(strconv.Itoa(idOrder))
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	if o.JenisPesanan == "cetak" {
+		err = o.Pengiriman.CreatePengiriman(strconv.Itoa(idOrder))
+		if err != nil {
+			return 0, err
+		}
+	}
 
 	defer con.Close()
 

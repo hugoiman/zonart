@@ -46,15 +46,17 @@ func (btc BiayaTambahanController) CreateBiayaTambahans(w http.ResponseWriter, r
 		return
 	}
 
+	penerima := []int{}
+	penerima = append(penerima, dataOrder.IDCustomer)
+
 	// send notif to customer
 	var notif models.Notifikasi
-	notif.IDPenerima = dataOrder.IDCustomer
 	notif.Pengirim = dataOrder.NamaToko
 	notif.Judul = "Anda mempunyai biaya tambahan baru"
 	notif.Pesan = notif.Pengirim + "telah menambahkan biaya lain pada pesanan Anda. No invoice: " + strconv.Itoa(dataOrder.IDOrder)
 	notif.Link = "/order/" + strconv.Itoa(dataOrder.IDOrder)
 	notif.CreatedAt = time.Now().Format("2006-01-02")
-	_ = notif.CreateNotifikasi()
+	notif.CreateNotifikasi(penerima)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -99,6 +101,9 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 		_ = dataNewerOrder.UpdateStatusOrder(idOrder)
 	}
 
+	penerima := []int{}
+	penerima = append(penerima, dataOrder.IDCustomer)
+
 	var notif models.Notifikasi
 	notif.IDPenerima = dataNewerOrder.IDCustomer
 	notif.Pengirim = dataNewerOrder.NamaToko
@@ -106,7 +111,7 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 	notif.Pesan = notif.Pengirim + "telah membatalkan biaya tambahan berupa " + dataBT.Item + "(Rp " + strconv.Itoa(dataBT.Nominal) + "). No invoice: " + strconv.Itoa(dataOrder.IDOrder)
 	notif.Link = "/order/" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
-	_ = notif.CreateNotifikasi()
+	notif.CreateNotifikasi(penerima)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

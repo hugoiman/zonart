@@ -52,15 +52,17 @@ func (pc PenanganController) SetPenangan(w http.ResponseWriter, r *http.Request)
 
 	dataToko, _ := toko.GetToko(idToko)
 
+	penerima := []int{}
+	penerima = append(penerima, dataKaryawan.IDCustomer)
+
 	// send notif to karyawan penangan
 	var notif models.Notifikasi
-	notif.IDPenerima = dataKaryawan.IDCustomer
 	notif.Pengirim = dataToko.NamaToko
 	notif.Judul = "Pengerjaan Pesanan"
 	notif.Pesan = notif.Pengirim + "telah menugaskan Anda untuk mengerjakan pesanan dengan no invoice: " + idOrder
 	notif.Link = "/order/" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
-	_ = notif.CreateNotifikasi()
+	notif.CreateNotifikasi(penerima)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

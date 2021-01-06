@@ -36,5 +36,5 @@ func Test_TC5(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v", response.Body)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya maksimal jumlah memilih melebihi batas jumlah opsi")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya req true dan minimal memilih < 1")
 }

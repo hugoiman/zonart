@@ -11,6 +11,7 @@ type Produk struct {
 	NamaProduk    string     `json:"namaProduk" validate:"required"`
 	Cetak         bool       `json:"cetak"`
 	SoftCopy      bool       `json:"softCopy"`
+	Berat         int        `json:"berat"`
 	Gambar        string     `json:"gambar" validate:"required"`
 	Deskripsi     string     `json:"deskripsi"`
 	HargaCetak    int        `json:"hargaCetak"`
@@ -29,14 +30,14 @@ type Produks struct {
 // GetProduks is func
 func (p Produk) GetProduks(idToko string) Produks {
 	con := db.Connect()
-	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, cetak, softCopy, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah FROM produk WHERE idToko = ?"
+	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, cetak, softCopy, berat, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah FROM produk WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var produks Produks
 
 	for rows.Next() {
 		rows.Scan(
-			&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.HargaCetak, &p.HargaSoftCopy, &p.Status, &p.Catatan, &p.HargaWajah,
+			&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.Berat, &p.HargaCetak, &p.HargaSoftCopy, &p.Status, &p.Catatan, &p.HargaWajah,
 		)
 
 		produks.Produks = append(produks.Produks, p)
@@ -50,10 +51,10 @@ func (p Produk) GetProduks(idToko string) Produks {
 // GetProduk is func
 func (p Produk) GetProduk(idToko, idProduk string) (Produk, error) {
 	con := db.Connect()
-	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, cetak, softCopy, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah FROM produk WHERE idToko = ? AND idProduk = ?"
+	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, cetak, softCopy, berat, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah FROM produk WHERE idToko = ? AND idProduk = ?"
 
 	err := con.QueryRow(query, idToko, idProduk).Scan(
-		&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.HargaCetak, &p.HargaSoftCopy, &p.Status, &p.Catatan, &p.HargaWajah)
+		&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.Berat, &p.HargaCetak, &p.HargaSoftCopy, &p.Status, &p.Catatan, &p.HargaWajah)
 
 	var grupOpsi GrupOpsi
 	p.GrupOpsi = grupOpsi.GetGrupOpsiProduk(idToko, idProduk)
@@ -66,8 +67,8 @@ func (p Produk) GetProduk(idToko, idProduk string) (Produk, error) {
 // CreateProduk is func
 func (p Produk) CreateProduk(idToko string) (int, error) {
 	con := db.Connect()
-	query := "INSERT INTO produk (idToko, namaProduk, gambar, deskripsi, cetak, softCopy, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah) VALUES (?,?,?,?,?,?,?,?,?)"
-	exec, err := con.Exec(query, idToko, p.NamaProduk, p.Gambar, p.Deskripsi, &p.Cetak, &p.SoftCopy, p.HargaCetak, p.HargaSoftCopy, p.Status, p.Catatan, p.HargaWajah)
+	query := "INSERT INTO produk (idToko, namaProduk, gambar, deskripsi, cetak, softCopy, berat, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah) VALUES (?,?,?,?,?,?,?,?,?)"
+	exec, err := con.Exec(query, idToko, p.NamaProduk, p.Gambar, p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.Berat, p.HargaCetak, p.HargaSoftCopy, p.Status, p.Catatan, p.HargaWajah)
 
 	if err != nil {
 		return 0, err
@@ -84,8 +85,8 @@ func (p Produk) CreateProduk(idToko string) (int, error) {
 // UpdateProduk is func
 func (p Produk) UpdateProduk(idToko, idProduk string) error {
 	con := db.Connect()
-	query := "UPDATE produk SET namaProduk = ?, gambar = ?, deskripsi = ?, cetak = ?, softCopy = ?, hargaCetak = ?, hargaSoftCopy = ?, status = ?, catatan = ?, hargaWajah = ? WHERE idToko = ? AND idProduk = ?"
-	_, err := con.Exec(query, p.NamaProduk, p.Gambar, p.Deskripsi, &p.Cetak, &p.SoftCopy, p.HargaCetak, p.HargaSoftCopy, p.Status, p.Catatan, p.HargaWajah, idToko, idProduk)
+	query := "UPDATE produk SET namaProduk = ?, gambar = ?, deskripsi = ?, cetak = ?, softCopy = ?, berat = ?, hargaCetak = ?, hargaSoftCopy = ?, status = ?, catatan = ?, hargaWajah = ? WHERE idToko = ? AND idProduk = ?"
+	_, err := con.Exec(query, p.NamaProduk, p.Gambar, p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.Berat, p.HargaCetak, p.HargaSoftCopy, p.Status, p.Catatan, p.HargaWajah, idToko, idProduk)
 
 	defer con.Close()
 
