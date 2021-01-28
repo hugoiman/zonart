@@ -8,7 +8,7 @@ import (
 // Notifikasi is class
 type Notifikasi struct {
 	IDNotifikasi int    `json:"idNotifikasi"`
-	IDPenerima   int    `json:"idPenerima"`
+	IDPenerima   []int  `json:"idPenerima"`
 	Pengirim     string `json:"pengirim"`
 	Judul        string `json:"judul"`
 	Pesan        string `json:"pesan"`
@@ -25,7 +25,7 @@ type Notifikasis struct {
 // GetNotifikasis is func
 func (n Notifikasi) GetNotifikasis(idCustomer string) Notifikasis {
 	con := db.Connect()
-	query := "SELECT idNotifikasi, idPenerima, pengirim, judul, pesan, link, dibaca, createdAt FROM notifikasi WHERE idPenerima = ?"
+	query := "SELECT idNotifikasi, pengirim, judul, pesan, link, dibaca, createdAt FROM notifikasi WHERE idPenerima = ?"
 	rows, _ := con.Query(query, idCustomer)
 
 	var notifikasis Notifikasis
@@ -33,7 +33,7 @@ func (n Notifikasi) GetNotifikasis(idCustomer string) Notifikasis {
 
 	for rows.Next() {
 		rows.Scan(
-			&n.IDNotifikasi, &n.IDPenerima, &n.Pengirim, &n.Judul, &n.Pesan, &n.Link, &n.Dibaca, &createdAt,
+			&n.IDNotifikasi, &n.Pengirim, &n.Judul, &n.Pesan, &n.Link, &n.Dibaca, &createdAt,
 		)
 
 		n.CreatedAt = createdAt.Format("02 Jan 2006")
@@ -46,12 +46,12 @@ func (n Notifikasi) GetNotifikasis(idCustomer string) Notifikasis {
 }
 
 // CreateNotifikasi is func
-func (n Notifikasi) CreateNotifikasi(penerima []int) {
+func (n Notifikasi) CreateNotifikasi() {
 	con := db.Connect()
 	query := "INSERT INTO notifikasi (idPenerima, pengirim, judul, pesan, link, createdAt) VALUES (?,?,?,?,?,?)"
 
-	for _, vID := range penerima {
-		_, _ = con.Exec(query, vID, n.Pengirim, n.Judul, n.Pesan, n.Link, n.CreatedAt)
+	for _, vIDPenerima := range n.IDPenerima {
+		_, _ = con.Exec(query, vIDPenerima, n.Pengirim, n.Judul, n.Pesan, n.Link, n.CreatedAt)
 	}
 
 	defer con.Close()

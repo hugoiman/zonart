@@ -9,8 +9,8 @@ import (
 type Penggajian struct {
 	IDPenggajian int    `json:"idPenggajian"`
 	IDToko       int    `json:"idToko"`
-	IDKaryawan   int    `json:"idKaryawan"`
-	NamaKaryawan string `json:"namaKaryawan" validate:"required"`
+	IDKaryawan   int    `json:"idKaryawan" validate:"required"`
+	NamaKaryawan string `json:"namaKaryawan"`
 	Periode      string `json:"periode" validate:"required"`
 	Nominal      string `json:"nominal" validate:"required"`
 	TglTransaksi string `json:"tglTransaksi" validate:"required"`
@@ -21,10 +21,11 @@ type Penggajians struct {
 	Penggajians []Penggajian `json:"penggajian"`
 }
 
-// GetPenggajians is func
-func (p Penggajian) GetPenggajians(idToko string) Penggajians {
+// GetGajis is func
+func (p Penggajian) GetGajis(idToko string) Penggajians {
 	con := db.Connect()
-	query := "SELECT idPenggajian, idToko, idKaryawan, periode, nominal, tglTransaksi FROM penggajian WHERE idToko = ?"
+	query := "SELECT a.idPenggajian, a.idToko, a.idKaryawan, b.namaKaryawan, a.periode, a.nominal, a.tglTransaksi FROM penggajian a " +
+		"JOIN karyawan b ON a.idKaryawan = b.idKaryawan WHERE a.idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var tglTransaksi time.Time
@@ -32,7 +33,7 @@ func (p Penggajian) GetPenggajians(idToko string) Penggajians {
 
 	for rows.Next() {
 		rows.Scan(
-			&p.IDPenggajian, &p.IDToko, &p.IDKaryawan, &p.Periode, &p.Nominal, &tglTransaksi,
+			&p.IDPenggajian, &p.IDToko, &p.IDKaryawan, &p.NamaKaryawan, &p.Periode, &p.Nominal, &tglTransaksi,
 		)
 
 		p.TglTransaksi = tglTransaksi.Format("02 Jan 2006")
@@ -44,19 +45,19 @@ func (p Penggajian) GetPenggajians(idToko string) Penggajians {
 	return penggajians
 }
 
-// CreatePenggajian is func
-func (p Penggajian) CreatePenggajian(idToko string) error {
+// CreateGaji is func
+func (p Penggajian) CreateGaji(idToko string) error {
 	con := db.Connect()
 	query := "INSERT INTO penggajian (idToko, idKaryawan, periode, nominal, tglTransaksi) VALUES (?,?,?,?,?)"
-	_, err := con.Exec(query, idToko, p.IDToko, p.IDKaryawan, p.Periode, p.Nominal, p.TglTransaksi)
+	_, err := con.Exec(query, idToko, p.IDKaryawan, p.Periode, p.Nominal, p.TglTransaksi)
 
 	defer con.Close()
 
 	return err
 }
 
-// DeletePenggajian is func
-func (p Penggajian) DeletePenggajian(idToko, idPenggajian string) error {
+// DeleteGaji is func
+func (p Penggajian) DeleteGaji(idToko, idPenggajian string) error {
 	con := db.Connect()
 	query := "DELETE FROM penggajian WHERE idToko = ? AND idPenggajian = ?"
 	_, err := con.Exec(query, idToko, idPenggajian)

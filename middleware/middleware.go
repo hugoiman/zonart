@@ -97,8 +97,27 @@ func (mw MiddleWare) AuthOwnerAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// AuthCustomerOrder is middleware
-func (mw MiddleWare) AuthCustomerOrder(next http.HandlerFunc) http.HandlerFunc {
+// AuthEditor is middleware
+func (mw MiddleWare) AuthEditor(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idToko := vars["idToko"]
+		var karyawan models.Karyawan
+
+		user := context.Get(r, "user").(*MyClaims)
+
+		dataKaryawan, err := karyawan.AuthKaryawan(idToko, strconv.Itoa(user.IDCustomer))
+		if dataKaryawan.Posisi != "editor" || dataKaryawan.Status != "aktif" || err != nil {
+			http.Error(w, "Gagal! Anda tidak memiliki hak akses.", http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
+// CustomerOrder is middleware
+func (mw MiddleWare) CustomerOrder(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		idOrder := vars["idOrder"]
@@ -106,11 +125,54 @@ func (mw MiddleWare) AuthCustomerOrder(next http.HandlerFunc) http.HandlerFunc {
 
 		user := context.Get(r, "user").(*MyClaims)
 
-		dataOrder, err := order.GetOrder(idOrder, strconv.Itoa(user.IDCustomer))
+		dataOrder, err := order.GetOrder(idOrder)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		} else if user.IDCustomer != dataOrder.IDCustomer {
+			http.Error(w, "Gagal! Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
+// OwnerAdminOrder is middleware
+func (mw MiddleWare) OwnerAdminOrder(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idOrder := vars["idOrder"]
+		idToko := vars["idToko"]
+		var order models.Order
+
+		dataOrder, err := order.GetOrder(idOrder)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		} else if strconv.Itoa(dataOrder.IDToko) != idToko {
+			http.Error(w, "Gagal! Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
+// EditorOrder is middleware
+func (mw MiddleWare) EditorOrder(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idOrder := vars["idOrder"]
+		var order models.Order
+
+		user := context.Get(r, "user").(*MyClaims)
+
+		dataOrder, err := order.GetOrder(idOrder)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		} else if dataOrder.Penangan.IDPenangan != user.IDCustomer {
 			http.Error(w, "Gagal! Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
 			return
 		}

@@ -33,6 +33,9 @@ func main() {
 	var order controllers.OrderController
 	// var pembukuan controllers.PembukuanController
 	var penangan controllers.PenanganController
+	var pembayaran controllers.PembayaranController
+	var pengiriman controllers.PengirimanController
+	var penggajian controllers.PenggajianController
 	var produk controllers.ProdukController
 	var toko controllers.TokoController
 	var undangan controllers.UndanganController
@@ -91,21 +94,38 @@ func main() {
 	api.HandleFunc("/api/grup-opsi-produk/{idToko}/{idGrupOpsi}", mw.AuthOwnerAdmin(goproduk.GetGrupOpsiProduks)).Methods("GET")
 
 	// my list order customer
-	// api.HandleFunc("/api/order", controllers.GetOrders).Methods("GET")
-	// detail order customer
-	api.HandleFunc("/api/order/{idOrder}", order.GetOrder).Methods("GET")
+	api.HandleFunc("/api/order", order.GetOrders).Methods("GET")
+	api.HandleFunc("/api/order/{idOrder}", mw.CustomerOrder(order.GetOrder)).Methods("GET")
 	// detail order toko
-	api.HandleFunc("/api/order/{idToko}/{idOrder}", order.GetOrderToko).Methods("GET")
-	// list order toko
-	// api.HandleFunc("/api/orders/{idToko}", controllers.GetOrder).Methods("GET")
+	api.HandleFunc("/api/order-toko/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.GetOrder))).Methods("GET")
+	api.HandleFunc("/api/order-toko/{idToko}", mw.AuthOwnerAdmin(order.GetOrdersToko)).Methods("GET")
 	// list order editor
-	// api.HandleFunc("/api/orders/{idToko}", controllers.GetOrder).Methods("GET")
+	api.HandleFunc("/api/order-editor/{idToko}/{idOrder}", mw.AuthEditor(mw.EditorOrder(order.GetOrder))).Methods("GET")
+	api.HandleFunc("/api/order-editor/{idToko}", mw.AuthEditor(order.GetOrdersEditor)).Methods("GET")
+
 	api.HandleFunc("/api/order/{idToko}/{idProduk}", order.CreateOrder).Methods("POST")
+	api.HandleFunc("/api/order-waktu-pengerjaan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(order.SetWaktuPengerjaan)).Methods("POST")
+	api.HandleFunc("/api/order-konfirmasi/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.KonfirmasiOrder))).Methods("POST")
+	api.HandleFunc("/api/order-hasil/{idToko}/{idOrder}", mw.AuthEditor(mw.EditorOrder(order.UploadHasilProduksi))).Methods("POST")
+	api.HandleFunc("/api/order-setujui/{idOrder}", mw.CustomerOrder(order.SetujuiHasilProduksi)).Methods("POST")
+	api.HandleFunc("/api/order-batal/{idOrder}", mw.CustomerOrder(order.SetujuiHasilProduksi)).Methods("POST")
+	api.HandleFunc("/api/order-status/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.FinishOrder))).Methods("POST")
 
-	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(bt.CreateBiayaTambahans)).Methods("POST")
-	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}/{idBiayaTambahan}", mw.AuthOwnerAdmin(bt.DeleteBiayaTambahan)).Methods("DELETE")
+	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(bt.CreateBiayaTambahan))).Methods("POST")
+	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}/{idBiayaTambahan}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(bt.DeleteBiayaTambahan))).Methods("DELETE")
 
-	api.HandleFunc("/api/penangan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(penangan.SetPenangan)).Methods("POST")
+	api.HandleFunc("/api/penangan/{idOrder}/{idToko}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(penangan.SetPenangan))).Methods("POST")
+
+	api.HandleFunc("/api/pembayaran/{idOrder}", mw.CustomerOrder(pembayaran.CreatePembayaran)).Methods("POST")
+	api.HandleFunc("/api/pembayaran-konfirmasi/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(pembayaran.KonfirmasiPembayaran))).Methods("POST")
+
+	api.HandleFunc("/api/pengiriman/{idOrder}/{idToko}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(pengiriman.SetResi))).Methods("POST")
+
+	api.HandleFunc("/api/revisi/{idOrder}", mw.CustomerOrder(order.CreateOrder)).Methods("POST")
+
+	api.HandleFunc("/api/gaji/{idToko}", mw.AuthOwner(penggajian.GetGajis)).Methods("GET")
+	api.HandleFunc("/api/gaji/{idToko}", mw.AuthOwner(penggajian.CreateGaji)).Methods("POST")
+	api.HandleFunc("/api/gaji/{idPenggajian}/{idToko}", mw.AuthOwner(penggajian.DeleteGaji)).Methods("DELETE")
 
 	os.Setenv("PORT", "8080")
 	port := "8080"

@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+	"zonart/internal/gomail"
 	mw "zonart/middleware"
 	"zonart/pkg/models"
 
@@ -112,14 +113,14 @@ func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request)
 
 	_ = customer.UpdatePassword(data.IDCustomer, encryptedPass)
 
-	// message := "Hallo " + data.Nama + ", your new password is <b>" + newPass + "</b>"
-	// err := SendEmail("New Password", email, message)
-	// if err != nil {
-	// 	http.Error(w, "Gagal! Coba beberapa saat lagi.", http.StatusBadRequest)
-	// 	return
-	// }
+	message := "Hallo " + data.Nama + ", your new password is <b>" + newPass + "</b>"
+	err = gomail.SendEmail("New Password", email, message)
+	if err != nil {
+		http.Error(w, "Gagal! Coba beberapa saat lagi.", http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"New password has been sent to your email ` + newPass + `."}`))
+	w.Write([]byte(`{"message":"New password has been sent to your email"}`))
 }

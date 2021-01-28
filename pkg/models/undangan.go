@@ -68,14 +68,21 @@ func (u Undangan) GetUndangan(idUndangan, idToko, idCustomer string) (Undangan, 
 }
 
 // UndangKaryawan is func
-func (u Undangan) UndangKaryawan(idToko string) error {
+func (u Undangan) UndangKaryawan(idToko string) (int, error) {
 	con := db.Connect()
 	query := "INSERT INTO undangan (idUndangan, idToko, idCustomer, posisi, status, date) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE posisi = ?, status = ?, date = ?"
-	_, err := con.Exec(query, u.IDUndangan, idToko, u.IDCustomer, u.Posisi, u.Status, u.Date, u.Posisi, u.Status, u.Date)
+	exec, err := con.Exec(query, u.IDUndangan, idToko, u.IDCustomer, u.Posisi, u.Status, u.Date, u.Posisi, u.Status, u.Date)
+
+	if err != nil {
+		return 0, err
+	}
+
+	idInt64, _ := exec.LastInsertId()
+	idUndangan := int(idInt64)
 
 	defer con.Close()
 
-	return err
+	return idUndangan, err
 }
 
 // TolakUndangan is func

@@ -94,13 +94,22 @@ func (uc UndanganController) UndangKaryawan(w http.ResponseWriter, r *http.Reque
 	undangan.Status = "menunggu"
 	undangan.Date = time.Now().Format("2006-01-02")
 
-	err = undangan.UndangKaryawan(idToko)
+	idUndangan, err := undangan.UndangKaryawan(idToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// send notif to new karyawan
+	var notif models.Notifikasi
+	notif.IDPenerima = append(notif.IDPenerima, dataCustomer.IDCustomer)
+	notif.Pengirim = dataToko.NamaToko
+	notif.Judul = notif.Pengirim + " telah mengundang anda sebagai " + undangan.Posisi + "."
+	notif.Pesan = "Pesanan sedang diproses. Silahkan melakukan pembayaran."
+	notif.Link = "/undangan/" + strconv.Itoa(idUndangan)
+	notif.CreatedAt = undangan.Date
+
+	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -167,7 +176,19 @@ func (uc UndanganController) TerimaUndangan(w http.ResponseWriter, r *http.Reque
 
 	_ = undangan.TerimaUndangan(idUndangan, idToko, idCustomer)
 
+	var toko models.Toko
+	dataToko, err := toko.GetToko(idToko)
+
 	// send notif to owner
+	var notif models.Notifikasi
+	notif.IDPenerima = append(notif.IDPenerima, dataToko.IDOwner)
+	notif.Pengirim = dataToko.NamaToko
+	notif.Judul = notif.Pengirim + " telah menerima undangan anda"
+	notif.Pesan = "Pesanan sedang diproses. Silahkan melakukan pembayaran."
+	notif.Link = "/undangan/" + idUndangan
+	notif.CreatedAt = time.Now().Format("2006-01-02")
+
+	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

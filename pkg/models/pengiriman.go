@@ -42,3 +42,14 @@ func (p Pengiriman) GetPengiriman(idOrder string) (Pengiriman, error) {
 	defer con.Close()
 	return p, err
 }
+
+// SetResi is func
+func (p Pengiriman) SetResi(idOrder string) error {
+	con := db.Connect()
+	query := "UPDATE pengiriman SET resi = ? WHERE idOrder = ?"
+	_, err := con.Exec(query, p.Resi, idOrder)
+
+	defer con.Close()
+
+	return err
+}

@@ -14,11 +14,10 @@ import (
 // BiayaTambahanController is class
 type BiayaTambahanController struct{}
 
-// CreateBiayaTambahans is func
-func (btc BiayaTambahanController) CreateBiayaTambahans(w http.ResponseWriter, r *http.Request) {
+// CreateBiayaTambahan is func
+func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
-	idToko := vars["idToko"]
 
 	var tb models.BiayaTambahan
 	var order models.Order
@@ -31,7 +30,7 @@ func (btc BiayaTambahanController) CreateBiayaTambahans(w http.ResponseWriter, r
 		return
 	}
 
-	dataOrder, err := order.GetOrderToko(idOrder, idToko)
+	dataOrder, err := order.GetOrder(idOrder)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -46,17 +45,22 @@ func (btc BiayaTambahanController) CreateBiayaTambahans(w http.ResponseWriter, r
 		return
 	}
 
+	dataOrder.Total -= tb.Nominal
+	dataOrder.Tagihan += tb.Nominal
+	dataOrder.StatusPembayaran = "menunggu pembayaran"
+	_ = dataOrder.UpdateBiayaOrder(idOrder)
+
 	penerima := []int{}
-	penerima = append(penerima, dataOrder.IDCustomer)
 
 	// send notif to customer
 	var notif models.Notifikasi
+	notif.IDPenerima = append(penerima, dataOrder.IDCustomer)
 	notif.Pengirim = dataOrder.NamaToko
-	notif.Judul = "Anda mempunyai biaya tambahan baru"
-	notif.Pesan = notif.Pengirim + "telah menambahkan biaya lain pada pesanan Anda. No invoice: " + strconv.Itoa(dataOrder.IDOrder)
+	notif.Judul = "Terdapat Biaya Tambahan Baru"
+	notif.Pesan = "Pesanan " + strconv.Itoa(dataOrder.IDOrder) + " mempunyai biaya tambahan baru."
 	notif.Link = "/order/" + strconv.Itoa(dataOrder.IDOrder)
 	notif.CreatedAt = time.Now().Format("2006-01-02")
-	notif.CreateNotifikasi(penerima)
+	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -66,17 +70,16 @@ func (btc BiayaTambahanController) CreateBiayaTambahans(w http.ResponseWriter, r
 // DeleteBiayaTambahan is func
 func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	idToko := vars["idToko"]
 	idOrder := vars["idOrder"]
 	idBiayaTambahan := vars["idBiayaTambahan"]
 
 	var bt models.BiayaTambahan
 	var order models.Order
-	var newerOrder models.Order
+	// var newerOrder models.Order
 
-	dataOrder, err := order.GetOrderToko(idOrder, idToko)
+	dataOrder, err := order.GetOrder(idOrder)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan3.", http.StatusBadRequest)
+		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	} else if dataOrder.StatusPesanan == "selesai" {
 		http.Error(w, "Gagal! Pesanan telah selesai.", http.StatusBadRequest)
@@ -85,33 +88,34 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 
 	dataBT, err := bt.GetBiayaTambahan(idBiayaTambahan, idOrder)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan2.", http.StatusBadRequest)
+		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
 	err = dataBT.DeleteBiayaTambahan(idBiayaTambahan, idOrder)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan1.", http.StatusBadRequest)
+		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
-	dataNewerOrder, _ := newerOrder.GetOrderToko(idOrder, idToko)
+	dataNewerOrder, _ := order.GetOrder(idOrder)
+	dataNewerOrder.Tagihan -= dataBT.Nominal
+	dataNewerOrder.Total += dataBT.Nominal
+
 	if dataNewerOrder.Tagihan <= 0 {
 		dataNewerOrder.StatusPembayaran = "lunas"
-		_ = dataNewerOrder.UpdateStatusOrder(idOrder)
 	}
 
-	penerima := []int{}
-	penerima = append(penerima, dataOrder.IDCustomer)
+	_ = dataNewerOrder.UpdateBiayaOrder(idOrder)
 
 	var notif models.Notifikasi
-	notif.IDPenerima = dataNewerOrder.IDCustomer
+	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
 	notif.Pengirim = dataNewerOrder.NamaToko
 	notif.Judul = "Biaya tambahan telah dibatalkan"
-	notif.Pesan = notif.Pengirim + "telah membatalkan biaya tambahan berupa " + dataBT.Item + "(Rp " + strconv.Itoa(dataBT.Nominal) + "). No invoice: " + strconv.Itoa(dataOrder.IDOrder)
+	notif.Pesan = "Biaya tambahan berupa " + dataBT.Item + "(Rp " + strconv.Itoa(dataBT.Nominal) + ") telah dibatalkan. No pesanan " + strconv.Itoa(dataOrder.IDOrder)
 	notif.Link = "/order/" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
-	notif.CreateNotifikasi(penerima)
+	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
