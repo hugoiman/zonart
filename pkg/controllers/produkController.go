@@ -60,7 +60,7 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if produk.Cetak == false && produk.SoftCopy == false {
-		http.Error(w, "Gagal! Pilih setidaknya satu jenis pemesanan", http.StatusBadRequest)
+		http.Error(w, "Pilih setidaknya satu jenis pemesanan", http.StatusBadRequest)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Produk telah ditambahkan.","idProduk":"` + strconv.Itoa(idProduk) + `"}`))
+	w.Write([]byte(`{"message":"Produk telah ditambahkan.","idProduk":"` + strconv.Itoa(idProduk) + `"}`))
 }
 
 // UpdateProduk is func
@@ -91,7 +91,7 @@ func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if produk.Cetak == false && produk.SoftCopy == false {
-		http.Error(w, "Gagal! Pilih setidaknya satu jenis pemesanan", http.StatusBadRequest)
+		http.Error(w, "Pilih setidaknya satu jenis pemesanan", http.StatusBadRequest)
 		return
 	}
 
@@ -115,11 +115,11 @@ func (pc ProdukController) DeleteProduk(w http.ResponseWriter, r *http.Request) 
 
 	err := produk.DeleteProduk(idToko, idProduk)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Data telah dihapus!"}`))
+	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
 }

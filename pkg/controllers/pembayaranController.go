@@ -60,7 +60,7 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Pembayaran telah terkirim."}`))
+	w.Write([]byte(`{"message":"Pembayaran telah terkirim."}`))
 }
 
 // KonfirmasiPembayaran is func
@@ -114,5 +114,5 @@ func (pc PembayaranController) KonfirmasiPembayaran(w http.ResponseWriter, r *ht
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Pembayaran telah dikonfirmasi."}`))
+	w.Write([]byte(`{"message":"Pembayaran telah dikonfirmasi."}`))
 }

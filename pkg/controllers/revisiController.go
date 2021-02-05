@@ -36,5 +36,5 @@ func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Revisi telah terkirim."}`))
+	w.Write([]byte(`{"message":"Revisi telah terkirim."}`))
 }

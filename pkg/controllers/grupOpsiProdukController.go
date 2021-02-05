@@ -41,7 +41,7 @@ func (gopc GrupOpsiProdukController) SambungGrupOpsikeProduk(w http.ResponseWrit
 	_, errP := produk.GetProduk(idToko, idProduk)        // produk not found
 	_, errGo := grupOpsi.GetGrupOpsi(idToko, idGrupOpsi) // grup opsi tidak ditemukan
 	if errP != nil || errGo != nil {
-		http.Error(w, "Gagal! Terjadi kesalahan.", http.StatusBadRequest)
+		http.Error(w, "Terjadi kesalahan.", http.StatusBadRequest)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (gopc GrupOpsiProdukController) SambungGrupOpsikeProduk(w http.ResponseWrit
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Berhasil disambungkan."}`))
+	w.Write([]byte(`{"message":"Berhasil disambungkan."}`))
 }
 
 // PutusGrupOpsidiProduk is func
@@ -67,7 +67,7 @@ func (gopc GrupOpsiProdukController) PutusGrupOpsidiProduk(w http.ResponseWriter
 
 	_, err := produk.GetProduk(idToko, idProduk)
 	if err != nil {
-		http.Error(w, "Gagal! Tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
@@ -79,5 +79,5 @@ func (gopc GrupOpsiProdukController) PutusGrupOpsidiProduk(w http.ResponseWriter
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Sambungan telah terputus."}`))
+	w.Write([]byte(`{"message":"Sambungan telah terputus."}`))
 }

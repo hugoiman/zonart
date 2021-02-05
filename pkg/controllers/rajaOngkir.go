@@ -10,16 +10,22 @@ import (
 
 // RajaOngkir is class
 type RajaOngkir struct {
+	baseURL string
+	apiKey  string
 }
 
-const baseURL = "https://api.rajaongkir.com/starter"
-const apiKey = "1999918691cd6b4137c9ec218333e3e2"
+// SetVariable is setter
+func (rj *RajaOngkir) SetVariable() {
+	rj.baseURL = "https://api.rajaongkir.com/starter"
+	rj.apiKey = "1999918691cd6b4137c9ec218333e3e2"
+}
 
 // GetIDKota is func
 func (rj RajaOngkir) GetIDKota(kota string) (string, bool) {
-	url := baseURL + "/city"
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("key", apiKey)
+	rj.SetVariable()
+	uRL := rj.baseURL + "/city"
+	req, _ := http.NewRequest("GET", uRL, nil)
+	req.Header.Add("key", rj.apiKey)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", false
@@ -37,12 +43,13 @@ func (rj RajaOngkir) GetIDKota(kota string) (string, bool) {
 
 // GetOngkir is func
 func (rj RajaOngkir) GetOngkir(asal, tujuan, kodeKurir, service, berat string) (int, string, string, bool) {
-	url := baseURL + "/cost"
+	rj.SetVariable()
+	uRL := rj.baseURL + "/cost"
 	payload := strings.NewReader("origin=" + asal + "&destination=" + tujuan + "&weight=" + berat + "&courier=" + kodeKurir)
-	req, _ := http.NewRequest("POST", url, payload)
+	req, _ := http.NewRequest("POST", uRL, payload)
 
-	req.Header.Add("key", apiKey)
-	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+	req.Header.Add("key", rj.apiKey)
+	req.Header.Add("content-type", "application/x-www-form-uRLencoded")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 0, "", "", false

@@ -7,7 +7,7 @@ import (
 // Customer is class
 type Customer struct {
 	IDCustomer int    `json:"idCustomer"`
-	Username   string `json:"username" validate:"required"`
+	Username   string `json:"username" validate:"required,min=3,max=20"`
 	Email      string `json:"email" validate:"required,email"`
 	Nama       string `json:"nama" validate:"required"`
 }

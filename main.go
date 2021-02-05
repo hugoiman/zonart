@@ -15,7 +15,9 @@ import (
 
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
+	headers := handlers.AllowedHeaders([]string{"Origin", "Accept", "Keep-Alive", "User-Agent", "If-Modified-Since", "Cache-Control", "Referer", "Authorization", "Content-Type", "X-Requested-With"})
 	origins := handlers.AllowedOrigins([]string{"*"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT", "HEAD"})
 
 	api := router.PathPrefix("").Subrouter()
 
@@ -45,6 +47,7 @@ func main() {
 	router.HandleFunc("/api/login", auth.Login).Methods("POST")
 	router.HandleFunc("/api/register", customer.Register).Methods("POST")
 	router.HandleFunc("/api/reset-password", auth.ResetPassword).Methods("POST")
+	router.HandleFunc("/api/verification-reset-password", auth.VerificationResetPassword).Methods("POST")
 
 	api.HandleFunc("/api/customer", customer.GetCustomer).Methods("GET")
 	api.HandleFunc("/api/customer", customer.UpdateProfil).Methods("PUT")
@@ -131,5 +134,5 @@ func main() {
 	port := "8080"
 
 	fmt.Println("Server running at :", port)
-	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS(origins)(router)))
+	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS(origins, headers, methods)(router)))
 }

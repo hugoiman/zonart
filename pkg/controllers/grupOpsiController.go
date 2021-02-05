@@ -68,16 +68,16 @@ func (goc GrupOpsiController) CreateGrupOpsi(w http.ResponseWriter, r *http.Requ
 	}
 
 	if grupOpsi.Required == false && grupOpsi.Min != 0 {
-		http.Error(w, "Gagal! Jika pilihan tidak wajib diisi, maka minimal pilihan harus 0", http.StatusBadRequest)
+		http.Error(w, "Jika pilihan tidak wajib diisi, maka minimal pilihan harus 0", http.StatusBadRequest)
 		return
 	} else if grupOpsi.Required == true && grupOpsi.Min < 1 {
-		http.Error(w, "Gagal! Jika pilihan wajib diisi, maka minimal pilihan setidaknya 1", http.StatusBadRequest)
+		http.Error(w, "Jika pilihan wajib diisi, maka minimal pilihan setidaknya 1", http.StatusBadRequest)
 		return
 	} else if grupOpsi.Max > totalOpsi {
-		http.Error(w, "Gagal! Maksimal jumlah memilih melebihi batas jumlah opsi", http.StatusBadRequest)
+		http.Error(w, "Maksimal jumlah memilih melebihi batas jumlah opsi", http.StatusBadRequest)
 		return
 	} else if grupOpsi.Min > grupOpsi.Max {
-		http.Error(w, "Gagal! Minimal jumlah memilih harus kurang dari samadengan maksimal jumlah memilih", http.StatusBadRequest)
+		http.Error(w, "Minimal jumlah memilih harus kurang dari samadengan maksimal jumlah memilih", http.StatusBadRequest)
 		return
 	}
 
@@ -89,7 +89,7 @@ func (goc GrupOpsiController) CreateGrupOpsi(w http.ResponseWriter, r *http.Requ
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! GrupOpsi telah ditambahkan.","idGrupOpsi":"` + strconv.Itoa(idGrupOpsi) + `"}`))
+	w.Write([]byte(`{"message":"GrupOpsi telah ditambahkan.","idGrupOpsi":"` + strconv.Itoa(idGrupOpsi) + `"}`))
 }
 
 // UpdateGrupOpsi is func
@@ -114,16 +114,16 @@ func (goc GrupOpsiController) UpdateGrupOpsi(w http.ResponseWriter, r *http.Requ
 	}
 
 	if grupOpsi.Required == false && grupOpsi.Min != 0 {
-		http.Error(w, "Gagal! Jika pilihan tidak wajib diisi, maka minimal pilihan harus 0", http.StatusBadRequest)
+		http.Error(w, "Jika pilihan tidak wajib diisi, maka minimal pilihan harus 0", http.StatusBadRequest)
 		return
 	} else if grupOpsi.Required == true && grupOpsi.Min < 1 {
-		http.Error(w, "Gagal! Jika pilihan wajib diisi, maka minimal pilihan setidaknya 1", http.StatusBadRequest)
+		http.Error(w, "Jika pilihan wajib diisi, maka minimal pilihan setidaknya 1", http.StatusBadRequest)
 		return
 	} else if grupOpsi.Max > totalOpsi {
-		http.Error(w, "Gagal! Maksimal jumlah memilih melebihi batas jumlah opsi", http.StatusBadRequest)
+		http.Error(w, "Maksimal jumlah memilih melebihi batas jumlah opsi", http.StatusBadRequest)
 		return
 	} else if grupOpsi.Min > grupOpsi.Max {
-		http.Error(w, "Gagal! Minimal jumlah memilih harus kurang dari samadengan maksimal memilih", http.StatusBadRequest)
+		http.Error(w, "Minimal jumlah memilih harus kurang dari samadengan maksimal memilih", http.StatusBadRequest)
 		return
 	}
 
@@ -139,7 +139,7 @@ func (goc GrupOpsiController) UpdateGrupOpsi(w http.ResponseWriter, r *http.Requ
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! GrupOpsi telah diperbarui."}`))
+	w.Write([]byte(`{"message":"GrupOpsi telah diperbarui."}`))
 }
 
 // DeleteGrupOpsi is func
@@ -151,11 +151,11 @@ func (goc GrupOpsiController) DeleteGrupOpsi(w http.ResponseWriter, r *http.Requ
 
 	err := grupOpsi.DeleteGrupOpsi(idToko, idGrupOpsi)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Data telah dihapus!"}`))
+	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
 }

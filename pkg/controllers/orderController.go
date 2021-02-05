@@ -106,17 +106,17 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var produk models.Produk
 	dataProduk, err := produk.GetProduk(idToko, idProduk)
 	if err != nil {
-		http.Error(w, "Gagal! Produk tidak ditemukan", http.StatusBadRequest)
+		http.Error(w, "Produk tidak ditemukan", http.StatusBadRequest)
 		return
 	}
 
 	for _, vGrupOpsi := range dataProduk.GrupOpsi {
 		totalOpsiGrup := gjson.Get(string(grupOpsi), "opsiOrder.#(idGrupOpsi=="+strconv.Itoa(vGrupOpsi.IDGrupOpsi)+")#").Array()
 		if len(totalOpsiGrup) < vGrupOpsi.Min {
-			http.Error(w, "Gagal! "+vGrupOpsi.NamaGrup+" kurang dari batas minimal", http.StatusBadRequest)
+			http.Error(w, ""+vGrupOpsi.NamaGrup+" kurang dari batas minimal", http.StatusBadRequest)
 			return
 		} else if len(totalOpsiGrup) > vGrupOpsi.Max {
-			http.Error(w, "Gagal! "+vGrupOpsi.NamaGrup+" melebihi batas maksimal", http.StatusBadRequest)
+			http.Error(w, ""+vGrupOpsi.NamaGrup+" melebihi batas maksimal", http.StatusBadRequest)
 			return
 		}
 	}
@@ -188,7 +188,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		order.Pengiriman.Ongkir = ongkir
 		order.Pengiriman.Estimasi = estimasi
 	} else {
-		http.Error(w, "Gagal! Terjadi kesalahan. Mohon periksa data pengiriman.", http.StatusBadRequest)
+		http.Error(w, "Terjadi kesalahan. Mohon periksa data pengiriman.", http.StatusBadRequest)
 		return
 	}
 
@@ -223,7 +223,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Mohon tunggu konfirmasi kami. Terimakasih.","idOrder":"` + strconv.Itoa(idOrder) + `"}`))
+	w.Write([]byte(`{"message":"Mohon tunggu konfirmasi kami. Terimakasih.","idOrder":"` + strconv.Itoa(idOrder) + `"}`))
 }
 
 // HitungHargaBeratOpsi is func
@@ -392,7 +392,7 @@ func (oc OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
 
 	dataOrder, _ := order.GetOrder(idOrder)
 	if dataOrder.StatusPesanan != "menunggu konfirmasi" {
-		http.Error(w, "Gagal! Pesanan sedang diproses.", http.StatusBadRequest)
+		http.Error(w, "Pesanan sedang diproses.", http.StatusBadRequest)
 		return
 	}
 
@@ -417,7 +417,7 @@ func (oc OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Pesanan telah dibatalkan"}`))
+	w.Write([]byte(`{"message":"Pesanan telah dibatalkan"}`))
 }
 
 // FinishOrder is func
@@ -455,5 +455,5 @@ func (oc OrderController) FinishOrder(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Pesanan telah dibatalkan"}`))
+	w.Write([]byte(`{"message":"Pesanan telah dibatalkan"}`))
 }

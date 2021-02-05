@@ -19,12 +19,12 @@ func (rc RekeningController) DeleteRekening(w http.ResponseWriter, r *http.Reque
 
 	err := rekening.DeleteRekening(idToko, idRekening)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Data telah dihapus!"}`))
+	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
 
 }

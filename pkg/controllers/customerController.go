@@ -43,10 +43,10 @@ func (cc CustomerController) Register(w http.ResponseWriter, r *http.Request) {
 	var customer models.Customer
 
 	data := struct {
-		Username string `json:"username" validate:"required"`
+		Username string `json:"username" validate:"required,min=3"`
 		Email    string `json:"email"  validate:"required,email"`
 		Nama     string `json:"nama" validate:"required"`
-		Password string `json:"password" validate:"required"`
+		Password string `json:"password" validate:"required,min=5"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -101,19 +101,20 @@ func (cc CustomerController) ChangePassword(w http.ResponseWriter, r *http.Reque
 	var customer models.Customer
 	user := context.Get(r, "user").(*MyClaims)
 
-	var data map[string]interface{}
-	json.NewDecoder(r.Body).Decode(&data)
-
-	if err := validator.New().Var(fmt.Sprintf("%v", data["newPassword"]), "required,min=6,max=18"); err != nil {
+	data := struct {
+		NewPassword string `json:"newPassword" validate:"required"`
+		OldPassword string `json:"oldPassword"  validate:"required"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Var(fmt.Sprintf("%v", data["oldPassword"]), "required,min=6,max=18"); err != nil {
+	} else if err := validator.New().Struct(data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var oldPass = sha1.New()
-	oldPass.Write([]byte(fmt.Sprintf("%v", data["oldPassword"])))
+	oldPass.Write([]byte(data.OldPassword))
 	var encryptedOldPass = fmt.Sprintf("%x", oldPass.Sum(nil))
 
 	isValid := models.CheckOldPassword(user.IDCustomer, encryptedOldPass)
@@ -123,7 +124,7 @@ func (cc CustomerController) ChangePassword(w http.ResponseWriter, r *http.Reque
 	}
 
 	var newPass = sha1.New()
-	newPass.Write([]byte(fmt.Sprintf("%v", data["newPassword"])))
+	newPass.Write([]byte(data.NewPassword))
 	var encryptedPass = fmt.Sprintf("%x", newPass.Sum(nil))
 
 	_ = customer.UpdatePassword(user.IDCustomer, encryptedPass)

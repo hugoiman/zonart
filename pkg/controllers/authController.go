@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"time"
 	"zonart/internal/gomail"
@@ -17,6 +16,13 @@ import (
 
 // MyClaims is credential
 type MyClaims = mw.MyClaims
+
+// ClaimsResetPassword is Credential
+type ClaimsResetPassword struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	jwt.StandardClaims
+}
 
 // AuthController is class
 type AuthController struct{}
@@ -41,14 +47,14 @@ func (auth AuthController) Login(w http.ResponseWriter, r *http.Request) {
 
 	idCustomer, err := login.Login()
 	if err != nil {
-		http.Error(w, "Gagal! Username atau password salah.", http.StatusBadRequest)
+		http.Error(w, "Username atau password salah.", http.StatusBadRequest)
 		return
 	}
 
 	var customer models.Customer
 	data, err := customer.GetCustomer(idCustomer)
 	if err != nil {
-		http.Error(w, "Gagal! Terjadi error.", http.StatusInternalServerError)
+		http.Error(w, "Terjadi error.", http.StatusInternalServerError)
 		return
 	}
 
@@ -81,46 +87,93 @@ func (auth AuthController) CreateToken(customer models.Customer) string {
 
 // ResetPassword is func
 func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
-	var dataJSON map[string]interface{}
-	json.NewDecoder(r.Body).Decode(&dataJSON)
-
-	email := fmt.Sprintf("%v", dataJSON["email"])
-	var customer models.Customer
-
-	if err := validator.New().Var(email, "required,email"); err != nil {
+	data := struct {
+		Email       string `json:"email"  validate:"required,email"`
+		NewPassword string `json:"newPassword" validate:"required,min=6"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if err := validator.New().Struct(data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	data, err := customer.GetCustomer(email)
+	var customer models.Customer
+	dataCustomer, err := customer.GetCustomer(data.Email)
 	if err != nil {
 		http.Error(w, "User tidak ditemukan", http.StatusBadRequest)
 		return
 	}
 
-	// Generate Random String
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-	randomStr := make([]rune, 10)
-	for i := range randomStr {
-		randomStr[i] = letters[rand.Intn(len(letters))]
+	// Generate token
+	var mySigningKey = mw.MySigningKey
+	claims := ClaimsResetPassword{
+		Email:    data.Email,
+		Password: data.NewPassword,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		},
 	}
-	newPass := string(randomStr)
 
-	var pass = sha1.New()
-	pass.Write([]byte(newPass))
-	var encryptedPass = fmt.Sprintf("%x", pass.Sum(nil))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, _ := token.SignedString(mySigningKey)
+	link := "http://localhost:5500/pages/verifikasi-reset-password.html?token=" + tokenString
 
-	_ = customer.UpdatePassword(data.IDCustomer, encryptedPass)
-
-	message := "Hallo " + data.Nama + ", your new password is <b>" + newPass + "</b>"
-	err = gomail.SendEmail("New Password", email, message)
+	message := "Hallo " + dataCustomer.Nama + ",<br> Silahkan klik link dibawah ini untuk verifikasi. Link ini akan kadaluarsa dalam waktu 15 menit.<br><br>" + link
+	err = gomail.SendEmail("Reset Password", data.Email, message)
 	if err != nil {
-		http.Error(w, "Gagal! Coba beberapa saat lagi.", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"New password has been sent to your email"}`))
+	w.Write([]byte(`{"message":"Link verifikasi telah terkirim. Silahkan periksa email anda."}`))
 }
+
+// VerificationResetPassword is func
+func (auth AuthController) VerificationResetPassword(w http.ResponseWriter, r *http.Request) {
+	data := struct {
+		Token string `json:"token"  validate:"required"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if err := validator.New().Struct(data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	claimsResetPassword := &ClaimsResetPassword{}
+
+	token, err := jwt.ParseWithClaims(data.Token, claimsResetPassword, func(token *jwt.Token) (interface{}, error) {
+		return mw.MySigningKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, "Token invalid: "+err.Error(), http.StatusBadRequest) // Token expired/key tidak cocok(invalid)
+		return
+	}
+
+	var customer models.Customer
+	dataCustomer, err := customer.GetCustomer(claimsResetPassword.Email)
+	if err != nil {
+		http.Error(w, "User tidak ditemukan", http.StatusBadRequest)
+		return
+	}
+
+	//  Enkripsi Password
+	var pass = sha1.New()
+	pass.Write([]byte(claimsResetPassword.Password))
+	var encryptedPassword = fmt.Sprintf("%x", pass.Sum(nil))
+
+	//  Update Password
+	_ = customer.UpdatePassword(dataCustomer.IDCustomer, encryptedPassword)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Berhasil diverifikasi. Silahkan melakukan login."}`))
+}
+
+// Logout is func

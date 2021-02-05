@@ -37,5 +37,5 @@ func (rc PengirimanController) SetResi(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Nomor resi telah disimpan."}`))
+	w.Write([]byte(`{"message":"Nomor resi telah disimpan."}`))
 }

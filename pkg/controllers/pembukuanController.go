@@ -50,7 +50,7 @@ func (pc PembukuanController) CreatePengeluaran(w http.ResponseWriter, r *http.R
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Pengeluaran telah ditambahkan."}`))
+	w.Write([]byte(`{"message":"Pengeluaran telah ditambahkan."}`))
 }
 
 // DeletePengeluaran is func
@@ -62,12 +62,12 @@ func (pc PembukuanController) DeletePengeluaran(w http.ResponseWriter, r *http.R
 
 	err := pembukuan.DeletePengeluaran(idToko, idPembukuan)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Data telah dihapus!"}`))
+	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
 
 }

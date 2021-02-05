@@ -35,7 +35,7 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if dataOrder.StatusPesanan == "selesai" {
-		http.Error(w, "Gagal! Pesanan telah selesai.", http.StatusBadRequest)
+		http.Error(w, "Status pesanan telah selesai.", http.StatusBadRequest)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Biaya tambahan telah ditambahkan."}`))
+	w.Write([]byte(`{"message":"Biaya tambahan telah ditambahkan."}`))
 }
 
 // DeleteBiayaTambahan is func
@@ -79,22 +79,22 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 
 	dataOrder, err := order.GetOrder(idOrder)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	} else if dataOrder.StatusPesanan == "selesai" {
-		http.Error(w, "Gagal! Pesanan telah selesai.", http.StatusBadRequest)
+		http.Error(w, "Pesanan telah selesai.", http.StatusBadRequest)
 		return
 	}
 
 	dataBT, err := bt.GetBiayaTambahan(idBiayaTambahan, idOrder)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
 	err = dataBT.DeleteBiayaTambahan(idBiayaTambahan, idOrder)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
@@ -119,6 +119,6 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Data telah dihapus!"}`))
+	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
 
 }

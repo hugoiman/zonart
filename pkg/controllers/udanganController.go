@@ -85,7 +85,7 @@ func (uc UndanganController) UndangKaryawan(w http.ResponseWriter, r *http.Reque
 	dataToko, _ := toko.GetToko(idToko)
 
 	if dataCustomer.IDCustomer == dataToko.IDOwner {
-		http.Error(w, "Gagal! Anda adalah pemilik dari toko ini.", http.StatusBadRequest)
+		http.Error(w, "Anda adalah pemilik dari toko ini.", http.StatusBadRequest)
 		return
 	}
 
@@ -192,7 +192,7 @@ func (uc UndanganController) TerimaUndangan(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses!"}`))
+	w.Write([]byte(`{"message":""}`))
 }
 
 // BatalkanUndangan is func
@@ -209,7 +209,7 @@ func (uc UndanganController) BatalkanUndangan(w http.ResponseWriter, r *http.Req
 		http.Error(w, "Undangan tidak ditemukan", http.StatusBadRequest)
 		return
 	} else if dataUndangan.Status != "menunggu" {
-		http.Error(w, "Gagal! Undangan hanya dapat dibatalkan jika status undangan adalah MENUNGGU.", http.StatusBadRequest)
+		http.Error(w, "Undangan hanya dapat dibatalkan jika status undangan adalah MENUNGGU.", http.StatusBadRequest)
 		return
 	}
 

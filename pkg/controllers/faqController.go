@@ -69,7 +69,7 @@ func (fc FaqController) CreateFaq(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! FAQ telah ditambahkan."}`))
+	w.Write([]byte(`{"message":"FAQ telah ditambahkan."}`))
 }
 
 // DeleteFaq is func
@@ -81,12 +81,12 @@ func (fc FaqController) DeleteFaq(w http.ResponseWriter, r *http.Request) {
 
 	err := faq.DeleteFaq(idToko, idFaq)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Data telah dihapus!"}`))
+	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
 
 }

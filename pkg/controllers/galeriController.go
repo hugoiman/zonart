@@ -48,7 +48,7 @@ func (gc GaleriController) CreateGaleri(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Gambar telah ditambahkan."}`))
+	w.Write([]byte(`{"message":"Gambar telah ditambahkan."}`))
 }
 
 // DeleteGaleri is func
@@ -60,12 +60,12 @@ func (gc GaleriController) DeleteGaleri(w http.ResponseWriter, r *http.Request) 
 
 	err := galeri.DeleteGaleri(idToko, idGaleri)
 	if err != nil {
-		http.Error(w, "Gagal! Data tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses! Data telah dihapus!"}`))
+	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
 
 }

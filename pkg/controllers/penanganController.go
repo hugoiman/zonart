@@ -37,10 +37,10 @@ func (pc PenanganController) SetPenangan(w http.ResponseWriter, r *http.Request)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if dataKaryawan.Status != "aktif" {
-		http.Error(w, "Gagal! Status karyawan tidak aktif.", http.StatusBadRequest)
+		http.Error(w, "Status karyawan tidak aktif.", http.StatusBadRequest)
 		return
 	} else if dataKaryawan.Posisi != "editor" {
-		http.Error(w, "Gagal! Posisi karyawan bukanlah editor.", http.StatusBadRequest)
+		http.Error(w, "Posisi karyawan bukanlah editor.", http.StatusBadRequest)
 		return
 	}
 
