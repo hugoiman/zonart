@@ -29,7 +29,7 @@ func (pc PenggajianController) GetGajis(w http.ResponseWriter, r *http.Request) 
 // CreateGaji is func
 func (pc PenggajianController) CreateGaji(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	idOrder := vars["idOrder"]
+	idToko := vars["idToko"]
 
 	var penggajian models.Penggajian
 
@@ -41,7 +41,7 @@ func (pc PenggajianController) CreateGaji(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err := penggajian.CreateGaji(idOrder)
+	err := penggajian.CreateGaji(idToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

@@ -25,6 +25,6 @@ func (rc RekeningController) DeleteRekening(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
+	w.Write([]byte(`{"message":"Rekening telah dihapus!"}`))
 
 }

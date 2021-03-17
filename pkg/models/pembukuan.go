@@ -9,7 +9,7 @@ import (
 type Pembukuan struct {
 	IDPembukuan  int    `json:"idPembukuan"`
 	IDToko       int    `json:"idToko"`
-	Jenis        string `json:"jenis"`
+	Jenis        string `json:"jenis" validate:"required"`
 	Keterangan   string `json:"keterangan" validate:"required"`
 	Nominal      int    `json:"nominal" validate:"required"`
 	TglTransaksi string `json:"tglTransaksi" validate:"required"`
@@ -53,10 +53,10 @@ func (p Pembukuan) CreatePembukuan(idToko string) error {
 	return err
 }
 
-// DeletePengeluaran is func
-func (p Pembukuan) DeletePengeluaran(idToko, idPembukuan string) error {
+// DeletePembukuan is func
+func (p Pembukuan) DeletePembukuan(idToko, idPembukuan string) error {
 	con := db.Connect()
-	query := "DELETE FROM pembukuan WHERE idToko = ? AND idPembukuan = ? AND jenis = 'pengeluaran'"
+	query := "DELETE FROM pembukuan WHERE idToko = ? AND idPembukuan = ?"
 	_, err := con.Exec(query, idToko, idPembukuan)
 
 	defer con.Close()

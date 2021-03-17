@@ -10,22 +10,25 @@ type GrupOpsi struct {
 	IDGrupOpsi      int    `json:"idGrupOpsi"`
 	IDToko          int    `json:"idToko"`
 	NamaGrup        string `json:"namaGrup" validate:"required"`
+	Deskripsi       string `json:"deskripsi"`
 	Required        bool   `json:"required"`
 	Min             int    `json:"min"`
 	Max             int    `json:"max"`
 	SpesificRequest bool   `json:"spesificRequest"`
+	HardCopy        bool   `json:"hardcopy"`
+	SoftCopy        bool   `json:"softcopy"`
 	Opsi            []Opsi `json:"opsi" validate:"dive"`
 }
 
 // GrupOpsis is list of grupOpsi
 type GrupOpsis struct {
-	GrupOpsis []GrupOpsi `json:"grupOpsi"`
+	GrupOpsis []GrupOpsi `json:"grupopsi"`
 }
 
 // GetGrupOpsis is func
 func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) GrupOpsis {
 	con := db.Connect()
-	query := "SELECT idGrupOpsi, idToko, namaGrup, required, min, max, spesificRequest FROM grupOpsi WHERE idToko = ?"
+	query := "SELECT idGrupOpsi, idToko, namaGrup, deskripsi, required, min, max, spesificRequest, hardcopy, softcopy FROM grupOpsi WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var grupOpsis GrupOpsis
@@ -33,7 +36,7 @@ func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) GrupOpsis {
 
 	for rows.Next() {
 		rows.Scan(
-			&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest,
+			&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy,
 		)
 
 		grupOpsi.Opsi = opsi.GetOpsis(strconv.Itoa(grupOpsi.IDGrupOpsi))
@@ -48,10 +51,10 @@ func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) GrupOpsis {
 // GetGrupOpsi is func
 func (grupOpsi GrupOpsi) GetGrupOpsi(idToko, idGrupOpsi string) (GrupOpsi, error) {
 	con := db.Connect()
-	query := "SELECT idGrupOpsi, idToko, namaGrup, required, min, max, spesificRequest FROM grupOpsi WHERE idToko = ? AND idGrupOpsi = ?"
+	query := "SELECT idGrupOpsi, idToko, namaGrup, deskripsi, required, min, max, spesificRequest, hardcopy, softcopy FROM grupOpsi WHERE idToko = ? AND idGrupOpsi = ?"
 
 	err := con.QueryRow(query, idToko, idGrupOpsi).Scan(
-		&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest)
+		&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy)
 
 	var opsi Opsi
 	grupOpsi.Opsi = opsi.GetOpsis(idGrupOpsi)
@@ -64,7 +67,7 @@ func (grupOpsi GrupOpsi) GetGrupOpsi(idToko, idGrupOpsi string) (GrupOpsi, error
 // GetGrupOpsiProduk is get all grup opsi in a produk
 func (grupOpsi GrupOpsi) GetGrupOpsiProduk(idToko, idProduk string) []GrupOpsi {
 	con := db.Connect()
-	query := "SELECT a.idGrupOpsi, a.idToko, a.namaGrup, a.required, a.min, a.max, a.spesificRequest FROM grupOpsi a JOIN grupOpsiProduk b ON a.idGrupOpsi = b.idGrupOpsi WHERE b.idProduk = ? AND a.idToko = ?"
+	query := "SELECT a.idGrupOpsi, a.idToko, a.namaGrup, a.deskripsi, a.required, a.min, a.max, a.spesificRequest, hardcopy, softcopy FROM grupOpsi a JOIN grupOpsiProduk b ON a.idGrupOpsi = b.idGrupOpsi WHERE b.idProduk = ? AND a.idToko = ?"
 	rows, _ := con.Query(query, idProduk, idToko)
 
 	var gop []GrupOpsi
@@ -72,7 +75,7 @@ func (grupOpsi GrupOpsi) GetGrupOpsiProduk(idToko, idProduk string) []GrupOpsi {
 
 	for rows.Next() {
 		rows.Scan(
-			&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest,
+			&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy,
 		)
 
 		grupOpsi.Opsi = opsi.GetOpsis(strconv.Itoa(grupOpsi.IDGrupOpsi))
@@ -87,8 +90,8 @@ func (grupOpsi GrupOpsi) GetGrupOpsiProduk(idToko, idProduk string) []GrupOpsi {
 // CreateGrupOpsi is func
 func (grupOpsi GrupOpsi) CreateGrupOpsi(idToko string) (int, error) {
 	con := db.Connect()
-	query := "INSERT INTO grupOpsi (idToko, namaGrup, required, min, max, spesificRequest) VALUES (?,?,?,?,?,?)"
-	exec, err := con.Exec(query, idToko, grupOpsi.NamaGrup, grupOpsi.Required, grupOpsi.Min, grupOpsi.Max, grupOpsi.SpesificRequest)
+	query := "INSERT INTO grupOpsi (idToko, namaGrup, deskripsi, required, min, max, spesificRequest, hardcopy, softcopy) VALUES (?,?,?,?,?,?,?,?,?)"
+	exec, err := con.Exec(query, idToko, grupOpsi.NamaGrup, grupOpsi.Deskripsi, grupOpsi.Required, grupOpsi.Min, grupOpsi.Max, grupOpsi.SpesificRequest, grupOpsi.HardCopy, grupOpsi.SoftCopy)
 
 	if err != nil {
 		return 0, err
@@ -113,8 +116,8 @@ func (grupOpsi GrupOpsi) CreateGrupOpsi(idToko string) (int, error) {
 // UpdateGrupOpsi is func
 func (grupOpsi GrupOpsi) UpdateGrupOpsi(idToko, idGrupOpsi string) error {
 	con := db.Connect()
-	query := "UPDATE grupOpsi SET namaGrup = ?, required = ?, min = ?, max = ?, spesificRequest = ? WHERE idToko = ? AND idGrupOpsi = ?"
-	_, err := con.Exec(query, grupOpsi.NamaGrup, grupOpsi.Required, grupOpsi.Min, grupOpsi.Max, grupOpsi.SpesificRequest, idToko, idGrupOpsi)
+	query := "UPDATE grupOpsi SET namaGrup = ?, deskripsi = ?, required = ?, min = ?, max = ?, spesificRequest = ?, hardcopy = ?, softcopy = ? WHERE idToko = ? AND idGrupOpsi = ?"
+	_, err := con.Exec(query, grupOpsi.NamaGrup, grupOpsi.Deskripsi, grupOpsi.Required, grupOpsi.Min, grupOpsi.Max, grupOpsi.SpesificRequest, grupOpsi.HardCopy, grupOpsi.SoftCopy, idToko, idGrupOpsi)
 
 	defer con.Close()
 

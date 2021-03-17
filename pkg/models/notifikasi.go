@@ -25,7 +25,7 @@ type Notifikasis struct {
 // GetNotifikasis is func
 func (n Notifikasi) GetNotifikasis(idCustomer string) Notifikasis {
 	con := db.Connect()
-	query := "SELECT idNotifikasi, pengirim, judul, pesan, link, dibaca, createdAt FROM notifikasi WHERE idPenerima = ?"
+	query := "SELECT idNotifikasi, pengirim, judul, pesan, link, dibaca, createdAt FROM notifikasi WHERE idPenerima = ? ORDER BY idNotifikasi DESC"
 	rows, _ := con.Query(query, idCustomer)
 
 	var notifikasis Notifikasis
@@ -46,22 +46,23 @@ func (n Notifikasi) GetNotifikasis(idCustomer string) Notifikasis {
 }
 
 // CreateNotifikasi is func
-func (n Notifikasi) CreateNotifikasi() {
+func (n Notifikasi) CreateNotifikasi() error {
 	con := db.Connect()
 	query := "INSERT INTO notifikasi (idPenerima, pengirim, judul, pesan, link, createdAt) VALUES (?,?,?,?,?,?)"
-
+	var err error
 	for _, vIDPenerima := range n.IDPenerima {
-		_, _ = con.Exec(query, vIDPenerima, n.Pengirim, n.Judul, n.Pesan, n.Link, n.CreatedAt)
+		_, err = con.Exec(query, vIDPenerima, n.Pengirim, n.Judul, n.Pesan, n.Link, n.CreatedAt)
 	}
 
 	defer con.Close()
+	return err
 }
 
 // ReadNotifikasi is func
-func (n Notifikasi) ReadNotifikasi(idNotifikasi, idPenerima string) error {
+func (n Notifikasi) ReadNotifikasi(idPenerima string) error {
 	con := db.Connect()
-	query := "UPDATE notifikasi SET dibaca = 1 WHERE idNotifikasi = ? AND idPenerima = ?"
-	_, err := con.Exec(query, idNotifikasi, idPenerima)
+	query := "UPDATE notifikasi SET dibaca = 1 WHERE idPenerima = ?"
+	_, err := con.Exec(query, idPenerima)
 
 	defer con.Close()
 

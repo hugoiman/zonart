@@ -7,7 +7,6 @@ import (
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
-	"github.com/gorilla/mux"
 )
 
 // NotifikasiController is class
@@ -30,14 +29,12 @@ func (nc NotifikasiController) GetNotifikasis(w http.ResponseWriter, r *http.Req
 // ReadNotifikasi is func
 func (nc NotifikasiController) ReadNotifikasi(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
-	vars := mux.Vars(r)
 
-	idNotifikasi := vars["idNotifikasi"]
 	idPenerima := user.IDCustomer
 
 	var notifikasi models.Notifikasi
 
-	_ = notifikasi.ReadNotifikasi(idNotifikasi, strconv.Itoa(idPenerima))
+	_ = notifikasi.ReadNotifikasi(strconv.Itoa(idPenerima))
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

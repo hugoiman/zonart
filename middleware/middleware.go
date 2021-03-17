@@ -159,20 +159,24 @@ func (mw MiddleWare) OwnerAdminOrder(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// EditorOrder is middleware
-func (mw MiddleWare) EditorOrder(next http.HandlerFunc) http.HandlerFunc {
+// PenanganOrder is middleware
+func (mw MiddleWare) PenanganOrder(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		idOrder := vars["idOrder"]
+
 		var order models.Order
+		var toko models.Toko
 
 		user := context.Get(r, "user").(*MyClaims)
 
-		dataOrder, err := order.GetOrder(idOrder)
+		dataOrder, _ := order.GetOrder(idOrder)
+		dataToko, err := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
+		
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		} else if dataOrder.Penangan.IDPenangan != user.IDCustomer {
+		} else if user.IDCustomer != dataToko.IDOwner && dataOrder.Penangan.IDPenangan != user.IDCustomer {
 			http.Error(w, "Gagal! Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
 			return
 		}

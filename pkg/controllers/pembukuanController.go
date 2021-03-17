@@ -26,8 +26,8 @@ func (pc PembukuanController) GetPembukuans(w http.ResponseWriter, r *http.Reque
 	w.Write(message)
 }
 
-// CreatePengeluaran is func
-func (pc PembukuanController) CreatePengeluaran(w http.ResponseWriter, r *http.Request) {
+// CreatePembukuan is func
+func (pc PembukuanController) CreatePembukuan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	var pembukuan models.Pembukuan
@@ -40,8 +40,6 @@ func (pc PembukuanController) CreatePengeluaran(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	pembukuan.Jenis = "pengeluaran"
-
 	err := pembukuan.CreatePembukuan(idToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -50,17 +48,17 @@ func (pc PembukuanController) CreatePengeluaran(w http.ResponseWriter, r *http.R
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Pengeluaran telah ditambahkan."}`))
+	w.Write([]byte(`{"message":"Data telah ditambahkan."}`))
 }
 
-// DeletePengeluaran is func
-func (pc PembukuanController) DeletePengeluaran(w http.ResponseWriter, r *http.Request) {
+// DeletePembukuan is func
+func (pc PembukuanController) DeletePembukuan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 	idPembukuan := vars["idPembukuan"]
 	var pembukuan models.Pembukuan
 
-	err := pembukuan.DeletePengeluaran(idToko, idPembukuan)
+	err := pembukuan.DeletePembukuan(idToko, idPembukuan)
 	if err != nil {
 		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
 		return

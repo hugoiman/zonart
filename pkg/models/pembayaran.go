@@ -33,7 +33,7 @@ func (p Pembayaran) GetPembayarans(idOrder string) []Pembayaran {
 	con := db.Connect()
 	var ps []Pembayaran
 
-	query := "SELECT idPembayaran, idOrder, bukti, nominal, status, createdAt WHERE idOrder = ?"
+	query := "SELECT idPembayaran, idOrder, bukti, nominal, status, createdAt FROM pembayaran WHERE idOrder = ?"
 
 	var createdAt time.Time
 	rows, _ := con.Query(query, idOrder)

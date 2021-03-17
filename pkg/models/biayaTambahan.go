@@ -7,16 +7,17 @@ type BiayaTambahan struct {
 	IDBiayaTambahan int    `json:"idBiayaTambahan"`
 	IDOrder         int    `json:"idOrder"`
 	Item            string `json:"item" validate:"required"`
-	Nominal         int    `json:"nominal" validate:"required"`
+	Berat           string `json:"berat"`
+	Total           int    `json:"total" validate:"required"`
 }
 
 // GetBiayaTambahan is func
 func (bt BiayaTambahan) GetBiayaTambahan(idBiayaTambahan, idOrder string) (BiayaTambahan, error) {
 	con := db.Connect()
-	query := "SELECT idBiayaTambahan, idOrder, item, nominal FROM biayaTambahan WHERE idBiayaTambahan = ? AND idOrder = ?"
+	query := "SELECT idBiayaTambahan, idOrder, item, berat, total FROM biayaTambahan WHERE idBiayaTambahan = ? AND idOrder = ?"
 
 	err := con.QueryRow(query, idBiayaTambahan, idOrder).Scan(
-		&bt.IDBiayaTambahan, &bt.IDOrder, &bt.Item, &bt.Nominal)
+		&bt.IDBiayaTambahan, &bt.IDOrder, &bt.Item, &bt.Berat, &bt.Total)
 
 	defer con.Close()
 	return bt, err
@@ -27,12 +28,12 @@ func (bt BiayaTambahan) GetBiayaTambahans(idOrder string) []BiayaTambahan {
 	con := db.Connect()
 	var bts []BiayaTambahan
 
-	query := "SELECT idBiayaTambahan, idOrder, item, nominal FROM biayaTambahan WHERE idOrder = ?"
+	query := "SELECT idBiayaTambahan, idOrder, item, berat, total FROM biayaTambahan WHERE idOrder = ?"
 
 	rows, _ := con.Query(query, idOrder)
 	for rows.Next() {
 		rows.Scan(
-			&bt.IDBiayaTambahan, &bt.IDOrder, &bt.Item, &bt.Nominal,
+			&bt.IDBiayaTambahan, &bt.IDOrder, &bt.Item, &bt.Berat, &bt.Total,
 		)
 
 		bts = append(bts, bt)
@@ -46,15 +47,15 @@ func (bt BiayaTambahan) GetBiayaTambahans(idOrder string) []BiayaTambahan {
 // CreateBiayaTambahan is func
 func (bt BiayaTambahan) CreateBiayaTambahan(idOrder string) error {
 	con := db.Connect()
-	query := "INSERT INTO biayaTambahan (idOrder, item, nominal) VALUES (?,?,?)"
+	query := "INSERT INTO biayaTambahan (idOrder, item, berat, total) VALUES (?,?,?,?)"
 
-	_, err := con.Exec(query, idOrder, bt.Item, bt.Nominal)
+	_, err := con.Exec(query, idOrder, bt.Item, bt.Berat, bt.Total)
 	if err != nil {
 		return err
 	}
 
 	query = "UPDATE `order` SET total = total + ?, tagihan = tagihan + ?, statusPembayaran = 'belum lunas' WHERE idOrder = ?"
-	_, _ = con.Exec(query, bt.Nominal, bt.Nominal, idOrder)
+	_, _ = con.Exec(query, bt.Total, bt.Total, idOrder)
 
 	defer con.Close()
 
@@ -68,7 +69,7 @@ func (bt BiayaTambahan) DeleteBiayaTambahan(idBiayaTambahan, idOrder string) err
 	_, err := con.Exec(query, idBiayaTambahan)
 
 	query = "UPDATE `order` SET total = total - ?, tagihan = tagihan - ? WHERE idOrder = ?"
-	_, _ = con.Exec(query, bt.Nominal, bt.Nominal, idOrder)
+	_, _ = con.Exec(query, bt.Total, bt.Total, idOrder)
 
 	defer con.Close()
 

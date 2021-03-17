@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
+	"fmt"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -24,6 +24,25 @@ func (oc OrderController) GetOrder(w http.ResponseWriter, r *http.Request) {
 	var order models.Order
 
 	dataOrder, err := order.GetOrder(idOrder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	message, _ := json.Marshal(dataOrder)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(message)
+}
+
+// GetOrderByInvoice is get detail order customer
+func (oc OrderController) GetOrderByInvoice(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idInvoice := vars["idInvoice"]
+	var order models.Order
+
+	dataOrder, err := order.GetOrderByInvoice(idInvoice)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -155,26 +174,27 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	order.IDCustomer = user.IDCustomer
-	order.NamaProduk = dataProduk.NamaProduk
-	order.StatusPesanan = "menunggu konfirmasi"
-	order.StatusPembayaran = "-"
-	order.Dibayar = 0
-	order.Tagihan = 0
-	order.HargaWajah = dataProduk.HargaWajah
-	order.CreatedAt = time.Now().Format("2006-01-02")
+	order.ProdukOrder.NamaProduk = dataProduk.NamaProduk
+	order.ProdukOrder.BeratProduk = dataProduk.Berat
+	order.Invoice.StatusPesanan = "menunggu konfirmasi"
+	order.Invoice.StatusPembayaran = "-"
+	order.Invoice.TotalBayar = 0
+	order.Invoice.Tagihan = 0
+	order.ProdukOrder.HargaSatuanWajah = dataProduk.HargaWajah
+	order.TglOrder = time.Now().Format("2006-01-02")
 
 	// Total Harga Wajah
-	order.TotalHargaWajah = order.TambahanWajah * order.HargaWajah
+	totalHargaWajah := order.TambahanWajah * order.ProdukOrder.HargaSatuanWajah
 
 	// Total Harga Opsi
-	oc.HitungHargaBeratOpsi(&order)
+	totalHargaOpsi, totalBeratOpsi := oc.HitungHargaBeratOpsi(order)
 
 	// get ongkir, estimasi, jenis kurir dan set harga produk
 	var rj RajaOngkir
 	var toko models.Toko
 	dataToko, _ := toko.GetToko(idToko)
 
-	order.Pengiriman.Berat = (dataProduk.Berat * order.Pcs) + order.TotalBeratOpsi
+	order.Pengiriman.Berat = (dataProduk.Berat * order.Pcs) + totalBeratOpsi
 	asal, _ := rj.GetIDKota(dataToko.Kota)
 	tujuan, _ := rj.GetIDKota(order.Pengiriman.Kota)
 	ongkir, estimasi, kurir, ok := rj.GetOngkir(asal, tujuan, order.Pengiriman.KodeKurir, order.Pengiriman.Service, strconv.Itoa(order.Pengiriman.Berat))
@@ -182,9 +202,9 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	// simpan harga produk
 	if order.JenisPesanan == "soft copy" {
-		order.HargaProduk = dataProduk.HargaSoftCopy
+		order.ProdukOrder.HargaProduk = int(gjson.Get(string(dtProduk), `jenisPemesanan.#(jenis=="soft copy").harga`).Int())
 	} else if order.JenisPesanan == "cetak" && ok {
-		order.HargaProduk = dataProduk.HargaCetak
+		order.ProdukOrder.HargaProduk = int(gjson.Get(string(dtProduk), `jenisPemesanan.#(jenis=="cetak").harga`).Int())
 		order.Pengiriman.Ongkir = ongkir
 		order.Pengiriman.Estimasi = estimasi
 	} else {
@@ -193,12 +213,21 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hitung total belanja
-	order.Total = (order.HargaProduk * order.Pcs) + order.TotalHargaWajah + order.TotalHargaOpsi + order.TotalTambahanBiaya + order.Pengiriman.Ongkir
+	order.Invoice.TotalPembelian = (order.ProdukOrder.HargaProduk * order.Pcs) + totalHargaWajah + totalHargaOpsi + order.Pengiriman.Ongkir
 
-	// buat order
+	// create invoice
+	order.Invoice.IDCustomer = user.IDCustomer
+	idInvoice, err := order.Invoice.CreateInvoice(idToko)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	order.IDInvoice = idInvoice
+
+	// create order
 	idOrder, err := order.CreateOrder(idToko, idProduk)
 	if err != nil {
-		_ = order.DeleteOrder(strconv.Itoa(idOrder))
+		_ = order.Invoice.DeleteInvoice(strconv.Itoa(idInvoice))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -216,32 +245,34 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	notif.IDPenerima = append(notif.IDPenerima, admins...)
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Permintaan pesanan baru"
-	notif.Pesan = notif.Pengirim + " telah memesan produk " + order.NamaProduk + ". Pesanan " + strconv.Itoa(idOrder)
+	notif.Pesan = notif.Pengirim + " telah memesan produk " + order.ProdukOrder.NamaProduk + ". Pesanan " + strconv.Itoa(idOrder)
 	notif.Link = "/order/" + strconv.Itoa(idOrder)
-	notif.CreatedAt = order.CreatedAt
+	notif.CreatedAt = order.TglOrder
 	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Mohon tunggu konfirmasi kami. Terimakasih.","idOrder":"` + strconv.Itoa(idOrder) + `"}`))
+	w.Write([]byte(`{"message":"Mohon tunggu konfirmasi penjual. Terimakasih.","idOrder":"` + strconv.Itoa(idOrder) + `"}`))
 }
 
 // HitungHargaBeratOpsi is func
-func (oc OrderController) HitungHargaBeratOpsi(o *models.Order) {
+func (oc OrderController) HitungHargaBeratOpsi(o models.Order) (int, int) {
+	var totalHargaOpsi, totalBeratOpsi int
 	for _, valueOpsi := range o.OpsiOrder {
 		if valueOpsi.PerProduk == false {
-			o.TotalHargaOpsi += valueOpsi.Harga
-			o.TotalBeratOpsi += valueOpsi.Berat
+			totalHargaOpsi += valueOpsi.Harga
+			totalBeratOpsi += valueOpsi.Berat
 		} else {
-			o.TotalHargaOpsi += valueOpsi.Harga * o.Pcs
-			o.TotalBeratOpsi += valueOpsi.Berat * o.Pcs
+			totalHargaOpsi += valueOpsi.Harga * o.Pcs
+			totalBeratOpsi += valueOpsi.Berat * o.Pcs
 		}
-
 	}
+
+	return totalHargaOpsi, totalBeratOpsi
 }
 
-// KonfirmasiOrder is func
-func (oc OrderController) KonfirmasiOrder(w http.ResponseWriter, r *http.Request) {
+// ProsesOrder is func
+func (oc OrderController) ProsesOrder(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	idOrder := vars["idOrder"]
@@ -253,11 +284,11 @@ func (oc OrderController) KonfirmasiOrder(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	dataOrder.Tagihan = dataOrder.Total
-	dataOrder.StatusPembayaran = "menunggu pembayaran"
-	dataOrder.StatusPesanan = "diproses"
+	dataOrder.Invoice.Tagihan = dataOrder.Invoice.TotalPembelian
+	dataOrder.Invoice.StatusPembayaran = "menunggu pembayaran"
+	dataOrder.Invoice.StatusPesanan = "diproses"
 
-	err = dataOrder.KonfirmasiOrder(idOrder)
+	err = dataOrder.Invoice.ProsesOrder(strconv.Itoa(dataOrder.Invoice.IDInvoice))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -266,17 +297,17 @@ func (oc OrderController) KonfirmasiOrder(w http.ResponseWriter, r *http.Request
 	var notif models.Notifikasi
 
 	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
-	notif.Pengirim = dataOrder.NamaToko
+	notif.Pengirim = dataOrder.Invoice.NamaToko
 	notif.Judul = "Pesanan telah dikonfirmasi"
 	notif.Pesan = "Pesanan " + idOrder + " sedang diproses. Silahkan melakukan pembayaran."
-	notif.Link = "/order/" + idOrder
+	notif.Link = "/order?id=" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
 
 	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses!"}`))
+	w.Write([]byte(`{"message":"Pesanan diproses."}`))
 }
 
 // SetWaktuPengerjaan is func
@@ -301,6 +332,10 @@ func (oc OrderController) SetWaktuPengerjaan(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "Gagal!", http.StatusBadRequest)
 		return
 	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Waktu pengerjaan disimpan!"}`))
 }
 
 // UploadHasilProduksi is func
@@ -311,7 +346,7 @@ func (oc OrderController) UploadHasilProduksi(w http.ResponseWriter, r *http.Req
 	var dataJSON map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&dataJSON)
 
-	hasil := fmt.Sprintf("%v", dataJSON["hasil"])
+	hasil := fmt.Sprintf("%v", dataJSON["hasilOrder"])
 	var order models.Order
 
 	if err := validator.New().Var(hasil, "required"); err != nil {
@@ -319,8 +354,7 @@ func (oc OrderController) UploadHasilProduksi(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	order.Hasil = hasil
-	order.StatusPesanan = "menunggu persetujuan pembeli"
+	order.HasilOrder = hasil
 
 	if err := order.UploadHasilProduksi(idOrder); err != nil {
 		http.Error(w, "Gagal!", http.StatusBadRequest)
@@ -331,129 +365,129 @@ func (oc OrderController) UploadHasilProduksi(w http.ResponseWriter, r *http.Req
 
 	var notif models.Notifikasi
 	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
-	notif.Pengirim = dataOrder.NamaToko
+	notif.Pengirim = dataOrder.Invoice.NamaToko
 	notif.Judul = "Hasil pesanan sudah keluar"
-	notif.Pesan = "Hasil pesanan " + idOrder + " sudah keluar. Segera beri tanggapan ke penjual"
-	notif.Link = "/order/" + idOrder
+	notif.Pesan = "Hasil pesanan " + idOrder + " sudah keluar. Segera beri tanggapan ke penjual."
+	notif.Link = "/order?id=" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
 
 	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses!"}`))
+	w.Write([]byte(`{"message":"Upload telah terkirim."}`))
 }
 
-// SetujuiHasilProduksi is func
-func (oc OrderController) SetujuiHasilProduksi(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idOrder := vars["idOrder"]
+// // SetujuiHasilProduksi is func
+// func (oc OrderController) SetujuiHasilProduksi(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	idOrder := vars["idOrder"]
 
-	var order models.Order
+// 	var order models.Order
 
-	order.StatusPesanan = "sudah disetujui pembeli"
+// 	order.StatusPesanan = "sudah disetujui pembeli"
 
-	if err := order.SetujuiHasilProduksi(idOrder); err != nil {
-		http.Error(w, "Gagal!", http.StatusBadRequest)
-		return
-	}
+// 	if err := order.SetujuiHasilProduksi(idOrder); err != nil {
+// 		http.Error(w, "Gagal!", http.StatusBadRequest)
+// 		return
+// 	}
 
-	dataOrder, _ := order.GetOrder(idOrder)
+// 	dataOrder, _ := order.GetOrder(idOrder)
 
-	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataOrder.Penangan.IDPenangan)
-	notif.Pengirim = dataOrder.NamaToko
-	notif.Judul = "Hasil pesanan sudah disetujui"
-	notif.Pesan = "Hasil pesanan " + idOrder + " sudah disetujui pembeli."
-	notif.Link = "/order/" + idOrder
-	notif.CreatedAt = time.Now().Format("2006-01-02")
+// 	var notif models.Notifikasi
+// 	notif.IDPenerima = append(notif.IDPenerima, dataOrder.Penangan.IDPenangan)
+// 	notif.Pengirim = dataOrder.NamaToko
+// 	notif.Judul = "Hasil pesanan sudah disetujui"
+// 	notif.Pesan = "Hasil pesanan " + idOrder + " sudah disetujui pembeli."
+// 	notif.Link = "/order?id=" + idOrder
+// 	notif.CreatedAt = time.Now().Format("2006-01-02")
 
-	notif.CreateNotifikasi()
+// 	notif.CreateNotifikasi()
 
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses!"}`))
-}
+// 	w.Header().Set("Content-type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write([]byte(`{"message":"Sukses!"}`))
+// }
 
-// CancelOrder is func
-func (oc OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
-	user := context.Get(r, "user").(*MyClaims)
-	vars := mux.Vars(r)
-	idOrder := vars["idOrder"]
+// // CancelOrder is func
+// func (oc OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
+// 	user := context.Get(r, "user").(*MyClaims)
+// 	vars := mux.Vars(r)
+// 	idOrder := vars["idOrder"]
 
-	var order models.Order
+// 	var order models.Order
 
-	order.StatusPesanan = "dibatalkan"
+// 	order.StatusPesanan = "dibatalkan"
 
-	if err := order.CancelOrder(idOrder); err != nil {
-		http.Error(w, "Gagal!", http.StatusBadRequest)
-		return
-	}
+// 	if err := order.CancelOrder(idOrder); err != nil {
+// 		http.Error(w, "Gagal!", http.StatusBadRequest)
+// 		return
+// 	}
 
-	dataOrder, _ := order.GetOrder(idOrder)
-	if dataOrder.StatusPesanan != "menunggu konfirmasi" {
-		http.Error(w, "Pesanan sedang diproses.", http.StatusBadRequest)
-		return
-	}
+// 	dataOrder, _ := order.GetOrder(idOrder)
+// 	if dataOrder.StatusPesanan != "menunggu konfirmasi" {
+// 		http.Error(w, "Pesanan sedang diproses.", http.StatusBadRequest)
+// 		return
+// 	}
 
-	var toko models.Toko
-	dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
+// 	var toko models.Toko
+// 	dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
 
-	var karyawan models.Karyawan
-	admins := karyawan.GetAdmins(strconv.Itoa(dataOrder.IDToko))
+// 	var karyawan models.Karyawan
+// 	admins := karyawan.GetAdmins(strconv.Itoa(dataOrder.IDToko))
 
-	var customer models.Customer
-	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
+// 	var customer models.Customer
+// 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
-	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataToko.IDOwner)
-	notif.IDPenerima = append(notif.IDPenerima, admins...)
-	notif.Pengirim = dataCustomer.Nama
-	notif.Judul = "Pesanan dibatalkan"
-	notif.Pesan = "Pesanan " + idOrder + " dibatalkan oleh pembeli."
-	notif.Link = "/order/" + idOrder
-	notif.CreatedAt = time.Now().Format("2006-01-02")
-	notif.CreateNotifikasi()
+// 	var notif models.Notifikasi
+// 	notif.IDPenerima = append(notif.IDPenerima, dataToko.IDOwner)
+// 	notif.IDPenerima = append(notif.IDPenerima, admins...)
+// 	notif.Pengirim = dataCustomer.Nama
+// 	notif.Judul = "Pesanan dibatalkan"
+// 	notif.Pesan = "Pesanan " + idOrder + " dibatalkan oleh pembeli."
+// 	notif.Link = "/order?id=" + idOrder
+// 	notif.CreatedAt = time.Now().Format("2006-01-02")
+// 	notif.CreateNotifikasi()
 
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Pesanan telah dibatalkan"}`))
-}
+// 	w.Header().Set("Content-type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write([]byte(`{"message":"Pesanan telah dibatalkan"}`))
+// }
 
-// FinishOrder is func
-func (oc OrderController) FinishOrder(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idOrder := vars["idOrder"]
-	idToko, err := strconv.Atoi(vars["idToko"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+// // FinishOrder is func
+// func (oc OrderController) FinishOrder(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	idOrder := vars["idOrder"]
+// 	idToko, err := strconv.Atoi(vars["idToko"])
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
 
-	var order models.Order
-	dataOrder, _ := order.GetOrder(idOrder)
-	dataOrder.StatusPesanan = "selesai"
+// 	var order models.Order
+// 	dataOrder, _ := order.GetOrder(idOrder)
+// 	dataOrder.StatusPesanan = "selesai"
 
-	var pembukuan models.Pembukuan
-	pembukuan.IDToko = idToko
-	pembukuan.Jenis = "pemasukan"
-	pembukuan.Keterangan = "Pesanan " + idOrder + " telah selesai"
-	pembukuan.Nominal = dataOrder.Dibayar - dataOrder.Pengiriman.Ongkir
-	pembukuan.TglTransaksi = time.Now().Format("2006-01-02")
+// 	var pembukuan models.Pembukuan
+// 	pembukuan.IDToko = idToko
+// 	pembukuan.Jenis = "pemasukan"
+// 	pembukuan.Keterangan = "Pesanan " + idOrder + " telah selesai"
+// 	pembukuan.Nominal = dataOrder.Dibayar - dataOrder.Pengiriman.Ongkir
+// 	pembukuan.TglTransaksi = time.Now().Format("2006-01-02")
 
-	err = order.FinishOrder(idOrder)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+// 	err = order.FinishOrder(idOrder)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
 
-	_ = pembukuan.CreatePembukuan(idOrder)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+// 	_ = pembukuan.CreatePembukuan(idOrder)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
 
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Pesanan telah dibatalkan"}`))
-}
+// 	w.Header().Set("Content-type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write([]byte(`{"message":"Pesanan telah dibatalkan"}`))
+// }

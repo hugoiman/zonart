@@ -27,6 +27,22 @@ func (gopc GrupOpsiProdukController) GetGrupOpsiProduks(w http.ResponseWriter, r
 	w.Write(message)
 }
 
+// GetGrupOpsiProduksByProduk is get all produk in a grup opsi
+func (gopc GrupOpsiProdukController) GetGrupOpsiProduksByProduk(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idToko := vars["idToko"]
+	idProduk := vars["idProduk"]
+
+	var gop models.GrupOpsiProduk
+
+	dataGOP := gop.GetGrupOpsiProduksByProduk(idToko, idProduk)
+	message, _ := json.Marshal(dataGOP)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(message)
+}
+
 // SambungGrupOpsikeProduk is func
 func (gopc GrupOpsiProdukController) SambungGrupOpsikeProduk(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

@@ -28,7 +28,7 @@ func (u Undangan) GetUndangans(idToko string) Undangans {
 	con := db.Connect()
 	query := "SELECT a.idUndangan, a.idToko, a.idCustomer, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
 		"JOIN toko b ON a.idToko = b.idToko " +
-		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idToko = ?"
+		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idToko = ? ORDER BY a.idUndangan DESC"
 	rows, _ := con.Query(query, idToko)
 
 	var tgl time.Time
@@ -49,15 +49,15 @@ func (u Undangan) GetUndangans(idToko string) Undangans {
 }
 
 // GetUndangan is func
-func (u Undangan) GetUndangan(idUndangan, idToko, idCustomer string) (Undangan, error) {
+func (u Undangan) GetUndangan(idUndangan string) (Undangan, error) {
 	con := db.Connect()
 	query := "SELECT a.idUndangan, a.idToko, a.idCustomer, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
 		"JOIN toko b ON a.idToko = b.idToko " +
-		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idToko = ? AND a.idUndangan = ? AND a.idCustomer = ?"
+		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idUndangan = ?"
 
 	var tgl time.Time
 
-	err := con.QueryRow(query, idToko, idUndangan, idCustomer).Scan(
+	err := con.QueryRow(query, idUndangan).Scan(
 		&u.IDUndangan, &u.IDToko, &u.IDCustomer, &u.Posisi, &u.Status, &u.NamaToko, &u.NamaCustomer, &u.Email, &tgl)
 
 	u.Date = tgl.Format("02 Jan 2006")
@@ -86,10 +86,10 @@ func (u Undangan) UndangKaryawan(idToko string) (int, error) {
 }
 
 // TolakUndangan is func
-func (u Undangan) TolakUndangan(idUndangan, idToko, idCustomer string) error {
+func (u Undangan) TolakUndangan(idUndangan string) error {
 	con := db.Connect()
-	query := "UPDATE undangan SET status = 'ditolak' WHERE idUndangan = ? AND idToko = ? AND idCustomer = ?"
-	_, err := con.Exec(query, idUndangan, idToko, idCustomer)
+	query := "UPDATE undangan SET status = 'ditolak' WHERE idUndangan = ?"
+	_, err := con.Exec(query, idUndangan)
 
 	defer con.Close()
 
@@ -97,10 +97,10 @@ func (u Undangan) TolakUndangan(idUndangan, idToko, idCustomer string) error {
 }
 
 // TerimaUndangan is func
-func (u Undangan) TerimaUndangan(idUndangan, idToko, idCustomer string) error {
+func (u Undangan) TerimaUndangan(idUndangan string) error {
 	con := db.Connect()
-	query := "UPDATE undangan SET status = 'disetujui' WHERE idUndangan = ? AND idToko = ? AND idCustomer = ?"
-	_, err := con.Exec(query, idUndangan, idToko, idCustomer)
+	query := "UPDATE undangan SET status = 'diterima' WHERE idUndangan = ?"
+	_, err := con.Exec(query, idUndangan)
 
 	defer con.Close()
 

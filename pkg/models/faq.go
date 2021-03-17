@@ -19,7 +19,7 @@ type Faqs struct {
 // GetFaqs is func
 func (f Faq) GetFaqs(idToko string) Faqs {
 	con := db.Connect()
-	query := "SELECT idFaq, idToko, pertanyaan, jawaban, kategori FROM faq WHERE idToko = ?"
+	query := "SELECT idFaq, idToko, pertanyaan, jawaban, kategori FROM faq WHERE idToko = ? ORDER BY idFaq DESC"
 	rows, _ := con.Query(query, idToko)
 
 	var faqs Faqs
@@ -50,14 +50,21 @@ func (f Faq) GetFaq(idFaq, idToko string) (Faq, error) {
 }
 
 // CreateFaq is func
-func (f Faq) CreateFaq(idToko string) error {
+func (f Faq) CreateFaq(idToko string) (int, error) {
 	con := db.Connect()
 	query := "INSERT INTO faq (idToko, pertanyaan, jawaban, kategori) VALUES (?,?,?,?)"
-	_, err := con.Exec(query, idToko, f.Pertanyaan, f.Jawaban, f.Kategori)
+	exec, err := con.Exec(query, idToko, f.Pertanyaan, f.Jawaban, f.Kategori)
+
+	if err != nil {
+		return 0, err
+	}
+
+	idInt64, _ := exec.LastInsertId()
+	idProduk := int(idInt64)
 
 	defer con.Close()
 
-	return err
+	return idProduk, err
 }
 
 // DeleteFaq is func

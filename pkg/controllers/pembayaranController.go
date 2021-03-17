@@ -55,7 +55,7 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	notif.Judul = "Pembayaran Masuk"
 	notif.Pesan = notif.Pengirim + " telah melakukan pembayaran Rp " + strconv.Itoa(pembayaran.Nominal) + ". No invoice:" + idOrder
 	notif.Link = "/order/" + idOrder
-	notif.CreatedAt = order.CreatedAt
+	notif.CreatedAt = order.TglOrder
 	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
@@ -86,11 +86,11 @@ func (pc PembayaranController) KonfirmasiPembayaran(w http.ResponseWriter, r *ht
 
 	var order models.Order
 	dataOrder, _ := order.GetOrder(idOrder)
-	dataOrder.Tagihan -= dataPembayaran.Nominal
-	dataOrder.Dibayar += dataPembayaran.Nominal
+	dataOrder.Invoice.Tagihan -= dataPembayaran.Nominal
+	dataOrder.Invoice.TotalBayar += dataPembayaran.Nominal
 
-	if order.Tagihan == 0 {
-		order.StatusPembayaran = "lunas"
+	if order.Invoice.Tagihan == 0 {
+		order.Invoice.StatusPembayaran = "lunas"
 	}
 
 	pembayaran.Status = "diterima"
@@ -104,11 +104,11 @@ func (pc PembayaranController) KonfirmasiPembayaran(w http.ResponseWriter, r *ht
 	// send notif to customer
 	var notif models.Notifikasi
 	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
-	notif.Pengirim = dataOrder.NamaToko
+	notif.Pengirim = dataOrder.Invoice.NamaToko
 	notif.Judul = notif.Pengirim + " telah mengonfirmasi pembayaran anda. Inv: " + idOrder
 	notif.Pesan = ""
 	notif.Link = "/order/" + idOrder
-	notif.CreatedAt = order.CreatedAt
+	notif.CreatedAt = order.TglOrder
 
 	notif.CreateNotifikasi()
 

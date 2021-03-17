@@ -3,6 +3,8 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -61,7 +63,9 @@ func (fc FaqController) CreateFaq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := faq.CreateFaq(idToko)
+	faq.Kategori = strings.Title(strings.ToLower(faq.Kategori))
+
+	idFaq, err := faq.CreateFaq(idToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -69,7 +73,7 @@ func (fc FaqController) CreateFaq(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"FAQ telah ditambahkan."}`))
+	w.Write([]byte(`{"message":"FAQ telah ditambahkan.","idFaq":"` + strconv.Itoa(idFaq) + `"}`))
 }
 
 // DeleteFaq is func

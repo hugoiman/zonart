@@ -72,7 +72,7 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"","domain":"` + toko.Slug + `"}`))
+	w.Write([]byte(`{"message":"Toko berhasil terdaftar!"}`))
 }
 
 // UpdateToko is func
@@ -117,5 +117,5 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":""}`))
+	w.Write([]byte(`{"message":"Data berhasil diperbarui!."}`))
 }

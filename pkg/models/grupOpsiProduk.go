@@ -40,6 +40,29 @@ func (gop GrupOpsiProduk) GetGrupOpsiProduks(idToko, idGrupOpsi string) GrupOpsi
 	return gops
 }
 
+// GetGrupOpsiProduksByProduk is get all produk in a grup opsi by id produk
+func (gop GrupOpsiProduk) GetGrupOpsiProduksByProduk(idToko, idProduk string) GrupOpsiProduks {
+	con := db.Connect()
+	query := "SELECT a.idProduk, a.idGrupOpsi, b.namaGrup, c.namaProduk FROM grupOpsiProduk a " +
+		"JOIN grupOpsi b ON a.idGrupOpsi = b.idGrupOpsi " +
+		"JOIN produk c ON a.idProduk = c.idProduk WHERE b.idToko = ? AND a.idProduk = ? ORDER BY a.idGrupOpsi ASC"
+	rows, _ := con.Query(query, idToko, idProduk)
+
+	var gops GrupOpsiProduks
+
+	for rows.Next() {
+		rows.Scan(
+			&gop.IDProduk, &gop.IDGrupOpsi, &gop.NamaGrup, &gop.NamaProduk,
+		)
+
+		gops.GrupOpsiProduks = append(gops.GrupOpsiProduks, gop)
+	}
+
+	defer con.Close()
+
+	return gops
+}
+
 // SambungGrupOpsikeProduk is func
 func (gop GrupOpsiProduk) SambungGrupOpsikeProduk(idProduk, idGrupOpsi string) error {
 	con := db.Connect()

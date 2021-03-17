@@ -57,12 +57,12 @@ func (pc PenanganController) SetPenangan(w http.ResponseWriter, r *http.Request)
 	notif.IDPenerima = append(notif.IDPenerima, dataKaryawan.IDCustomer)
 	notif.Pengirim = dataToko.NamaToko
 	notif.Judul = "Pengerjaan Pesanan"
-	notif.Pesan = "Anda telah diberi tanggungjawab untuk mengerjakan pesanan " + idOrder
-	notif.Link = "/order/" + idOrder
+	notif.Pesan = "Anda telah diberi tugas untuk mengerjakan pesanan " + idOrder
+	notif.Link = "/order?id=" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
 	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Sukses!"}`))
+	w.Write([]byte(`{"message":"Pesanan diteruskan ke ` + dataKaryawan.NamaKaryawan + `"}`))
 }

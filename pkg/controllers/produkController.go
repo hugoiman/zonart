@@ -3,10 +3,10 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
+	"github.com/gosimple/slug"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -35,8 +35,8 @@ func (pc ProdukController) GetProduk(w http.ResponseWriter, r *http.Request) {
 	var produk models.Produk
 
 	dataProduk, err := produk.GetProduk(idToko, idProduk)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err != nil || dataProduk.Status == "dihapus" {
+		http.Error(w, "Produk tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
@@ -59,14 +59,11 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 	} else if err := validator.New().Struct(produk); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if produk.Cetak == false && produk.SoftCopy == false {
-		http.Error(w, "Pilih setidaknya satu jenis pemesanan", http.StatusBadRequest)
-		return
 	}
 
-	produk.Status = true
+	produk.Slug = slug.Make(produk.NamaProduk)
 
-	idProduk, err := produk.CreateProduk(idToko)
+	_, err := produk.CreateProduk(idToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -74,7 +71,7 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Produk telah ditambahkan.","idProduk":"` + strconv.Itoa(idProduk) + `"}`))
+	w.Write([]byte(`{"message":"Produk telah ditambahkan.","produk":"` + produk.Slug + `"}`))
 }
 
 // UpdateProduk is func
@@ -90,10 +87,9 @@ func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) 
 	} else if err := validator.New().Struct(produk); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if produk.Cetak == false && produk.SoftCopy == false {
-		http.Error(w, "Pilih setidaknya satu jenis pemesanan", http.StatusBadRequest)
-		return
 	}
+
+	produk.Slug = slug.Make(produk.NamaProduk)
 
 	err := produk.UpdateProduk(idToko, idProduk)
 	if err != nil {
@@ -103,7 +99,7 @@ func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Data produk berhasil diperbarui!"}`))
+	w.Write([]byte(`{"message":"Data produk berhasil diperbarui!","produk":"` + produk.Slug + `"}`))
 }
 
 // DeleteProduk is func

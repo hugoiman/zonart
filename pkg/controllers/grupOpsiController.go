@@ -79,6 +79,9 @@ func (goc GrupOpsiController) CreateGrupOpsi(w http.ResponseWriter, r *http.Requ
 	} else if grupOpsi.Min > grupOpsi.Max {
 		http.Error(w, "Minimal jumlah memilih harus kurang dari samadengan maksimal jumlah memilih", http.StatusBadRequest)
 		return
+	} else if grupOpsi.HardCopy == false && grupOpsi.SoftCopy == false {
+		http.Error(w, "Pilih minimal satu jenis pemesanan", http.StatusBadRequest)
+		return
 	}
 
 	idGrupOpsi, err := grupOpsi.CreateGrupOpsi(idToko)

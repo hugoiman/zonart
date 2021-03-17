@@ -68,3 +68,24 @@ func (rj RajaOngkir) GetOngkir(asal, tujuan, kodeKurir, service, berat string) (
 
 	return int(ongkir), estimasi, kurir, true
 }
+
+// GetAllKota is func
+func (rj RajaOngkir) GetAllKota(w http.ResponseWriter, r *http.Request) {
+	rj.SetVariable()
+	url := rj.baseURL + "/city"
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("key", rj.apiKey)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(body)
+}

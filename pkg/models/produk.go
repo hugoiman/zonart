@@ -1,25 +1,24 @@
 package models
 
 import (
+	"strconv"
 	"zonart/db"
 )
 
 // Produk is class
 type Produk struct {
-	IDProduk      int        `json:"idProduk"`
-	IDToko        int        `json:"idToko"`
-	NamaProduk    string     `json:"namaProduk" validate:"required"`
-	Cetak         bool       `json:"cetak"`
-	SoftCopy      bool       `json:"softCopy"`
-	Berat         int        `json:"berat"`
-	Gambar        string     `json:"gambar" validate:"required"`
-	Deskripsi     string     `json:"deskripsi"`
-	HargaCetak    int        `json:"hargaCetak"`
-	HargaSoftCopy int        `json:"hargaSoftCopy"`
-	Status        bool       `json:"status"`
-	Catatan       string     `json:"catatan"`
-	HargaWajah    int        `json:"hargaWajah" validate:"required"`
-	GrupOpsi      []GrupOpsi `json:"grupOpsi"`
+	IDProduk       int                    `json:"idProduk"`
+	IDToko         int                    `json:"idToko"`
+	NamaProduk     string                 `json:"namaProduk" validate:"required"`
+	Berat          int                    `json:"berat"`
+	Gambar         string                 `json:"gambar" validate:"required"`
+	Deskripsi      string                 `json:"deskripsi"`
+	Status         string                 `json:"status" validate:"required,eq=aktif|eq=tidak aktif"`
+	Catatan        string                 `json:"catatan"`
+	HargaWajah     int                    `json:"hargaWajah"`
+	Slug           string                 `json:"slug"`
+	JenisPemesanan []JenisPemesananProduk `json:"jenisPemesanan"`
+	GrupOpsi       []GrupOpsi             `json:"grupOpsi"`
 }
 
 // Produks is list of produk
@@ -30,15 +29,21 @@ type Produks struct {
 // GetProduks is func
 func (p Produk) GetProduks(idToko string) Produks {
 	con := db.Connect()
-	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, cetak, softCopy, berat, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah FROM produk WHERE idToko = ?"
+	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug FROM produk WHERE idToko = ? AND status != 'dihapus' ORDER BY idProduk DESC"
 	rows, _ := con.Query(query, idToko)
 
 	var produks Produks
 
 	for rows.Next() {
 		rows.Scan(
-			&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.Berat, &p.HargaCetak, &p.HargaSoftCopy, &p.Status, &p.Catatan, &p.HargaWajah,
+			&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Berat, &p.Status, &p.Catatan, &p.HargaWajah, &p.Slug,
 		)
+
+		var jpp JenisPemesananProduk
+		p.JenisPemesanan = jpp.GetJenisPemesananProduk(strconv.Itoa(p.IDProduk))
+
+		var grupOpsi GrupOpsi
+		p.GrupOpsi = grupOpsi.GetGrupOpsiProduk(idToko, strconv.Itoa(p.IDProduk))
 
 		produks.Produks = append(produks.Produks, p)
 	}
@@ -51,13 +56,16 @@ func (p Produk) GetProduks(idToko string) Produks {
 // GetProduk is func
 func (p Produk) GetProduk(idToko, idProduk string) (Produk, error) {
 	con := db.Connect()
-	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, cetak, softCopy, berat, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah FROM produk WHERE idToko = ? AND idProduk = ?"
+	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug FROM produk WHERE idToko = ? AND (idProduk = ? OR slug = ?)"
 
-	err := con.QueryRow(query, idToko, idProduk).Scan(
-		&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.Berat, &p.HargaCetak, &p.HargaSoftCopy, &p.Status, &p.Catatan, &p.HargaWajah)
+	err := con.QueryRow(query, idToko, idProduk, idProduk).Scan(
+		&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Berat, &p.Status, &p.Catatan, &p.HargaWajah, &p.Slug)
+
+	var jpp JenisPemesananProduk
+	p.JenisPemesanan = jpp.GetJenisPemesananProduk(strconv.Itoa(p.IDProduk))
 
 	var grupOpsi GrupOpsi
-	p.GrupOpsi = grupOpsi.GetGrupOpsiProduk(idToko, idProduk)
+	p.GrupOpsi = grupOpsi.GetGrupOpsiProduk(idToko, strconv.Itoa(p.IDProduk))
 
 	defer con.Close()
 
@@ -67,8 +75,8 @@ func (p Produk) GetProduk(idToko, idProduk string) (Produk, error) {
 // CreateProduk is func
 func (p Produk) CreateProduk(idToko string) (int, error) {
 	con := db.Connect()
-	query := "INSERT INTO produk (idToko, namaProduk, gambar, deskripsi, cetak, softCopy, berat, hargaCetak, hargaSoftCopy, status, catatan, hargaWajah) VALUES (?,?,?,?,?,?,?,?,?)"
-	exec, err := con.Exec(query, idToko, p.NamaProduk, p.Gambar, p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.Berat, p.HargaCetak, p.HargaSoftCopy, p.Status, p.Catatan, p.HargaWajah)
+	query := "INSERT INTO produk (idToko, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug) VALUES (?,?,?,?,?,?,?,?,?)"
+	exec, err := con.Exec(query, idToko, p.NamaProduk, p.Gambar, p.Deskripsi, &p.Berat, p.Status, p.Catatan, p.HargaWajah, p.Slug)
 
 	if err != nil {
 		return 0, err
@@ -76,6 +84,14 @@ func (p Produk) CreateProduk(idToko string) (int, error) {
 
 	idInt64, _ := exec.LastInsertId()
 	idProduk := int(idInt64)
+
+	for _, v := range p.JenisPemesanan {
+		err = v.CreateJenisPemesanan(strconv.Itoa(idProduk))
+		if err != nil {
+			_ = p.DeleteProduk(idToko, strconv.Itoa(idProduk))
+			return idProduk, err
+		}
+	}
 
 	defer con.Close()
 
@@ -85,9 +101,12 @@ func (p Produk) CreateProduk(idToko string) (int, error) {
 // UpdateProduk is func
 func (p Produk) UpdateProduk(idToko, idProduk string) error {
 	con := db.Connect()
-	query := "UPDATE produk SET namaProduk = ?, gambar = ?, deskripsi = ?, cetak = ?, softCopy = ?, berat = ?, hargaCetak = ?, hargaSoftCopy = ?, status = ?, catatan = ?, hargaWajah = ? WHERE idToko = ? AND idProduk = ?"
-	_, err := con.Exec(query, p.NamaProduk, p.Gambar, p.Deskripsi, &p.Cetak, &p.SoftCopy, &p.Berat, p.HargaCetak, p.HargaSoftCopy, p.Status, p.Catatan, p.HargaWajah, idToko, idProduk)
+	query := "UPDATE produk SET namaProduk = ?, gambar = ?, deskripsi = ?, berat = ?, status = ?, catatan = ?, hargaWajah = ?, slug = ? WHERE idToko = ? AND idProduk = ?"
+	_, err := con.Exec(query, p.NamaProduk, p.Gambar, p.Deskripsi, &p.Berat, p.Status, p.Catatan, p.HargaWajah, p.Slug, idToko, idProduk)
 
+	for _, v := range p.JenisPemesanan {
+		_ = v.UpdateJenisPemesanan(idProduk, strconv.Itoa(v.IDJenisPemesanan))
+	}
 	defer con.Close()
 
 	return err
@@ -96,7 +115,7 @@ func (p Produk) UpdateProduk(idToko, idProduk string) error {
 // DeleteProduk is func
 func (p Produk) DeleteProduk(idToko, idProduk string) error {
 	con := db.Connect()
-	query := "DELETE FROM produk WHERE idToko = ? AND idProduk = ?"
+	query := "UPDATE produk SET status = 'dihapus' WHERE idToko = ? AND idProduk = ?"
 	_, err := con.Exec(query, idToko, idProduk)
 
 	defer con.Close()
