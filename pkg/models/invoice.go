@@ -6,7 +6,7 @@ import (
 
 // Invoice is class
 type Invoice struct {
-	IDInvoice        int    `json:"idInvoice"`
+	IDInvoice        string `json:"idInvoice"`
 	IDCustomer       int    `json:"idCustomer"`
 	IDToko           int    `json:"idToko"`
 	Pembeli          string `json:"pembeli"`
@@ -37,22 +37,19 @@ func (i Invoice) GetInvoice(idInvoice string) (Invoice, error) {
 }
 
 // CreateInvoice is func
-func (i Invoice) CreateInvoice(idToko string) (int, error) {
+func (i Invoice) CreateInvoice(idToko string) error {
 	con := db.Connect()
-	query := "INSERT INTO `invoice` (idCustomer, idToko, totalPembelian, totalbayar, tagihan, statusPesanan, statusPembayaran) " +
-		"VALUES (?,?,?,?,?,?,?)"
-	exec, err := con.Exec(query, i.IDCustomer, idToko, i.TotalPembelian, i.TotalBayar, i.Tagihan, i.StatusPesanan, i.StatusPembayaran)
+	query := "INSERT INTO `invoice` (idInvoice, idCustomer, idToko, totalPembelian, totalbayar, tagihan, statusPesanan, statusPembayaran) " +
+		"VALUES (?,?,?,?,?,?,?,?)"
+	_, err := con.Exec(query, i.IDInvoice, i.IDCustomer, idToko, i.TotalPembelian, i.TotalBayar, i.Tagihan, i.StatusPesanan, i.StatusPembayaran)
 
 	if err != nil {
-		return 0, err
+		return err
 	}
-
-	idInt64, _ := exec.LastInsertId()
-	idInvoice := int(idInt64)
 
 	defer con.Close()
 
-	return idInvoice, err
+	return err
 }
 
 // DeleteInvoice is func
@@ -66,11 +63,11 @@ func (i Invoice) DeleteInvoice(idInvoice string) error {
 	return err
 }
 
-// ProsesOrder is func
-func (i Invoice) ProsesOrder(idInvoice string) error {
+// UpdateInvoice is func
+func (i Invoice) UpdateInvoice(idInvoice string) error {
 	con := db.Connect()
-	query := "UPDATE invoice SET tagihan = ?, statusPembayaran = ?, statusPesanan = ? WHERE idInvoice = ?"
-	_, err := con.Exec(query, i.Tagihan, i.StatusPembayaran, i.StatusPesanan, idInvoice)
+	query := "UPDATE invoice SET totalBayar = ?, tagihan = ?, totalPembelian = ?, statusPembayaran = ?, statusPesanan = ? WHERE idInvoice = ?"
+	_, err := con.Exec(query, i.TotalBayar, i.Tagihan, i.TotalPembelian, i.StatusPembayaran, i.StatusPesanan, idInvoice)
 
 	defer con.Close()
 

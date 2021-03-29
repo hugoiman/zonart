@@ -24,14 +24,14 @@ type Karyawans struct {
 	Karyawans []Karyawan `json:"karyawan"`
 }
 
-// AuthKaryawan is func
-func (k Karyawan) AuthKaryawan(idToko, idCustomer string) (Karyawan, error) {
+// GetKaryawan is func
+func (k Karyawan) GetKaryawan(idToko, idKaryawan string) (Karyawan, error) {
 	con := db.Connect()
-	query := "SELECT idKaryawan, idToko, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ? AND idCustomer = ?"
+	query := "SELECT idKaryawan, idToko, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ? AND idKaryawan = ?"
 
 	var bergabung time.Time
 
-	err := con.QueryRow(query, idToko, idCustomer).Scan(
+	err := con.QueryRow(query, idToko, idKaryawan).Scan(
 		&k.IDKaryawan, &k.IDToko, &k.IDCustomer, &k.NamaKaryawan, &k.Email, &k.Hp, &k.Posisi, &k.Status, &k.Alamat, &bergabung)
 
 	k.Bergabung = bergabung.Format("02 Jan 2006")
@@ -41,14 +41,14 @@ func (k Karyawan) AuthKaryawan(idToko, idCustomer string) (Karyawan, error) {
 	return k, err
 }
 
-// GetKaryawan is func
-func (k Karyawan) GetKaryawan(idToko, idKaryawan string) (Karyawan, error) {
+// GetKaryawanByIDCustomer is func
+func (k Karyawan) GetKaryawanByIDCustomer(idToko, idCustomer string) (Karyawan, error) {
 	con := db.Connect()
-	query := "SELECT idKaryawan, idToko, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ? AND idKaryawan = ?"
+	query := "SELECT idKaryawan, idToko, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ? AND idCustomer = ?"
 
 	var bergabung time.Time
 
-	err := con.QueryRow(query, idToko, idKaryawan).Scan(
+	err := con.QueryRow(query, idToko, idCustomer).Scan(
 		&k.IDKaryawan, &k.IDToko, &k.IDCustomer, &k.NamaKaryawan, &k.Email, &k.Hp, &k.Posisi, &k.Status, &k.Alamat, &bergabung)
 
 	k.Bergabung = bergabung.Format("02 Jan 2006")

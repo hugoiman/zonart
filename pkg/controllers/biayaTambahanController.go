@@ -1,113 +1,144 @@
 package controllers
 
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+	"time"
+	"zonart/pkg/models"
+
+	"github.com/gorilla/mux"
+	"gopkg.in/go-playground/validator.v9"
+)
+
 // BiayaTambahanController is class
 type BiayaTambahanController struct{}
 
 // CreateBiayaTambahan is func
-// func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	idOrder := vars["idOrder"]
+func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idOrder := vars["idOrder"]
 
-// 	var tb models.BiayaTambahan
-// 	var order models.Order
+	var bt models.BiayaTambahan
+	var order models.Order
 
-// 	if err := json.NewDecoder(r.Body).Decode(&tb); err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	} else if err := validator.New().Struct(tb); err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
+	if err := json.NewDecoder(r.Body).Decode(&bt); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if err := validator.New().Struct(bt); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-// 	dataOrder, err := order.GetOrder(idOrder)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	} else if dataOrder.Invoice.StatusPesanan == "selesai" {
-// 		http.Error(w, "Status pesanan telah selesai.", http.StatusBadRequest)
-// 		return
-// 	}
+	dataOrder, _ := order.GetOrder(idOrder)
+	if dataOrder.Invoice.StatusPesanan != "diproses" {
+		http.Error(w, "Pesanan tidak sedang dalam proses pengerjaan.", http.StatusBadRequest)
+		return
+	}
 
-// 	err = tb.CreateBiayaTambahan(idOrder)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
+	err := bt.CreateBiayaTambahan(idOrder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	
+	var newOngkir = 0
+	if dataOrder.JenisPesanan == "cetak" && dataOrder.Pengiriman.KodeKurir != "cod" {
+		// Update Berat Ongkir
+		var rj RajaOngkir
+		var toko models.Toko
+		dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
+		newBerat := dataOrder.Pengiriman.Berat + bt.Berat
 
-// 	dataOrder.Invoice.TotalPembelian -= tb.Nominal
-// 	dataOrder.Invoice.Tagihan += tb.Nominal
-// 	dataOrder.Invoice.StatusPembayaran = "menunggu pembayaran"
-// 	_ = dataOrder.UpdateBiayaOrder(idOrder)
+		asal, _ := rj.GetIDKota(dataToko.Kota)
+		tujuan, _ := rj.GetIDKota(dataOrder.Pengiriman.Kota)
+		newOngkir, _, _, _ = rj.GetOngkir(asal, tujuan, dataOrder.Pengiriman.KodeKurir, dataOrder.Pengiriman.Service, strconv.Itoa(newBerat))
 
-// 	penerima := []int{}
+		var pengiriman models.Pengiriman
+		_ = pengiriman.UpdateBeratOngkir(idOrder, newBerat, newOngkir)
+	}
 
-// 	// send notif to customer
-// 	var notif models.Notifikasi
-// 	notif.IDPenerima = append(penerima, dataOrder.IDCustomer)
-// 	notif.Pengirim = dataOrder.Invoice.NamaToko
-// 	notif.Judul = "Terdapat Biaya Tambahan Baru"
-// 	notif.Pesan = "Pesanan " + strconv.Itoa(dataOrder.IDOrder) + " mempunyai biaya tambahan baru."
-// 	notif.Link = "/order/" + strconv.Itoa(dataOrder.IDOrder)
-// 	notif.CreatedAt = time.Now().Format("2006-01-02")
-// 	notif.CreateNotifikasi()
+	dataOrder.Invoice.TotalPembelian = dataOrder.Invoice.TotalPembelian - dataOrder.Pengiriman.Ongkir + bt.Total + newOngkir
+	dataOrder.Invoice.Tagihan = dataOrder.Invoice.TotalPembelian - dataOrder.Invoice.TotalBayar
+	dataOrder.Invoice.StatusPembayaran = "menunggu pembayaran"
+	_ = dataOrder.Invoice.UpdateInvoice(strconv.Itoa(dataOrder.IDInvoice))
+	
+	// send notif to customer
+	penerima := []int{}
+	var notif models.Notifikasi
+	notif.IDPenerima = append(penerima, dataOrder.IDCustomer)
+	notif.Pengirim = dataOrder.Invoice.NamaToko
+	notif.Judul = "Terdapat Biaya Tambahan Baru"
+	notif.Pesan = "Pesanan " + strconv.Itoa(dataOrder.IDInvoice) + " mempunyai biaya tambahan baru."
+	notif.Link = "/order?id=" + strconv.Itoa(dataOrder.IDOrder)
+	notif.CreatedAt = time.Now().Format("2006-01-02")
+	notif.CreateNotifikasi()
 
-// 	w.Header().Set("Content-type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-// 	w.Write([]byte(`{"message":"Biaya tambahan telah ditambahkan."}`))
-// }
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Biaya tambahan telah terkirim."}`))
+}
 
 // DeleteBiayaTambahan is func
-// func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	idOrder := vars["idOrder"]
-// 	idBiayaTambahan := vars["idBiayaTambahan"]
+func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idOrder := vars["idOrder"]
+	idBiayaTambahan := vars["idBiayaTambahan"]
 
-// 	var bt models.BiayaTambahan
-// 	var order models.Order
-// 	// var newerOrder models.Order
+	var bt models.BiayaTambahan
+	var order models.Order
 
-// 	dataOrder, err := order.GetOrder(idOrder)
-// 	if err != nil {
-// 		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-// 		return
-// 	} else if dataOrder.Invoice.StatusPesanan == "selesai" {
-// 		http.Error(w, "Pesanan telah selesai.", http.StatusBadRequest)
-// 		return
-// 	}
+	dataOrder, err := order.GetOrder(idOrder)
+	if err != nil {
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
+		return
+	} else if dataOrder.Invoice.StatusPesanan != "diproses" {
+		http.Error(w, "Pesanan tidak sedang dalam proses pengerjaan.", http.StatusBadRequest)
+		return
+	}
 
-// 	dataBT, err := bt.GetBiayaTambahan(idBiayaTambahan, idOrder)
-// 	if err != nil {
-// 		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-// 		return
-// 	}
+	dataBT, err := bt.GetBiayaTambahan(idBiayaTambahan, idOrder)
+	if err != nil {
+		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
+		return
+	}
+	
+	var newOngkir = 0
+	if dataOrder.JenisPesanan == "cetak" && dataOrder.Pengiriman.KodeKurir != "cod"  {
+		// Update Berat Ongkir
+		var rj RajaOngkir
+		var toko models.Toko
+		dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
+		newBerat := dataOrder.Pengiriman.Berat - dataBT.Berat
 
-// 	err = dataBT.DeleteBiayaTambahan(idBiayaTambahan, idOrder)
-// 	if err != nil {
-// 		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-// 		return
-// 	}
+		asal, _ := rj.GetIDKota(dataToko.Kota)
+		tujuan, _ := rj.GetIDKota(dataOrder.Pengiriman.Kota)
+		newOngkir, _, _, _ = rj.GetOngkir(asal, tujuan, dataOrder.Pengiriman.KodeKurir, dataOrder.Pengiriman.Service, strconv.Itoa(newBerat))
 
-// 	dataNewerOrder, _ := order.GetOrder(idOrder)
-// 	dataNewerOrder.Tagihan -= dataBT.Nominal
-// 	dataNewerOrder.Total += dataBT.Nominal
+		var pengiriman models.Pengiriman
+		_ = pengiriman.UpdateBeratOngkir(idOrder, newBerat, newOngkir)
+	}
 
-// 	if dataNewerOrder.Tagihan <= 0 {
-// 		dataNewerOrder.StatusPembayaran = "lunas"
-// 	}
+	dataOrder.Invoice.TotalPembelian = dataOrder.Invoice.TotalPembelian - dataOrder.Pengiriman.Ongkir - dataBT.Total + newOngkir
+	dataOrder.Invoice.Tagihan = dataOrder.Invoice.TotalPembelian - dataOrder.Invoice.TotalBayar
+	if  dataOrder.Invoice.Tagihan <= 0 {
+		dataOrder.Invoice.StatusPembayaran = "lunas"		
+	}
+	_ = dataOrder.Invoice.UpdateInvoice(strconv.Itoa(dataOrder.IDInvoice))
 
-// 	_ = dataNewerOrder.UpdateBiayaOrder(idOrder)
+	_ = bt.DeleteBiayaTambahan(idBiayaTambahan, idOrder)
 
-// 	var notif models.Notifikasi
-// 	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
-// 	notif.Pengirim = dataNewerOrder.NamaToko
-// 	notif.Judul = "Biaya tambahan telah dibatalkan"
-// 	notif.Pesan = "Biaya tambahan berupa " + dataBT.Item + "(Rp " + strconv.Itoa(dataBT.Nominal) + ") telah dibatalkan. No pesanan " + strconv.Itoa(dataOrder.IDOrder)
-// 	notif.Link = "/order/" + idOrder
-// 	notif.CreatedAt = time.Now().Format("2006-01-02")
-// 	notif.CreateNotifikasi()
+	var notif models.Notifikasi
+	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
+	notif.Pengirim = dataOrder.Invoice.NamaToko
+	notif.Judul = "Pembatalan biaya tambahan pada pesanan " + strconv.Itoa(dataOrder.IDInvoice)
+	notif.Pesan = "Biaya tambahan berupa " + dataBT.Item + "(Rp " + strconv.Itoa(dataBT.Total) + ") telah dibatalkan."
+	notif.Link = "/order?id=" + idOrder
+	notif.CreatedAt = time.Now().Format("2006-01-02")
+	notif.CreateNotifikasi()
 
-// 	w.Header().Set("Content-type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-// 	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Data telah dihapus!"}`))
 
-// }
+}

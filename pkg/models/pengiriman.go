@@ -53,3 +53,14 @@ func (p Pengiriman) SetResi(idOrder string) error {
 
 	return err
 }
+
+// UpdateBeratOngkir is func
+func (p Pengiriman) UpdateBeratOngkir(idOrder string, berat int, ongkir int) error {
+	con := db.Connect()
+	query := "UPDATE pengiriman SET berat = ?, ongkir = ? WHERE idOrder = ?"
+	_, err := con.Exec(query, berat, ongkir, idOrder)
+
+	defer con.Close()
+
+	return err
+}

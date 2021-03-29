@@ -10,16 +10,18 @@ type ProdukOrder struct {
 	BeratProduk      int    `json:"beratProduk"`
 	HargaProduk      int    `json:"hargaProduk"`
 	HargaSatuanWajah int    `json:"hargaSatuanWajah"`
+	FotoProduk 		 string `json:"fotoProduk"`
+	SlugProduk 		 string `json:"slugProduk"`
 }
 
 // GetProdukOrder is func
-func (po ProdukOrder) GetProdukOrder(idOrder string) (ProdukOrder, error) {
+func (po ProdukOrder) GetProdukOrder(idOrder, idProduk string) (ProdukOrder, error) {
 	con := db.Connect()
-	query := "SELECT idProdukOrder, idOrder, namaProduk, beratProduk, hargaProduk, hargaSatuanWajah " +
-		"FROM produkOrder WHERE idOrder = ?"
+	query := "SELECT a.idProdukOrder, a.idOrder, a.namaProduk, a.beratProduk, a.hargaProduk, a.hargaSatuanWajah, b.gambar, b.slug " +
+		"FROM produkOrder a, produk b WHERE a.idOrder = ? AND b.idProduk = ?"
 
-	err := con.QueryRow(query, idOrder).Scan(
-		&po.IDProdukOrder, &po.IDOrder, &po.NamaProduk, &po.BeratProduk, &po.HargaProduk, &po.HargaSatuanWajah,
+	err := con.QueryRow(query, idOrder, idProduk).Scan(
+		&po.IDProdukOrder, &po.IDOrder, &po.NamaProduk, &po.BeratProduk, &po.HargaProduk, &po.HargaSatuanWajah, &po.FotoProduk, &po.SlugProduk,
 	)
 
 	defer con.Close()

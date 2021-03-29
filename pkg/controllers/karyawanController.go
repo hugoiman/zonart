@@ -3,8 +3,10 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"zonart/pkg/models"
 
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -34,6 +36,26 @@ func (kc KaryawanController) GetKaryawan(w http.ResponseWriter, r *http.Request)
 	var karyawan models.Karyawan
 
 	dataKaryawan, err := karyawan.GetKaryawan(idToko, idKaryawan)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	message, _ := json.Marshal(dataKaryawan)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(message)
+}
+
+// GetKaryawanByIDCustomer is func
+func (kc KaryawanController) GetKaryawanByIDCustomer(w http.ResponseWriter, r *http.Request) {
+	user := context.Get(r, "user").(*MyClaims)
+	vars := mux.Vars(r)
+	idToko := vars["idToko"]
+	var karyawan models.Karyawan
+
+	dataKaryawan, err := karyawan.GetKaryawanByIDCustomer(idToko, strconv.Itoa(user.IDCustomer))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

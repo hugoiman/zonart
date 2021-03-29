@@ -11,16 +11,16 @@ type Penangan struct {
 }
 
 // GetPenangan is func
-func (p Penangan) GetPenangan(idOrder string) Penangan {
+func (p Penangan) GetPenangan(idOrder string) (Penangan, error) {
 	con := db.Connect()
 	query := "SELECT a.idPenangan, a.idOrder, a.idKaryawan, b.namaKaryawan FROM penangan a JOIN karyawan b ON a.idKaryawan = b.idKaryawan WHERE a.idOrder = ?"
 
-	_ = con.QueryRow(query, idOrder).Scan(
+	err := con.QueryRow(query, idOrder).Scan(
 		&p.IDPenangan, &p.IDOrder, &p.IDKaryawan, &p.NamaKaryawan)
 
 	defer con.Close()
 
-	return p
+	return p, err
 }
 
 // SetPenangan is func

@@ -24,7 +24,7 @@ func main() {
 	// Instansiasi Class Controller
 	var mw middleware.MiddleWare
 	var auth controllers.AuthController
-	// var bt controllers.BiayaTambahanController
+	var bt controllers.BiayaTambahanController
 	var customer controllers.CustomerController
 	var faq controllers.FaqController
 	var galeri controllers.GaleriController
@@ -46,6 +46,7 @@ func main() {
 	var jp controllers.JasaPengirimanController
 	var rekening controllers.RekeningController
 	var notif controllers.NotifikasiController
+	var ho controllers.HasilOrderController
 
 	api.Use(mw.AuthToken)
 
@@ -76,6 +77,7 @@ func main() {
 	api.HandleFunc("/api/karyawan/{idToko}", karyawan.GetKaryawans).Methods("GET")
 	api.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", karyawan.GetKaryawan).Methods("GET")
 	api.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", mw.AuthOwner(karyawan.UpdateKaryawan)).Methods("PUT")
+	api.HandleFunc("/api/karyawan-customer/{idToko}", karyawan.GetKaryawanByIDCustomer).Methods("GET")
 
 	api.HandleFunc("/api/undangan/{idUndangan}", undangan.GetUndangan).Methods("GET")
 	api.HandleFunc("/api/daftar-undangan/{idToko}", mw.AuthOwner(undangan.GetUndangans)).Methods("GET")
@@ -108,29 +110,28 @@ func main() {
 	api.HandleFunc("/api/order/{idOrder}", mw.CustomerOrder(order.GetOrder)).Methods("GET")
 	api.HandleFunc("/api/invoice/{idInvoice}", order.GetOrderByInvoice).Methods("GET")
 	// detail order toko
-	api.HandleFunc("/api/order-toko/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.GetOrder))).Methods("GET")
-	api.HandleFunc("/api/order-toko/{idToko}", mw.AuthOwnerAdmin(order.GetOrdersToko)).Methods("GET")
+	api.HandleFunc("/api/order-toko/{idToko}/{idOrder}", mw.SetUserPosition(order.GetOrderToko)).Methods("GET")
+	api.HandleFunc("/api/order-toko/{idToko}", mw.SetUserPosition(order.GetOrdersToko)).Methods("GET")
 	// list order editor
 	api.HandleFunc("/api/order-editor/{idOrder}", mw.PenanganOrder(order.GetOrder)).Methods("GET")
-	api.HandleFunc("/api/order-editor/{idToko}", mw.AuthEditor(order.GetOrdersEditor)).Methods("GET")
 
 	api.HandleFunc("/api/order/{idToko}/{idProduk}", order.CreateOrder).Methods("POST")
 	api.HandleFunc("/api/order-waktu/{idToko}/{idOrder}", mw.AuthOwnerAdmin(order.SetWaktuPengerjaan)).Methods("POST")
 	api.HandleFunc("/api/order-proses/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.ProsesOrder))).Methods("POST")
-	api.HandleFunc("/api/order-hasil/{idOrder}", mw.PenanganOrder(order.UploadHasilProduksi)).Methods("POST")
-	// api.HandleFunc("/api/order-setujui/{idOrder}", mw.CustomerOrder(order.SetujuiHasilProduksi)).Methods("POST")
-	// api.HandleFunc("/api/order-batal/{idOrder}", mw.CustomerOrder(order.SetujuiHasilProduksi)).Methods("POST")
-	// api.HandleFunc("/api/order-status/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.FinishOrder))).Methods("POST")
+	api.HandleFunc("/api/order-batal/{idOrder}", mw.CustomerOrder(order.CancelOrder)).Methods("POST")
+	api.HandleFunc("/api/order-selesai/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.FinishOrder))).Methods("POST")
+	api.HandleFunc("/api/order-hasil/{idOrder}", mw.PenanganOrder(ho.AddHasilOrder)).Methods("POST")
+	api.HandleFunc("/api/order-setujui/{idOrder}", mw.CustomerOrder(ho.SetujuiHasilOrder)).Methods("POST")
 
-	// api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(bt.CreateBiayaTambahan))).Methods("POST")
-	// api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}/{idBiayaTambahan}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(bt.DeleteBiayaTambahan))).Methods("DELETE")
+	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(bt.CreateBiayaTambahan))).Methods("POST")
+	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}/{idBiayaTambahan}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(bt.DeleteBiayaTambahan))).Methods("DELETE")
 
 	api.HandleFunc("/api/penangan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(penangan.SetPenangan))).Methods("POST")
 
 	api.HandleFunc("/api/pembayaran/{idOrder}", mw.CustomerOrder(pembayaran.CreatePembayaran)).Methods("POST")
-	api.HandleFunc("/api/pembayaran-konfirmasi/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(pembayaran.KonfirmasiPembayaran))).Methods("POST")
+	api.HandleFunc("/api/pembayaran-konfirmasi/{idToko}/{idOrder}/{idPembayaran}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(pembayaran.KonfirmasiPembayaran))).Methods("POST")
 
-	api.HandleFunc("/api/pengiriman/{idOrder}/{idToko}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(pengiriman.SetResi))).Methods("POST")
+	api.HandleFunc("/api/resi/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(pengiriman.SetResi))).Methods("POST")
 
 	api.HandleFunc("/api/revisi/{idOrder}", mw.CustomerOrder(revisi.CreateRevisi)).Methods("POST")
 

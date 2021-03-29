@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -30,11 +31,18 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	pembayaran.CreatedAt = time.Now().Format("2006-01-02")
+	pembayaran.Status = "Menunggu Konfirmasi"
+
 	err := pembayaran.CreatePembayaran(idOrder)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	var date time.Time
+	date, _ = time.Parse("2006-01-02", pembayaran.CreatedAt)
+	pembayaran.CreatedAt = date.Format("02 Jan 2006")
 
 	// send Notif to admin and owner
 	var order models.Order
@@ -54,13 +62,15 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Pembayaran Masuk"
 	notif.Pesan = notif.Pengirim + " telah melakukan pembayaran Rp " + strconv.Itoa(pembayaran.Nominal) + ". No invoice:" + idOrder
-	notif.Link = "/order/" + idOrder
+	notif.Link = dataOrder.Invoice.SlugToko + "/pesanan/" + idOrder
 	notif.CreatedAt = order.TglOrder
 	notif.CreateNotifikasi()
 
+	data, _ := json.Marshal(pembayaran)
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Pembayaran telah terkirim."}`))
+	w.Write([]byte(`{"message":"Pembayaran telah terkirim.","pembayaran":`+ string(data) +`}`))
 }
 
 // KonfirmasiPembayaran is func
@@ -68,38 +78,37 @@ func (pc PembayaranController) KonfirmasiPembayaran(w http.ResponseWriter, r *ht
 	vars := mux.Vars(r)
 	idPembayaran := vars["idPembayaran"]
 	idOrder := vars["idOrder"]
+
 	var pembayaran models.Pembayaran
+	var order models.Order
 
-	if err := json.NewDecoder(r.Body).Decode(&pembayaran); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if err := validator.New().Struct(pembayaran); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
+	dataOrder, _ := order.GetOrder(idOrder)
 	dataPembayaran, err := pembayaran.GetPembayaran(idPembayaran, idOrder)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	} else if dataPembayaran.Status == "Sudah Dikonfirmasi" {
+		http.Error(w, "Pembayaran sudah dikonfirmasi sebelumnya.", http.StatusBadRequest)
+		return
 	}
 
-	var order models.Order
-	dataOrder, _ := order.GetOrder(idOrder)
 	dataOrder.Invoice.Tagihan -= dataPembayaran.Nominal
 	dataOrder.Invoice.TotalBayar += dataPembayaran.Nominal
 
-	if order.Invoice.Tagihan == 0 {
-		order.Invoice.StatusPembayaran = "lunas"
+	if dataOrder.Invoice.Tagihan <= 0 {
+		dataOrder.Invoice.StatusPembayaran = "lunas"
 	}
 
-	pembayaran.Status = "diterima"
-	pembayaran.Nominal = dataPembayaran.Nominal
-	err = pembayaran.KonfirmasiPembayaran(idPembayaran, idOrder)
+	dataPembayaran.Status = "Sudah Dikonfirmasi"
+
+	err = dataOrder.Invoice.UpdateInvoice(dataOrder.Invoice.IDInvoice)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	_ = dataPembayaran.UpdatePembayaran(idPembayaran, idOrder)
 
 	// send notif to customer
 	var notif models.Notifikasi
@@ -107,7 +116,7 @@ func (pc PembayaranController) KonfirmasiPembayaran(w http.ResponseWriter, r *ht
 	notif.Pengirim = dataOrder.Invoice.NamaToko
 	notif.Judul = notif.Pengirim + " telah mengonfirmasi pembayaran anda. Inv: " + idOrder
 	notif.Pesan = ""
-	notif.Link = "/order/" + idOrder
+	notif.Link = "/order?id=" + idOrder
 	notif.CreatedAt = order.TglOrder
 
 	notif.CreateNotifikasi()

@@ -7,8 +7,8 @@ type BiayaTambahan struct {
 	IDBiayaTambahan int    `json:"idBiayaTambahan"`
 	IDOrder         int    `json:"idOrder"`
 	Item            string `json:"item" validate:"required"`
-	Berat           string `json:"berat"`
-	Total           int    `json:"total" validate:"required"`
+	Berat           int	   `json:"berat"`
+	Total           int    `json:"total"`
 }
 
 // GetBiayaTambahan is func
@@ -54,9 +54,6 @@ func (bt BiayaTambahan) CreateBiayaTambahan(idOrder string) error {
 		return err
 	}
 
-	query = "UPDATE `order` SET total = total + ?, tagihan = tagihan + ?, statusPembayaran = 'belum lunas' WHERE idOrder = ?"
-	_, _ = con.Exec(query, bt.Total, bt.Total, idOrder)
-
 	defer con.Close()
 
 	return err
@@ -65,11 +62,8 @@ func (bt BiayaTambahan) CreateBiayaTambahan(idOrder string) error {
 // DeleteBiayaTambahan is func
 func (bt BiayaTambahan) DeleteBiayaTambahan(idBiayaTambahan, idOrder string) error {
 	con := db.Connect()
-	query := "DELETE FROM biayaTambahan WHERE idBiayaTambahan = ?"
-	_, err := con.Exec(query, idBiayaTambahan)
-
-	query = "UPDATE `order` SET total = total - ?, tagihan = tagihan - ? WHERE idOrder = ?"
-	_, _ = con.Exec(query, bt.Total, bt.Total, idOrder)
+	query := "DELETE FROM biayaTambahan WHERE idBiayaTambahan = ? AND idOrder = ?"
+	_, err := con.Exec(query, idBiayaTambahan, idOrder)
 
 	defer con.Close()
 
