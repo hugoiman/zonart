@@ -146,7 +146,8 @@ func main() {
 	api.HandleFunc("/api/pembukuan/{idToko}", mw.AuthOwner(pembukuan.CreatePembukuan)).Methods("POST")
 	api.HandleFunc("/api/pembukuan/{idToko}/{idPembukuan}", mw.AuthOwner(pembukuan.DeletePembukuan)).Methods("DELETE")
 
-	router.HandleFunc("/api/getKota", ro.GetAllKota).Methods("GET")
+	router.HandleFunc("/api/raja-ongkir/city", ro.GetAllKota).Methods("GET")
+	router.HandleFunc("/api/raja-ongkir/cost", ro.GetCost).Methods("POST")
 	router.HandleFunc("/api/kurir", jp.GetJasaPengirimans).Methods("GET")
 
 	api.HandleFunc("/api/rekening/{idToko}/{idRekening}", mw.AuthOwner(rekening.DeleteRekening)).Methods("DELETE")

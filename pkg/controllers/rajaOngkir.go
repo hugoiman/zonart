@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/tidwall/gjson"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // RajaOngkir is class
@@ -75,6 +77,44 @@ func (rj RajaOngkir) GetAllKota(w http.ResponseWriter, r *http.Request) {
 	url := rj.baseURL + "/city"
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("key", rj.apiKey)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(body)
+}
+
+func (rj RajaOngkir) GetCost(w http.ResponseWriter, r *http.Request) {
+	data := struct {
+		Origin      string `json:"origin"  validate:"required"`
+		Destination string `json:"destination" validate:"required"`
+		Weight      string `json:"weight" validate:"required"`
+		Courier     string `json:"courier" validate:"required"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if err := validator.New().Struct(data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	rj.SetVariable()
+	url := rj.baseURL + "/cost"
+
+	payload := strings.NewReader("origin=" + data.Origin + "&destination=" + data.Destination + "&weight=" + data.Weight + "&courier=" + data.Courier)
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("key", rj.apiKey)
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
