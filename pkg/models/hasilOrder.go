@@ -7,11 +7,11 @@ import (
 
 // HasilOrder is class
 type HasilOrder struct {
-	IDHasilOrder int `json:"idHasilOrder"`
-	IDOrder int `json:"idOrder"`
-	Hasil string `json:"hasil" validate:"required"`
-	Status string `json:"status"`
-	CreatedAt string `json:"createdAt"`
+	IDHasilOrder int    `json:"idHasilOrder"`
+	IDOrder      int    `json:"idOrder"`
+	Hasil        string `json:"hasil"`
+	Status       string `json:"status"`
+	CreatedAt    string `json:"createdAt"`
 }
 
 // GetHasilOrder is func

@@ -61,6 +61,7 @@ func main() {
 	// api.HandleFunc("/api/customers", controllers.GetCustomers).Methods("GET")
 
 	router.HandleFunc("/api/toko/{id}", toko.GetToko).Methods("GET")
+	api.HandleFunc("/api/toko", toko.GetTokos).Methods("GET")
 	api.HandleFunc("/api/toko", toko.CreateToko).Methods("POST")
 	api.HandleFunc("/api/toko/{idToko}", mw.AuthOwner(toko.UpdateToko)).Methods("PUT")
 	// GetMyListToko

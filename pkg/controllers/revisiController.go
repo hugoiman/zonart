@@ -31,6 +31,13 @@ func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	var order models.Order
+	dataOrder, _ := order.GetOrder(idOrder)
+	if dataOrder.Invoice.StatusPesanan != "diproses" {
+		http.Error(w, "Status Pesanan tidak sedang dalam diproses", http.StatusBadRequest)
+		return
+	}
+
 	revisi.CreatedAt = time.Now().Format("2006-01-02")
 
 	err := revisi.CreateRevisi(idOrder)
@@ -38,8 +45,6 @@ func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var order models.Order
-	dataOrder, _ := order.GetOrder(idOrder)
 
 	var karyawan models.Karyawan
 	dataKaryawan, _ := karyawan.GetKaryawan(strconv.Itoa(dataOrder.IDToko), strconv.Itoa(dataOrder.Penangan.IDKaryawan))
@@ -51,8 +56,8 @@ func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) 
 	var notif models.Notifikasi
 	notif.IDPenerima = append(notif.IDPenerima, dataKaryawan.IDCustomer)
 	notif.Pengirim = dataCustomer.Nama
-	notif.Judul = "Permintaan revisi pesanan " + idOrder
-	notif.Pesan = "Revisi pesanan " + idOrder + " ditambahkan. Segera periksa pesanan."
+	notif.Judul = "Permintaan revisi pesanan #" + dataOrder.IDInvoice
+	notif.Pesan = "Revisi pesanan #" + dataOrder.IDInvoice + " baru. Segera periksa pesanan."
 	notif.Link = dataOrder.Invoice.SlugToko + "/pesanan/" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
 

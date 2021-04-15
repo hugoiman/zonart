@@ -6,8 +6,8 @@ import "zonart/db"
 type Pengiriman struct {
 	IDPengiriman int    `json:"idPengiriman"`
 	IDOrder      int    `json:"idOrder"`
-	Penerima     string `json:"penerima"`
-	Telp         string `json:"telp"`
+	Penerima     string `json:"penerima" validate:"required"`
+	Telp         string `json:"telp" validate:"required"`
 	Alamat       string `json:"alamat"`
 	Kota         string `json:"kota"`
 	Label        string `json:"label"`

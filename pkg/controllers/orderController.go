@@ -124,10 +124,20 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	idProduk := vars["idProduk"]
 
 	var order models.Order
-	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	var cloudinary Cloudinary
+	var images = make([]string, 0)
+
+	decode := json.NewDecoder(r.Body).Decode(&order)
+	for _, v := range order.FileOrder {
+		images = append(images, v.Foto)
+	}
+
+	if decode != nil {
+		_ = cloudinary.DeleteImages(images)
+		http.Error(w, decode.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(order); err != nil {
+		_ = cloudinary.DeleteImages(images)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -138,19 +148,27 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var produk models.Produk
 	dataProduk, err := produk.GetProduk(idToko, idProduk)
 	if err != nil {
+		_ = cloudinary.DeleteImages(images)
 		http.Error(w, "Produk tidak ditemukan", http.StatusBadRequest)
 		return
 	}
 
 	for _, vGrupOpsi := range dataProduk.GrupOpsi {
 		totalOpsiGrup := gjson.Get(string(grupOpsi), "opsiOrder.#(idGrupOpsi=="+strconv.Itoa(vGrupOpsi.IDGrupOpsi)+")#").Array()
-		if len(totalOpsiGrup) < vGrupOpsi.Min {
-			http.Error(w, ""+vGrupOpsi.NamaGrup+" kurang dari batas minimal", http.StatusBadRequest)
+		if len(totalOpsiGrup) < vGrupOpsi.Min && (order.JenisPesanan == "cetak" && vGrupOpsi.HardCopy) || (order.JenisPesanan == "softcopy" && vGrupOpsi.SoftCopy) {
+			_ = cloudinary.DeleteImages(images)
+			http.Error(w, "Opsi pada "+vGrupOpsi.NamaGrup+" kurang dari batas minimal", http.StatusBadRequest)
 			return
-		} else if len(totalOpsiGrup) > vGrupOpsi.Max {
-			http.Error(w, ""+vGrupOpsi.NamaGrup+" melebihi batas maksimal", http.StatusBadRequest)
+		} else if len(totalOpsiGrup) > vGrupOpsi.Max && (order.JenisPesanan == "cetak" && vGrupOpsi.HardCopy) || (order.JenisPesanan == "softcopy" && vGrupOpsi.SoftCopy) {
+			_ = cloudinary.DeleteImages(images)
+			http.Error(w, "Opsi pada "+vGrupOpsi.NamaGrup+" melebihi batas maksimal", http.StatusBadRequest)
+			return
+		} else if (order.JenisPesanan == "cetak" && !vGrupOpsi.HardCopy) || (order.JenisPesanan == "softcopy" && !vGrupOpsi.SoftCopy) && len(totalOpsiGrup) > 0 {
+			_ = cloudinary.DeleteImages(images)
+			http.Error(w, vGrupOpsi.NamaGrup+" dapat diisi jika jenis pesanan selain "+order.JenisPesanan, http.StatusBadRequest)
 			return
 		}
+
 	}
 
 	dtProduk, _ := json.Marshal(dataProduk)
@@ -162,9 +180,11 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		spesificRequest := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").spesificRequest").Bool()
 		dataOpsiProduk := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+")#.opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+")").Array()
 		if len(dataGop) == 0 {
+			_ = cloudinary.DeleteImages(images)
 			http.Error(w, "Grup Opsi tidak ditemukan.", http.StatusBadRequest)
 			return
 		} else if len(dataOpsiProduk) == 0 && spesificRequest == false {
+			_ = cloudinary.DeleteImages(images)
 			http.Error(w, "Spesific Request tidak diizinkan.", http.StatusBadRequest)
 			return
 		} else if len(dataOpsiProduk) == 0 && spesificRequest == true {
@@ -201,7 +221,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	totalHargaWajah := order.TambahanWajah * order.ProdukOrder.HargaSatuanWajah
 
 	// Total Harga Opsi
-	totalHargaOpsi, totalBeratOpsi := oc.HitungHargaBeratOpsi(order)
+	totalHargaOpsi, totalBeratOpsi := oc.hitungHargaBeratOpsi(order)
 
 	// get ongkir, estimasi, jenis kurir dan set harga produk
 	var rj RajaOngkir
@@ -211,9 +231,18 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	// simpan harga produk
 	if order.JenisPesanan == "soft copy" {
 		order.ProdukOrder.HargaProduk = int(gjson.Get(string(dtProduk), `jenisPemesanan.#(jenis=="soft copy").harga`).Int())
+		order.Pengiriman.Kota = dataToko.Kota
+		order.Pengiriman.Kurir = ""
+		order.Pengiriman.Alamat = ""
+		order.Pengiriman.Label = ""
+		order.Pengiriman.Service = ""
 	} else if order.JenisPesanan == "cetak" && order.Pengiriman.KodeKurir == "cod" {
 		order.ProdukOrder.HargaProduk = int(gjson.Get(string(dtProduk), `jenisPemesanan.#(jenis=="cetak").harga`).Int())
+		order.Pengiriman.Kota = dataToko.Kota
 		order.Pengiriman.Kurir = "COD (Cash On Delivery)"
+		order.Pengiriman.Alamat = ""
+		order.Pengiriman.Label = ""
+		order.Pengiriman.Service = ""
 	} else if order.JenisPesanan == "cetak" && order.Pengiriman.KodeKurir != "cod" {
 		order.Pengiriman.Berat = (dataProduk.Berat * order.Pcs) + totalBeratOpsi
 		asal, _ := rj.GetIDKota(dataToko.Kota)
@@ -221,12 +250,12 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		ongkir, estimasi, kurir, err := rj.GetOngkir(asal, tujuan, order.Pengiriman.KodeKurir, order.Pengiriman.Service, strconv.Itoa(order.Pengiriman.Berat))
 
 		if !err {
+			_ = cloudinary.DeleteImages(images)
 			http.Error(w, "Terjadi kesalahan. Mohon periksa data pengiriman.", http.StatusBadRequest)
 			return
 		}
 
 		order.Pengiriman.Kurir = kurir
-
 		order.ProdukOrder.HargaProduk = int(gjson.Get(string(dtProduk), `jenisPemesanan.#(jenis=="cetak").harga`).Int())
 		order.Pengiriman.Ongkir = ongkir
 		order.Pengiriman.Estimasi = estimasi
@@ -239,14 +268,17 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	order.Invoice.IDCustomer = user.IDCustomer
 	err = order.Invoice.CreateInvoice(idToko)
 	if err != nil {
+		_ = cloudinary.DeleteImages(images)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// create order
 	idOrder, err := order.CreateOrder(idToko, idProduk)
+	fmt.Println(err)
 	if err != nil {
 		_ = order.Invoice.DeleteInvoice(order.Invoice.IDInvoice)
+		_ = cloudinary.DeleteImages(images)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -265,7 +297,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Permintaan pesanan baru"
 	notif.Pesan = notif.Pengirim + " telah memesan produk " + order.ProdukOrder.NamaProduk + ". Pesanan #" + order.Invoice.IDInvoice
-	notif.Link = "/pesanan/" + strconv.Itoa(idOrder)
+	notif.Link = dataToko.Slug + "/pesanan/" + strconv.Itoa(idOrder)
 	notif.CreatedAt = order.TglOrder
 	notif.CreateNotifikasi()
 
@@ -274,8 +306,8 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"message":"Mohon tunggu konfirmasi penjual. Terimakasih.","idOrder":"` + strconv.Itoa(idOrder) + `"}`))
 }
 
-// HitungHargaBeratOpsi is func
-func (oc OrderController) HitungHargaBeratOpsi(o models.Order) (int, int) {
+// hitungHargaBeratOpsi is func
+func (oc OrderController) hitungHargaBeratOpsi(o models.Order) (int, int) {
 	var totalHargaOpsi, totalBeratOpsi int
 	for _, valueOpsi := range o.OpsiOrder {
 		if valueOpsi.PerProduk == false {
@@ -366,7 +398,7 @@ func (oc OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	var order models.Order
 	dataOrder, _ := order.GetOrder(idOrder)
 	if dataOrder.Invoice.StatusPesanan != "menunggu konfirmasi" {
-		http.Error(w, "Pesanan sedang diproses.", http.StatusBadRequest)
+		http.Error(w, "Status pesanan tidak sedang menunggu konfirmasi", http.StatusBadRequest)
 		return
 	}
 

@@ -132,9 +132,6 @@ func (mw MiddleWare) CustomerOrder(next http.HandlerFunc) http.HandlerFunc {
 		} else if user.IDCustomer != dataOrder.IDCustomer {
 			http.Error(w, "Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
 			return
-		} else if r.Method != http.MethodGet && dataOrder.Invoice.StatusPesanan == "selesai" {
-			http.Error(w, "Pesanan sudah diselesaikan.", http.StatusBadRequest)
-			return
 		}
 
 		next.ServeHTTP(w, r)

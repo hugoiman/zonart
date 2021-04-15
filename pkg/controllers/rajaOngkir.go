@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/tidwall/gjson"
@@ -16,15 +17,15 @@ type RajaOngkir struct {
 	apiKey  string
 }
 
-// SetVariable is setter
-func (rj *RajaOngkir) SetVariable() {
+// setVariable is setter
+func (rj *RajaOngkir) setVariable() {
 	rj.baseURL = "https://api.rajaongkir.com/starter"
-	rj.apiKey = "1999918691cd6b4137c9ec218333e3e2"
+	rj.apiKey = "*"
 }
 
 // GetIDKota is func
 func (rj RajaOngkir) GetIDKota(kota string) (string, bool) {
-	rj.SetVariable()
+	rj.setVariable()
 	uRL := rj.baseURL + "/city"
 	req, _ := http.NewRequest("GET", uRL, nil)
 	req.Header.Add("key", rj.apiKey)
@@ -45,7 +46,7 @@ func (rj RajaOngkir) GetIDKota(kota string) (string, bool) {
 
 // GetOngkir is func
 func (rj RajaOngkir) GetOngkir(asal, tujuan, kodeKurir, service, berat string) (int, string, string, bool) {
-	rj.SetVariable()
+	rj.setVariable()
 	uRL := rj.baseURL + "/cost"
 	payload := strings.NewReader("origin=" + asal + "&destination=" + tujuan + "&weight=" + berat + "&courier=" + kodeKurir)
 	req, _ := http.NewRequest("POST", uRL, payload)
@@ -68,12 +69,19 @@ func (rj RajaOngkir) GetOngkir(asal, tujuan, kodeKurir, service, berat string) (
 		return 0, "", "", false
 	}
 
+	var regex = regexp.MustCompile(`(?i)hari|jam`)
+	if !regex.MatchString(estimasi) {
+		estimasi += " hari"
+	}
+	subStr := strings.NewReplacer("JAM", "jam", "HARI", "hari")
+	estimasi = subStr.Replace(estimasi)
+
 	return int(ongkir), estimasi, kurir, true
 }
 
 // GetAllKota is func
 func (rj RajaOngkir) GetAllKota(w http.ResponseWriter, r *http.Request) {
-	rj.SetVariable()
+	rj.setVariable()
 	url := rj.baseURL + "/city"
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("key", rj.apiKey)
@@ -106,7 +114,7 @@ func (rj RajaOngkir) GetCost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	rj.SetVariable()
+	rj.setVariable()
 	url := rj.baseURL + "/cost"
 
 	payload := strings.NewReader("origin=" + data.Origin + "&destination=" + data.Destination + "&weight=" + data.Weight + "&courier=" + data.Courier)

@@ -127,7 +127,11 @@ func (cc CustomerController) ChangePassword(w http.ResponseWriter, r *http.Reque
 	newPass.Write([]byte(data.NewPassword))
 	var encryptedPass = fmt.Sprintf("%x", newPass.Sum(nil))
 
-	_ = customer.UpdatePassword(user.IDCustomer, encryptedPass)
+	err := customer.UpdatePassword(user.IDCustomer, encryptedPass)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

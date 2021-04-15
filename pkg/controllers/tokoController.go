@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 	"zonart/pkg/models"
 
@@ -25,6 +26,27 @@ func (tc TokoController) GetToko(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	message, err := json.Marshal(dataToko)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(message)
+}
+
+// GetTokos is func
+func (tc TokoController) GetTokos(w http.ResponseWriter, r *http.Request) {
+	user := context.Get(r, "user").(*MyClaims)
+	var toko models.Toko
+
+	dataToko := toko.GetMyToko(strconv.Itoa(user.IDCustomer))
+	for _, v := range toko.GetTokoByEmploye(strconv.Itoa(user.IDCustomer)).Tokos {
+		dataToko.Tokos = append(dataToko.Tokos, v)
 	}
 
 	message, err := json.Marshal(dataToko)
@@ -61,7 +83,6 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 
 	toko.IDOwner = user.IDCustomer
 	toko.Foto = "toko.jpg"
-	toko.SetKaryawan = false
 	toko.CreatedAt = time.Now().Format("2006-01-02")
 
 	_, err := toko.CreateToko()

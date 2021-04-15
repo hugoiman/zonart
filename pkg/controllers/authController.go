@@ -52,13 +52,9 @@ func (auth AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var customer models.Customer
-	data, err := customer.GetCustomer(idCustomer)
-	if err != nil {
-		http.Error(w, "Terjadi error.", http.StatusInternalServerError)
-		return
-	}
+	data, _ := customer.GetCustomer(idCustomer)
 
-	token := AuthController{}.CreateToken(data)
+	token := AuthController{}.createToken(data)
 
 	type M map[string]interface{}
 	message, _ := json.Marshal(M{"token": token})
@@ -68,14 +64,14 @@ func (auth AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	w.Write(message)
 }
 
-// CreateToken is Generate token
-func (auth AuthController) CreateToken(customer models.Customer) string {
+// createToken is Generate token
+func (auth AuthController) createToken(customer models.Customer) string {
 	var mySigningKey = mw.MySigningKey
 	claims := MyClaims{
 		IDCustomer: customer.IDCustomer,
 		Username:   customer.Username,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 365).Unix(),
 		},
 	}
 
@@ -102,7 +98,7 @@ func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request)
 	var customer models.Customer
 	dataCustomer, err := customer.GetCustomer(data.Email)
 	if err != nil {
-		http.Error(w, "User tidak ditemukan", http.StatusBadRequest)
+		http.Error(w, "Email tidak terdaftar", http.StatusBadRequest)
 		return
 	}
 
@@ -118,7 +114,7 @@ func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, _ := token.SignedString(mySigningKey)
-	link := "http://localhost:5500/pages/verifikasi-reset-password.html?token=" + tokenString
+	link := "http://localhost:5500/verifikasi-reset-password?token=" + tokenString
 
 	message := "Hallo " + dataCustomer.Nama + ",<br> Silahkan klik link dibawah ini untuk verifikasi. Link ini akan kadaluarsa dalam waktu 15 menit.<br><br>" + link
 	err = gomail.SendEmail("Reset Password", data.Email, message)

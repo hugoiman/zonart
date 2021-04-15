@@ -21,13 +21,24 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
 
+	var cloudinary Cloudinary
 	var pembayaran models.Pembayaran
+	decode := json.NewDecoder(r.Body).Decode(&pembayaran)
 
-	if err := json.NewDecoder(r.Body).Decode(&pembayaran); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	var images = []string{pembayaran.Bukti}
+	if decode != nil {
+		_ = cloudinary.DeleteImages(images)
+		http.Error(w, decode.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(pembayaran); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var order models.Order
+	dataOrder, _ := order.GetOrder(idOrder)
+	if dataOrder.Invoice.StatusPesanan != "diproses" {
+		http.Error(w, "Status pesanan tidak sedang dalam proses", http.StatusBadRequest)
 		return
 	}
 
@@ -45,11 +56,9 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	pembayaran.CreatedAt = date.Format("02 Jan 2006")
 
 	// send Notif to admin and owner
-	var order models.Order
 	var toko models.Toko
 	var customer models.Customer
 
-	dataOrder, _ := order.GetOrder(idOrder)
 	dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
@@ -70,7 +79,7 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Pembayaran telah terkirim.","pembayaran":`+ string(data) +`}`))
+	w.Write([]byte(`{"message":"Pembayaran telah terkirim.","pembayaran":` + string(data) + `}`))
 }
 
 // KonfirmasiPembayaran is func
