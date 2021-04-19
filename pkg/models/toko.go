@@ -22,7 +22,7 @@ type Toko struct {
 	Foto               string               `json:"foto"`
 	CreatedAt          string               `json:"createdAt"`
 	JasaPengirimanToko []JasaPengirimanToko `json:"jasaPengirimanToko"`
-	Rekening           []Rekening           `json:"rekening"`
+	Rekening           []Rekening           `json:"rekening" validate:"dive"`
 }
 
 // Tokos is object

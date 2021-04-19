@@ -9,7 +9,7 @@ import (
 type Pembayaran struct {
 	IDPembayaran int    `json:"idPembayaran"`
 	IDOrder      int    `json:"idOrder"`
-	Bukti        string `json:"bukti" validate:"required"`
+	Bukti        string `json:"bukti"`
 	Nominal      int    `json:"nominal" validate:"required"`
 	Status       string `json:"status"`
 	CreatedAt    string `json:"createdAt"`

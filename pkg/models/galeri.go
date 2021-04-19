@@ -10,7 +10,7 @@ type Galeri struct {
 	IDToko   int    `json:"idToko"`
 	IDProduk int    `json:"idProduk" validate:"required"`
 	Kategori string `json:"kategori"`
-	Gambar   string `json:"gambar" validate:"required"`
+	Gambar   string `json:"gambar"`
 }
 
 // Galeris is list of galeri
@@ -40,21 +40,31 @@ func (g Galeri) GetGaleris(idToko string) Galeris {
 }
 
 // CreateGaleri is func
-func (g Galeri) CreateGaleri(idToko string) error {
+func (g Galeri) CreateGaleri(idToko string) (int, error) {
 	con := db.Connect()
 	query := "INSERT INTO galeri (idToko, idProduk, gambar) VALUES (?,?,?)"
-	_, err := con.Exec(query, idToko, g.IDProduk, g.Gambar)
+	exec, err := con.Exec(query, idToko, g.IDProduk, g.Gambar)
+
+	if err != nil {
+		return 0, err
+	}
+
+	idInt64, _ := exec.LastInsertId()
+	idGaleri := int(idInt64)
 
 	defer con.Close()
 
-	return err
+	return idGaleri, err
 }
 
 // DeleteGaleri is func
-func (g Galeri) DeleteGaleri(idToko, idGaleri string) error {
+func (g Galeri) DeleteGaleri(idToko string, idGaleri []string) error {
 	con := db.Connect()
-	query := "DELETE FROM galeri WHERE idToko = ? AND idGaleri = ?"
-	_, err := con.Exec(query, idToko, idGaleri)
+	var err error
+	for _, v := range idGaleri {
+		query := "DELETE FROM galeri WHERE idToko = ? AND idGaleri = ?"
+		_, err = con.Exec(query, idToko, v)
+	}
 
 	defer con.Close()
 

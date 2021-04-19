@@ -19,14 +19,14 @@ type Order struct {
 	Pcs             int             `json:"pcs" validate:"required,min=1"`    //y
 	RencanaPakai    string          `json:"rencanaPakai"`                     //y
 	WaktuPengerjaan string          `json:"waktuPengerjaan"`                  //y
-	ContohGambar    string          `json:"contohGambar" validate:"required"` //y
+	ContohGambar    string          `json:"contohGambar"`                     //y
 	TglOrder        string          `json:"tglOrder"`                         //y
 	Invoice         Invoice         `json:"invoice"`
 	ProdukOrder     ProdukOrder     `json:"produkOrder"`
 	Pengiriman      Pengiriman      `json:"pengiriman" validate:"required,dive"`
 	Penangan        Penangan        `json:"penangan"`
 	HasilOrder      HasilOrder      `json:"hasilOrder"`
-	FileOrder       []FileOrder     `json:"fileOrder" validate:"required,dive"`
+	FileOrder       []FileOrder     `json:"fileOrder"`
 	BiayaTambahan   []BiayaTambahan `json:"biayaTambahan"`
 	OpsiOrder       []OpsiOrder     `json:"opsiOrder"`
 	Revisi          []Revisi        `json:"revisi"`

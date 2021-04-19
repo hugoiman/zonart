@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // HasilOrderController is class
@@ -17,27 +17,42 @@ type HasilOrderController struct{}
 
 // AddHasilOrder is func
 func (hoc HasilOrderController) AddHasilOrder(w http.ResponseWriter, r *http.Request) {
+	payload := r.FormValue("payload")
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
 
 	var ho models.HasilOrder
-	if err := json.NewDecoder(r.Body).Decode(&ho); err != nil {
+	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&ho); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(ho); err != nil {
+	} else if _, _, err := r.FormFile("hasil"); err == http.ErrMissingFile {
+		http.Error(w, "Mohon masukan gambar", http.StatusBadRequest)
+		return
+	}
+
+	maxSize := int64(1024 * 1024 * 2) // 2 MB
+	destinationFolder := "zonart/hasilOrder"
+	var cloudinary Cloudinary
+	images, err := cloudinary.UploadImages(r, maxSize, destinationFolder)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	ho.Hasil = images[0]
+
+	var order models.Order
+	dataOrder, _ := order.GetOrder(idOrder)
 
 	ho.CreatedAt = time.Now().Format("2006-01-02")
 	ho.Status = "menunggu persetujuan"
 	if err := ho.AddHasilOrder(idOrder); err != nil {
+		cloudinary.DeleteImages(images)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var order models.Order
-	dataOrder, _ := order.GetOrder(idOrder)
+	oldImage := []string{dataOrder.HasilOrder.Hasil}
+	cloudinary.DeleteImages(oldImage)
 
 	var notif models.Notifikasi
 	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)

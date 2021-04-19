@@ -5,9 +5,9 @@ import "zonart/db"
 // Rekening is class
 type Rekening struct {
 	IDRekening int    `json:"idRekening"`
-	Bank       string `json:"bank"`
-	Norek      string `json:"norek"`
-	Pemilik    string `json:"pemilik"`
+	Bank       string `json:"bank" validate:"max=50"`
+	Norek      string `json:"norek" validate:"max=20"`
+	Pemilik    string `json:"pemilik" validate:"max=50"`
 }
 
 // GetRekening is func

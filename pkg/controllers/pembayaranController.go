@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 	"zonart/pkg/models"
 
@@ -17,23 +18,31 @@ type PembayaranController struct{}
 
 // CreatePembayaran is func
 func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.Request) {
+	payload := r.FormValue("payload")
 	user := context.Get(r, "user").(*MyClaims)
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
-
-	var cloudinary Cloudinary
 	var pembayaran models.Pembayaran
-	decode := json.NewDecoder(r.Body).Decode(&pembayaran)
-
-	var images = []string{pembayaran.Bukti}
-	if decode != nil {
-		_ = cloudinary.DeleteImages(images)
-		http.Error(w, decode.Error(), http.StatusBadRequest)
+	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&pembayaran); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(pembayaran); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	} else if _, _, err := r.FormFile("bukti"); err == http.ErrMissingFile {
+		http.Error(w, "Masukkan bukti pembayaran", http.StatusBadRequest)
+		return
 	}
+
+	var cloudinary Cloudinary
+	maxSize := int64(1024 * 1024 * 2) // 2 MB
+	destinationFolder := "zonart/pembayaran"
+	images, err := cloudinary.UploadImages(r, maxSize, destinationFolder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	pembayaran.Bukti = images[0]
 
 	var order models.Order
 	dataOrder, _ := order.GetOrder(idOrder)
@@ -45,8 +54,9 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	pembayaran.CreatedAt = time.Now().Format("2006-01-02")
 	pembayaran.Status = "Menunggu Konfirmasi"
 
-	err := pembayaran.CreatePembayaran(idOrder)
+	err = pembayaran.CreatePembayaran(idOrder)
 	if err != nil {
+		cloudinary.DeleteImages(images)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

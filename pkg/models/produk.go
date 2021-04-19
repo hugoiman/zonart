@@ -11,7 +11,7 @@ type Produk struct {
 	IDToko         int                    `json:"idToko"`
 	NamaProduk     string                 `json:"namaProduk" validate:"required"`
 	Berat          int                    `json:"berat"`
-	Gambar         string                 `json:"gambar" validate:"required"`
+	Gambar         string                 `json:"gambar"`
 	Deskripsi      string                 `json:"deskripsi"`
 	Status         string                 `json:"status" validate:"required,eq=aktif|eq=tidak aktif"`
 	Catatan        string                 `json:"catatan"`

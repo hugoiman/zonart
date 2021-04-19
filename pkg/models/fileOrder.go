@@ -6,7 +6,7 @@ import "zonart/db"
 type FileOrder struct {
 	IDFileOrder int    `json:"idFileOrder"`
 	IDOrder     int    `json:"idOrder"`
-	Foto        string `json:"foto" validate:"required"`
+	Foto        string `json:"foto"`
 }
 
 // GetFileOrder is func

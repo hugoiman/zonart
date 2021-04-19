@@ -19,8 +19,8 @@ type RajaOngkir struct {
 
 // setVariable is setter
 func (rj *RajaOngkir) setVariable() {
-	rj.baseURL = "https://api.rajaongkir.com/starter"
-	rj.apiKey = "*"
+	rj.baseURL = "a"
+	rj.apiKey = "a"
 }
 
 // GetIDKota is func

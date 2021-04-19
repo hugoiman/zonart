@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	"zonart/pkg/models"
 
@@ -82,7 +83,7 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 	}
 
 	toko.IDOwner = user.IDCustomer
-	toko.Foto = "toko.jpg"
+	toko.Foto = "https://res.cloudinary.com/dbddhr9rz/image/upload/v1612894274/zonart/toko/toko_jhecxf.png"
 	toko.CreatedAt = time.Now().Format("2006-01-02")
 
 	_, err := toko.CreateToko()
@@ -98,15 +99,17 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 
 // UpdateToko is func
 func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
+	payload := r.FormValue("payload")
 	vars := mux.Vars(r)
 	idToko := vars["idToko"]
 
 	var toko models.Toko
+	var rj RajaOngkir
 	var rekening models.Rekening
 	var jpt models.JasaPengirimanToko
 	regexSlug := regexp.MustCompile(`^([a-z])([a-z0-9-]{1,48})([a-z0-9])$`)
 
-	if err := json.NewDecoder(r.Body).Decode(&toko); err != nil {
+	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&toko); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(toko); err != nil {
@@ -115,13 +118,39 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 	} else if !regexSlug.MatchString(toko.Slug) {
 		http.Error(w, "Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
 		return
+	} else if _, ok := rj.GetIDKota(toko.Kota); !ok {
+		http.Error(w, "Kota tidak ditemukan", http.StatusBadRequest)
+		return
+	}
+
+	_, _, existImage := r.FormFile("foto")
+	var oldToko models.Toko
+	var images []string
+	var cloudinary Cloudinary
+	if existImage != http.ErrMissingFile {
+		maxSize := int64(1024 * 1024 * 2) // 2 MB
+		destinationFolder := "zonart/toko"
+		images, err := cloudinary.UploadImages(r, maxSize, destinationFolder)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		oldToko, _ = toko.GetToko(idToko)
+		toko.Foto = images[0]
 	}
 
 	// Update main data toko
 	err := toko.UpdateToko(idToko)
 	if err != nil {
+		cloudinary.DeleteImages(images)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	if existImage != http.ErrMissingFile && oldToko.Foto != "https://res.cloudinary.com/dbddhr9rz/image/upload/v1612894274/zonart/toko/toko_jhecxf.png" {
+		oldImage := []string{oldToko.Foto}
+		cloudinary.DeleteImages(oldImage)
 	}
 
 	// update data pengiriman toko

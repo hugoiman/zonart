@@ -30,7 +30,7 @@ func (mw MiddleWare) AuthToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if !strings.Contains(authHeader, "Bearer") {
-			http.Error(w, "Dibutuhkan otentikasi. Silahkan melakukan login.", http.StatusUnauthorized)
+			http.Error(w, "Dibutuhkan autentikasi. Silahkan login.", http.StatusUnauthorized)
 			return
 		}
 
@@ -42,7 +42,7 @@ func (mw MiddleWare) AuthToken(next http.Handler) http.Handler {
 			return MySigningKey, nil
 		})
 		if err != nil || !token.Valid {
-			http.Error(w, "Token invalid: "+err.Error(), http.StatusBadRequest) // Token expired/key tidak cocok(invalid)
+			http.Error(w, "Token invalid. Dibutuhkan autentikasi. Silahkan login.", http.StatusUnauthorized) // Token expired/key tidak cocok(invalid)
 			return
 		}
 

@@ -151,6 +151,8 @@ func main() {
 	router.HandleFunc("/api/raja-ongkir/cost", ro.GetCost).Methods("POST")
 	router.HandleFunc("/api/kurir", jp.GetJasaPengirimans).Methods("GET")
 
+	router.HandleFunc("/api/upload-test", controllers.UploadTest).Methods("POST")
+
 	api.HandleFunc("/api/rekening/{idToko}/{idRekening}", mw.AuthOwner(rekening.DeleteRekening)).Methods("DELETE")
 
 	os.Setenv("PORT", "8080")
