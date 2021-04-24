@@ -7,9 +7,9 @@ type Opsi struct {
 	IDOpsi     int    `json:"idOpsi"`
 	IDGrupOpsi int    `json:"idGrupOpsi"`
 	NamaGrup   string `json:"namaGrup"`
-	Opsi       string `json:"opsi" validate:"required,max=50"`
-	Harga      int    `json:"harga" validate:"max=10"`
-	Berat      int    `json:"berat" validate:"max=10"`
+	Opsi       string `json:"opsi" validate:"required"`
+	Harga      int    `json:"harga"`
+	Berat      int    `json:"berat"`
 	PerProduk  bool   `json:"perProduk"`
 	Status     bool   `json:"status"`
 }

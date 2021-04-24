@@ -59,7 +59,7 @@ func (t Toko) GetToko(id string) (Toko, error) {
 // CreateToko is func
 func (t Toko) CreateToko() (int, error) {
 	con := db.Connect()
-	query, _ := con.Prepare("INSERT INTO toko (idOwner, namaToko, emailToko, foto, deskripsi, alamat, kota, telp, whatsapp, instagram, website, slug, createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	query, _ := con.Prepare("INSERT INTO toko (idOwner, namaToko, emailToko, foto, deskripsi, alamat, kota, telp, whatsapp, instagram, website, slug, createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	exec, err := query.Exec(t.IDOwner, t.NamaToko, t.EmailToko, t.Foto, t.Deskripsi, t.Alamat,
 		t.Kota, t.Telp, t.Whatsapp, t.Instagram, t.Website, t.Slug, t.CreatedAt)
 	if err != nil {

@@ -77,7 +77,9 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 	} else if !regexSlug.MatchString(toko.Slug) {
 		http.Error(w, "Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
 		return
-	} else if _, ok := rj.GetIDKota(toko.Kota); !ok {
+	}
+	_, ok := rj.GetIDKota(toko.Kota)
+	if !ok {
 		http.Error(w, "Kota tidak ditemukan", http.StatusBadRequest)
 		return
 	}
@@ -94,7 +96,7 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Toko berhasil terdaftar!"}`))
+	w.Write([]byte(`{"message":"Toko berhasil terdaftar!", "domain":"` + toko.Slug + `"}`))
 }
 
 // UpdateToko is func
@@ -118,7 +120,10 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 	} else if !regexSlug.MatchString(toko.Slug) {
 		http.Error(w, "Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
 		return
-	} else if _, ok := rj.GetIDKota(toko.Kota); !ok {
+	}
+
+	_, ok := rj.GetIDKota(toko.Kota)
+	if !ok {
 		http.Error(w, "Kota tidak ditemukan", http.StatusBadRequest)
 		return
 	}

@@ -1,16 +1,16 @@
 package models
 
 import (
-	"zonart/db"
 	"time"
+	"zonart/db"
 )
 
 // Revisi is class
 type Revisi struct {
-	IDRevisi int    `json:"idRevisi"`
-	IDOrder  int    `json:"idOrder"`
-	Catatan  string `json:"catatan" validate:"required"`
-	CreatedAt  string    `json:"createdAt"`
+	IDRevisi  int    `json:"idRevisi"`
+	IDOrder   int    `json:"idOrder"`
+	Catatan   string `json:"catatan" validate:"required"`
+	CreatedAt string `json:"createdAt"`
 }
 
 // GetRevisi is func

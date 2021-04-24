@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"zonart/pkg/models"
 
@@ -78,9 +79,10 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 	produk.Gambar = images[0]
 	produk.Slug = slug.Make(produk.NamaProduk)
 
-	_, err = produk.CreateProduk(idToko)
+	idProduk, err := produk.CreateProduk(idToko)
 	if err != nil {
 		cloudinary.DeleteImages(images)
+		produk.DeleteProduk(idToko, strconv.Itoa(idProduk))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

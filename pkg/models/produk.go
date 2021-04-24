@@ -17,7 +17,7 @@ type Produk struct {
 	Catatan        string                 `json:"catatan"`
 	HargaWajah     int                    `json:"hargaWajah"`
 	Slug           string                 `json:"slug"`
-	JenisPemesanan []JenisPemesananProduk `json:"jenisPemesanan"`
+	JenisPemesanan []JenisPemesananProduk `json:"jenisPemesanan" validate:"unique=IDJenisPemesanan,len=2,dive"`
 	GrupOpsi       []GrupOpsi             `json:"grupOpsi"`
 }
 
@@ -88,7 +88,6 @@ func (p Produk) CreateProduk(idToko string) (int, error) {
 	for _, v := range p.JenisPemesanan {
 		err = v.CreateJenisPemesanan(strconv.Itoa(idProduk))
 		if err != nil {
-			_ = p.DeleteProduk(idToko, strconv.Itoa(idProduk))
 			return idProduk, err
 		}
 	}

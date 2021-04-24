@@ -19,7 +19,7 @@ func Test_TestCase3(t *testing.T) {
 		"alamat":    "Jl. Cindera Mata no 53.",
 		"kota":      "Jakarta Utara",
 		"whatsapp":  "081234567898",
-		"slug":      "barok-art@&$",
+		"slug":      "barok-art@&$", // format domain salah
 	}
 	payload, _ := json.Marshal(body)
 	request, _ := http.NewRequest(http.MethodPost, "/toko", bytes.NewBuffer(payload))
@@ -29,10 +29,10 @@ func Test_TestCase3(t *testing.T) {
 	handler := http.HandlerFunc(toko.CreateToko)
 
 	// set identitas user
-	context.Set(request, "user", &mw.MyClaims{IDCustomer: 3, Username: "asdf"})
+	context.Set(request, "user", &mw.MyClaims{IDCustomer: 13, Username: "geno"})
 
 	handler.ServeHTTP(response, request)
-	t.Logf("response message:  %v", response.Body)
+	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
 	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya format slug salah!")
 }

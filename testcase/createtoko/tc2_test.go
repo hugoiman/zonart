@@ -15,7 +15,7 @@ import (
 func Test_TestCase2(t *testing.T) {
 	body := map[string]interface{}{
 		"namaToko":  "Barokart",
-		"emailToko": "barokartgmail.com",
+		"emailToko": "barokartgmail.com", // format email salah
 		"alamat":    "Jl. Cindera Mata no 53.",
 		"kota":      "Jakarta Utara",
 		"whatsapp":  "081234567898",
@@ -29,10 +29,10 @@ func Test_TestCase2(t *testing.T) {
 	handler := http.HandlerFunc(toko.CreateToko)
 
 	// set identitas user
-	context.Set(request, "user", &mw.MyClaims{IDCustomer: 3, Username: "asdf"})
+	context.Set(request, "user", &mw.MyClaims{IDCustomer: 13, Username: "geno"})
 
 	handler.ServeHTTP(response, request)
-	t.Logf("response message:  %v", response.Body)
+	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Sehausnya validasi gagal")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Sehausnya gagal memvalidasi")
 }

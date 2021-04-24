@@ -29,10 +29,10 @@ func Test_TestCase6(t *testing.T) {
 	handler := http.HandlerFunc(toko.CreateToko)
 
 	// set identitas user
-	context.Set(request, "user", &mw.MyClaims{IDCustomer: 3, Username: "asdf"})
+	context.Set(request, "user", &mw.MyClaims{IDCustomer: 13, Username: "geno"})
 
 	handler.ServeHTTP(response, request)
-	t.Logf("response message:  %v", response.Body)
+	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusOK, "Sukses!")
+	assert.Equal(t, response.Code, http.StatusOK, "Seharusnya berhasil menyimpan")
 }

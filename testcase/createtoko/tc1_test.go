@@ -18,7 +18,7 @@ var toko controllers.TokoController
 func Test_TestCase1(t *testing.T) {
 	body := map[string]interface{}{
 		"namaToko":  "Barokart",
-		"emailToko": 1,
+		"emailToko": 1, // format tipe data salah
 		"alamat":    "Jl. Cindera Mata no 53.",
 		"kota":      "Jakarta Utara",
 		"whatsapp":  "081234567898",
@@ -32,10 +32,10 @@ func Test_TestCase1(t *testing.T) {
 	handler := http.HandlerFunc(toko.CreateToko)
 
 	// set identitas user
-	context.Set(request, "user", &mw.MyClaims{IDCustomer: 3, Username: "asdf"})
+	context.Set(request, "user", &mw.MyClaims{IDCustomer: 13, Username: "geno"})
 
 	handler.ServeHTTP(response, request)
-	t.Logf("response message:  %v", response.Body)
+	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
 	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal mendecode")
 }

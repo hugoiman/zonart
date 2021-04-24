@@ -5,9 +5,9 @@ import "zonart/db"
 // JenisPemesananProduk is func
 type JenisPemesananProduk struct {
 	IDProduk         int    `json:"idProduk"`
-	IDJenisPemesanan int    `json:"idJenisPemesanan" validate:"required"`
+	IDJenisPemesanan int    `json:"idJenisPemesanan" validate:"required,eq=1|eq=2"`
 	Jenis            string `json:"jenis"`
-	Harga            int    `json:"harga" validate:"required"`
+	Harga            int    `json:"harga"`
 	Status           bool   `json:"status"`
 }
 
