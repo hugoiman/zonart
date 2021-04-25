@@ -97,6 +97,11 @@ func (p Produk) CreateProduk(idToko string) (int, error) {
 	return idProduk, err
 }
 
+// func (p Produk) CreateProduk(idToko string) (int, error) {
+// 	return 1, nil
+// 	return 0, errors.New("Terjadi Error")
+// }
+
 // UpdateProduk is func
 func (p Produk) UpdateProduk(idToko, idProduk string) error {
 	con := db.Connect()

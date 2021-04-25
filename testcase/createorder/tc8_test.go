@@ -1,10 +1,13 @@
-package createorder
+package createtoko
 
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	mw "zonart/middleware"
 
@@ -13,49 +16,81 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// opsi produk tidak ada & spesific request = false
 func Test_TestCase8(t *testing.T) {
+	// fail create invoice
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
-		"tambahanWajah": 2,
-		"catatan":       "asdf asdfnjk asdfjnk",
-		"pcs":           1,
-		"rencanaPakai":  "5 Januari 2021",
-		"gambar":        "tes1.jpg",
+		"tambahanWajah": 10000000, // out of range
+		"pcs":           2,
+		"rencanaPakai":  "24 November 2021",
 		"opsiOrder": []map[string]interface{}{
 			{
-				"idGrupOpsi": 3,
-				"idOpsi":     9,
-				"opsi":       "",
+				"idGrupOpsi": 32,
+				"idOpsi":     0,
+				"opsi":       "kue ultah, terompet, lilin",
 			},
 			{
-				"idGrupOpsi": 1,
-				"idOpsi":     0,
-				"opsi":       "100 x 120 cm",
+				"idGrupOpsi": 33,
+				"idOpsi":     36,
 			},
+			{
+				"idGrupOpsi": 30,
+				"idOpsi":     29,
+			},
+		},
+		"pengiriman": map[string]interface{}{
+			"penerima":  "Roy",
+			"telp":      "08123456",
+			"alamat":    "Jl. ikan no 23",
+			"kota":      "Jakarta Timur",
+			"label":     "Rumah",
+			"kodeKurir": "tiki",
+			"service":   "ECO",
 		},
 	}
 
 	payload, _ := json.Marshal(body)
-	request, _ := http.NewRequest(http.MethodPost, "/api/order/13/1", bytes.NewBuffer(payload))
-	request.Header.Set("Content-Type", "application/json")
-	response := httptest.NewRecorder()
+	buffer := new(bytes.Buffer)
+	w := multipart.NewWriter(buffer)
+	data, err := w.CreateFormField("payload")
+	if err != nil {
+		t.Error(err)
+	}
+	data.Write(payload)
 
-	// set parameter idToko di URL
-	vars := map[string]string{
-		"idToko":   "13",
-		"idProduk": "1",
+	files := []string{"./avatar-1.png", "./avatar-2.png"}
+	for _, file := range files {
+		fw, err := w.CreateFormFile("fileOrder", file)
+		if err != nil {
+			t.Error(err)
+		}
+		fd, err := os.Open(file)
+		if err != nil {
+			t.Error(err)
+		}
+
+		_, err = io.Copy(fw, fd)
+		if err != nil {
+			t.Error(err)
+		}
+
+		fd.Close()
 	}
 
-	request = mux.SetURLVars(request, vars)
+	w.Close()
+
+	request, _ := http.NewRequest(http.MethodPost, "/order/idToko/idProduk", buffer)
+	request = mux.SetURLVars(request, map[string]string{"idToko": "37", "idProduk": "10"})
+	request.Header.Set("Content-Type", w.FormDataContentType())
+	response := httptest.NewRecorder()
 
 	handler := http.HandlerFunc(order.CreateOrder)
 
 	// set identitas user
-	context.Set(request, "user", &mw.MyClaims{IDCustomer: 3, Username: "asdf"})
+	context.Set(request, "user", &mw.MyClaims{IDCustomer: 11, Username: "roy"})
 
 	handler.ServeHTTP(response, request)
-	t.Logf("response message:  %v", response.Body)
+	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya opsi tidak ada & spesifik req = false")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal membuat invoice")
 }

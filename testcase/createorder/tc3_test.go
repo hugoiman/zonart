@@ -1,8 +1,9 @@
-package createorder
+package createtoko
 
 import (
 	"bytes"
 	"encoding/json"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,38 +14,62 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// produk not found
 func Test_TestCase3(t *testing.T) {
+	// file order is empty
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
 		"tambahanWajah": 2,
-		"catatan":       "asdf asdfnjk asdfjnk",
-		"pcs":           1,
-		"rencanaPakai":  "5 Januari 2021",
-		"gambar":        "tes1.jpg",
-		"opsiOrder":     []map[string]interface{}{},
+		"pcs":           2,
+		"rencanaPakai":  "24 November 2021",
+		"opsiOrder": []map[string]interface{}{
+			{
+				"idGrupOpsi": 32,
+				"idOpsi":     0,
+				"opsi":       "kue ultah, terompet, lilin",
+			},
+			{
+				"idGrupOpsi": 33,
+				"idOpsi":     36,
+			},
+			{
+				"idGrupOpsi": 30,
+				"idOpsi":     29,
+			},
+		},
+		"pengiriman": map[string]interface{}{
+			"penerima":  "Roy",
+			"telp":      "08123456",
+			"alamat":    "Jl. ikan no 23",
+			"kota":      "Jakarta Timur",
+			"label":     "Rumah",
+			"kodeKurir": "tiki",
+			"service":   "ECO",
+		},
 	}
 
 	payload, _ := json.Marshal(body)
-	request, _ := http.NewRequest(http.MethodPost, "/api/order/13/1000", bytes.NewBuffer(payload))
-	request.Header.Set("Content-Type", "application/json")
-	response := httptest.NewRecorder()
-
-	// set parameter idToko di URL
-	vars := map[string]string{
-		"idToko":   "13",
-		"idProduk": "1000",
+	buffer := new(bytes.Buffer)
+	w := multipart.NewWriter(buffer)
+	data, err := w.CreateFormField("payload")
+	if err != nil {
+		t.Error(err)
 	}
+	data.Write(payload)
 
-	request = mux.SetURLVars(request, vars)
+	w.Close()
+
+	request, _ := http.NewRequest(http.MethodPost, "/order/idToko/idProduk", buffer)
+	request = mux.SetURLVars(request, map[string]string{"idToko": "37", "idProduk": "10"})
+	request.Header.Set("Content-Type", w.FormDataContentType())
+	response := httptest.NewRecorder()
 
 	handler := http.HandlerFunc(order.CreateOrder)
 
 	// set identitas user
-	context.Set(request, "user", &mw.MyClaims{IDCustomer: 3, Username: "asdf"})
+	context.Set(request, "user", &mw.MyClaims{IDCustomer: 11, Username: "roy"})
 
 	handler.ServeHTTP(response, request)
-	t.Logf("response message:  %v", response.Body)
+	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya produk tidak ditemukan")
+	assert.NotEqual(t, response.Code, http.StatusBadRequest, "Seharusnya file kosong")
 }

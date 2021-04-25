@@ -202,7 +202,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	// upload fileOrder to cloud
 	maxSize := int64(1024 * 1024 * 10) // 10 MB
-	destinationFolder := "zonart/order4"
+	destinationFolder := "zonart/order"
 	var cloudinary Cloudinary
 	images, err := cloudinary.UploadImages(r, maxSize, destinationFolder)
 	if err != nil {

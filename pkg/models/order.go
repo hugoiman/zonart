@@ -13,14 +13,14 @@ type Order struct {
 	IDProduk        int             `json:"idProduk"`   //y
 	IDCustomer      int             `json:"idCustomer"` //y
 	IDInvoice       string          `json:"idInvoice"`
-	JenisPesanan    string          `json:"jenisPesanan" validate:"required"` //y
-	TambahanWajah   int             `json:"tambahanWajah"`                    //y
-	Catatan         string          `json:"catatan"`                          //y
-	Pcs             int             `json:"pcs" validate:"required,min=1"`    //y
-	RencanaPakai    string          `json:"rencanaPakai"`                     //y
-	WaktuPengerjaan string          `json:"waktuPengerjaan"`                  //y
-	ContohGambar    string          `json:"contohGambar"`                     //y
-	TglOrder        string          `json:"tglOrder"`                         //y
+	JenisPesanan    string          `json:"jenisPesanan" validate:"required,eq=cetak|eq=soft copy"` //y
+	TambahanWajah   int             `json:"tambahanWajah"`                                          //y
+	Catatan         string          `json:"catatan"`                                                //y
+	Pcs             int             `json:"pcs" validate:"required,min=1"`                          //y
+	RencanaPakai    string          `json:"rencanaPakai"`                                           //y
+	WaktuPengerjaan string          `json:"waktuPengerjaan"`                                        //y
+	ContohGambar    string          `json:"contohGambar"`                                           //y
+	TglOrder        string          `json:"tglOrder"`                                               //y
 	Invoice         Invoice         `json:"invoice"`
 	ProdukOrder     ProdukOrder     `json:"produkOrder"`
 	Pengiriman      Pengiriman      `json:"pengiriman" validate:"required,dive"`
