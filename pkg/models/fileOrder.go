@@ -5,7 +5,6 @@ import "zonart/db"
 // FileOrder is class
 type FileOrder struct {
 	IDFileOrder int    `json:"idFileOrder"`
-	IDOrder     int    `json:"idOrder"`
 	Foto        string `json:"foto"`
 }
 
@@ -14,12 +13,12 @@ func (fo FileOrder) GetFileOrder(idOrder string) []FileOrder {
 	con := db.Connect()
 	var fileOrders []FileOrder
 
-	query := "SELECT idFileOrder, idOrder, foto FROM fileOrder WHERE idOrder = ?"
+	query := "SELECT idFileOrder, foto FROM fileOrder WHERE idOrder = ?"
 
 	rows, _ := con.Query(query, idOrder)
 	for rows.Next() {
 		rows.Scan(
-			&fo.IDFileOrder, &fo.IDOrder, &fo.Foto,
+			&fo.IDFileOrder, &fo.Foto,
 		)
 
 		fileOrders = append(fileOrders, fo)

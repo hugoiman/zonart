@@ -62,7 +62,7 @@ func (mw MiddleWare) AuthOwner(next http.HandlerFunc) http.HandlerFunc {
 		user := context.Get(r, "user").(*MyClaims)
 
 		dataToko, err := toko.GetToko(idToko)
-		if err != nil || user.IDCustomer != dataToko.IDOwner {
+		if err != nil || user.IDCustomer != dataToko.Owner {
 			http.Error(w, "Anda tidak memiliki hak akses.", http.StatusForbidden)
 			return
 		}
@@ -88,7 +88,7 @@ func (mw MiddleWare) AuthOwnerAdmin(next http.HandlerFunc) http.HandlerFunc {
 		// }
 
 		dataKaryawan, err := karyawan.GetKaryawanByIDCustomer(idToko, strconv.Itoa(user.IDCustomer))
-		if user.IDCustomer != dataToko.IDOwner && (dataKaryawan.Posisi != "admin" || dataKaryawan.Status != "aktif" || err != nil) {
+		if user.IDCustomer != dataToko.Owner && (dataKaryawan.Posisi != "admin" || dataKaryawan.Status != "aktif" || err != nil) {
 			http.Error(w, "Anda tidak memiliki hak akses.", http.StatusForbidden)
 			return
 		}
@@ -125,12 +125,9 @@ func (mw MiddleWare) CustomerOrder(next http.HandlerFunc) http.HandlerFunc {
 
 		user := context.Get(r, "user").(*MyClaims)
 
-		dataOrder, err := order.GetOrder(idOrder)
+		_, err := order.GetOrderCustomer(idOrder, strconv.Itoa(user.IDCustomer))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		} else if user.IDCustomer != dataOrder.IDCustomer {
-			http.Error(w, "Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
 			return
 		}
 
@@ -146,15 +143,12 @@ func (mw MiddleWare) OwnerAdminOrder(next http.HandlerFunc) http.HandlerFunc {
 		idToko := vars["idToko"]
 		var order models.Order
 
-		dataOrder, err := order.GetOrder(idOrder)
+		dataOrder, err := order.GetOrderToko(idOrder, idToko)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		} else if strconv.Itoa(dataOrder.IDToko) != idToko {
-			http.Error(w, "Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
-			return
-		} else if r.Method != http.MethodGet && dataOrder.Invoice.StatusPesanan == "selesai" {
-			http.Error(w, "Pesanan sudah diselesaikan.", http.StatusBadRequest)
+		} else if r.Method != http.MethodGet && (dataOrder.Invoice.StatusPesanan == "selesai" || dataOrder.Invoice.StatusPesanan == "ditolak" || dataOrder.Invoice.StatusPesanan == "dibatalkan") {
+			http.Error(w, "Pesanan sudah "+dataOrder.Invoice.StatusPesanan, http.StatusBadRequest)
 			return
 		}
 
@@ -167,19 +161,24 @@ func (mw MiddleWare) PenanganOrder(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		idOrder := vars["idOrder"]
+		idToko := vars["idToko"]
 
 		var order models.Order
 		var toko models.Toko
 
 		user := context.Get(r, "user").(*MyClaims)
 
-		dataOrder, _ := order.GetOrder(idOrder)
-		dataToko, err := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
-
+		dataOrder, err := order.GetOrder(idOrder)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		} else if user.IDCustomer != dataToko.IDOwner && dataOrder.Penangan.IDPenangan != user.IDCustomer {
+		}
+
+		dataToko, err := toko.GetToko(idToko)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		} else if user.IDCustomer != dataToko.Owner && dataOrder.Penangan.IDPenangan != user.IDCustomer {
 			http.Error(w, "Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
 			return
 		}
@@ -201,7 +200,7 @@ func (mw MiddleWare) SetUserPosition(next http.HandlerFunc) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		} else if dataToko.IDOwner == user.IDCustomer {
+		} else if dataToko.Owner == user.IDCustomer {
 			position = map[string]interface{}{
 				"position": "owner",
 			}

@@ -8,7 +8,6 @@ import (
 // Revisi is class
 type Revisi struct {
 	IDRevisi  int    `json:"idRevisi"`
-	IDOrder   int    `json:"idOrder"`
 	Catatan   string `json:"catatan" validate:"required"`
 	CreatedAt string `json:"createdAt"`
 }
@@ -19,12 +18,12 @@ func (r Revisi) GetRevisi(idOrder string) []Revisi {
 	var revisis []Revisi
 	var createdAt time.Time
 
-	query := "SELECT idRevisi, idOrder, catatan, createdAt FROM revisi WHERE idOrder = ?"
+	query := "SELECT idRevisi, catatan, createdAt FROM revisi WHERE idOrder = ?"
 
 	rows, _ := con.Query(query, idOrder)
 	for rows.Next() {
 		rows.Scan(
-			&r.IDRevisi, &r.IDOrder, &r.Catatan, &createdAt,
+			&r.IDRevisi, &r.Catatan, &createdAt,
 		)
 
 		r.CreatedAt = createdAt.Format("02 Jan 2006")

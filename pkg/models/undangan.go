@@ -8,8 +8,6 @@ import (
 // Undangan is class
 type Undangan struct {
 	IDUndangan   int    `json:"idUndangan"`
-	IDToko       int    `json:"idToko"`
-	IDCustomer   int    `json:"idCustomer"`
 	Posisi       string `json:"posisi" validate:"required"`
 	Status       string `json:"status"`
 	NamaToko     string `json:"namaToko"`
@@ -26,7 +24,7 @@ type Undangans struct {
 // GetUndangans is func
 func (u Undangan) GetUndangans(idToko string) Undangans {
 	con := db.Connect()
-	query := "SELECT a.idUndangan, a.idToko, a.idCustomer, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
+	query := "SELECT a.idUndangan, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
 		"JOIN toko b ON a.idToko = b.idToko " +
 		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idToko = ? ORDER BY a.idUndangan DESC"
 	rows, _ := con.Query(query, idToko)
@@ -36,7 +34,7 @@ func (u Undangan) GetUndangans(idToko string) Undangans {
 
 	for rows.Next() {
 		rows.Scan(
-			&u.IDUndangan, &u.IDToko, &u.IDCustomer, &u.Posisi, &u.Status, &u.NamaToko, &u.NamaCustomer, &u.Email, &tgl,
+			&u.IDUndangan, &u.Posisi, &u.Status, &u.NamaToko, &u.NamaCustomer, &u.Email, &tgl,
 		)
 
 		u.Date = tgl.Format("02 Jan 2006")
@@ -51,14 +49,32 @@ func (u Undangan) GetUndangans(idToko string) Undangans {
 // GetUndangan is func
 func (u Undangan) GetUndangan(idUndangan string) (Undangan, error) {
 	con := db.Connect()
-	query := "SELECT a.idUndangan, a.idToko, a.idCustomer, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
+	query := "SELECT a.idUndangan, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
 		"JOIN toko b ON a.idToko = b.idToko " +
 		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idUndangan = ?"
 
 	var tgl time.Time
 
 	err := con.QueryRow(query, idUndangan).Scan(
-		&u.IDUndangan, &u.IDToko, &u.IDCustomer, &u.Posisi, &u.Status, &u.NamaToko, &u.NamaCustomer, &u.Email, &tgl)
+		&u.IDUndangan, &u.Posisi, &u.Status, &u.NamaToko, &u.NamaCustomer, &u.Email, &tgl)
+
+	u.Date = tgl.Format("02 Jan 2006")
+
+	defer con.Close()
+
+	return u, err
+}
+
+// GetUndangan is func
+func (u Undangan) GetUndanganCustomer(idUndangan, idCustomer string) (Undangan, error) {
+	con := db.Connect()
+	query := "SELECT a.idUndangan, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
+		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idUndangan = ? AND a.idCustomer = ?"
+
+	var tgl time.Time
+
+	err := con.QueryRow(query, idUndangan, idCustomer).Scan(
+		&u.IDUndangan, &u.Posisi, &u.Status, &u.NamaToko, &u.NamaCustomer, &u.Email, &tgl)
 
 	u.Date = tgl.Format("02 Jan 2006")
 
@@ -68,10 +84,10 @@ func (u Undangan) GetUndangan(idUndangan string) (Undangan, error) {
 }
 
 // UndangKaryawan is func
-func (u Undangan) UndangKaryawan(idToko string) (int, error) {
+func (u Undangan) UndangKaryawan(idToko, idCustomer string) (int, error) {
 	con := db.Connect()
 	query := "INSERT INTO undangan (idUndangan, idToko, idCustomer, posisi, status, date) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE posisi = ?, status = ?, date = ?"
-	exec, err := con.Exec(query, u.IDUndangan, idToko, u.IDCustomer, u.Posisi, u.Status, u.Date, u.Posisi, u.Status, u.Date)
+	exec, err := con.Exec(query, u.IDUndangan, idToko, idCustomer, u.Posisi, u.Status, u.Date, u.Posisi, u.Status, u.Date)
 
 	if err != nil {
 		return 0, err
@@ -121,10 +137,10 @@ func (u Undangan) BatalkanUndangan(idUndangan, idToko string) error {
 // CheckUndangan is func
 func (u Undangan) CheckUndangan(idToko, idCustomer string) (Undangan, error) {
 	con := db.Connect()
-	query := "SELECT idUndangan, idToko, idCustomer, posisi, status FROM undangan WHERE idToko = ? AND idCustomer = ?"
+	query := "SELECT idUndangan, posisi, status FROM undangan WHERE idToko = ? AND idCustomer = ?"
 
 	err := con.QueryRow(query, idToko, idCustomer).Scan(
-		&u.IDUndangan, &u.IDToko, &u.IDCustomer, &u.Posisi, &u.Status)
+		&u.IDUndangan, &u.Posisi, &u.Status)
 
 	defer con.Close()
 

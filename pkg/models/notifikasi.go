@@ -8,7 +8,7 @@ import (
 // Notifikasi is class
 type Notifikasi struct {
 	IDNotifikasi int    `json:"idNotifikasi"`
-	IDPenerima   []int  `json:"idPenerima"`
+	Penerima     []int  `json:"penerima"`
 	Pengirim     string `json:"pengirim"`
 	Judul        string `json:"judul"`
 	Pesan        string `json:"pesan"`
@@ -50,7 +50,7 @@ func (n Notifikasi) CreateNotifikasi() error {
 	con := db.Connect()
 	query := "INSERT INTO notifikasi (idPenerima, pengirim, judul, pesan, link, createdAt) VALUES (?,?,?,?,?,?)"
 	var err error
-	for _, vIDPenerima := range n.IDPenerima {
+	for _, vIDPenerima := range n.Penerima {
 		_, err = con.Exec(query, vIDPenerima, n.Pengirim, n.Judul, n.Pesan, n.Link, n.CreatedAt)
 	}
 

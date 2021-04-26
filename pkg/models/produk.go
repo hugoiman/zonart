@@ -8,7 +8,6 @@ import (
 // Produk is class
 type Produk struct {
 	IDProduk       int                    `json:"idProduk"`
-	IDToko         int                    `json:"idToko"`
 	NamaProduk     string                 `json:"namaProduk" validate:"required"`
 	Berat          int                    `json:"berat"`
 	Gambar         string                 `json:"gambar"`
@@ -29,14 +28,14 @@ type Produks struct {
 // GetProduks is func
 func (p Produk) GetProduks(idToko string) Produks {
 	con := db.Connect()
-	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug FROM produk WHERE idToko = ? AND status != 'dihapus' ORDER BY idProduk DESC"
+	query := "SELECT idProduk, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug FROM produk WHERE idToko = ? AND status != 'dihapus' ORDER BY idProduk DESC"
 	rows, _ := con.Query(query, idToko)
 
 	var produks Produks
 
 	for rows.Next() {
 		rows.Scan(
-			&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Berat, &p.Status, &p.Catatan, &p.HargaWajah, &p.Slug,
+			&p.IDProduk, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Berat, &p.Status, &p.Catatan, &p.HargaWajah, &p.Slug,
 		)
 
 		var jpp JenisPemesananProduk
@@ -56,10 +55,10 @@ func (p Produk) GetProduks(idToko string) Produks {
 // GetProduk is func
 func (p Produk) GetProduk(idToko, idProduk string) (Produk, error) {
 	con := db.Connect()
-	query := "SELECT idProduk, idToko, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug FROM produk WHERE idToko = ? AND (idProduk = ? OR slug = ?)"
+	query := "SELECT idProduk, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug FROM produk WHERE idToko = ? AND (idProduk = ? OR slug = ?)"
 
 	err := con.QueryRow(query, idToko, idProduk, idProduk).Scan(
-		&p.IDProduk, &p.IDToko, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Berat, &p.Status, &p.Catatan, &p.HargaWajah, &p.Slug)
+		&p.IDProduk, &p.NamaProduk, &p.Gambar, &p.Deskripsi, &p.Berat, &p.Status, &p.Catatan, &p.HargaWajah, &p.Slug)
 
 	var jpp JenisPemesananProduk
 	p.JenisPemesanan = jpp.GetJenisPemesananProduk(strconv.Itoa(p.IDProduk))

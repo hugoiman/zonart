@@ -55,10 +55,10 @@ func (hoc HasilOrderController) AddHasilOrder(w http.ResponseWriter, r *http.Req
 	cloudinary.DeleteImages(oldImage)
 
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
+	notif.Penerima = append(notif.Penerima, dataOrder.Pemesan)
 	notif.Pengirim = dataOrder.Invoice.NamaToko
 	notif.Judul = "Hasil pesanan sudah keluar"
-	notif.Pesan = "Hasil pesanan " + dataOrder.IDInvoice + " sudah keluar. Segera beri tanggapan ke penjual."
+	notif.Pesan = "Hasil pesanan " + dataOrder.Invoice.IDInvoice + " sudah keluar. Segera beri tanggapan ke penjual."
 	notif.Link = "/order?id=" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
 	notif.CreateNotifikasi()
@@ -91,7 +91,7 @@ func (hoc HasilOrderController) SetujuiHasilOrder(w http.ResponseWriter, r *http
 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataOrder.Penangan.IDPenangan)
+	notif.Penerima = append(notif.Penerima, dataOrder.Penangan.IDPenangan)
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Hasil pesanan " + dataOrder.Invoice.IDInvoice + " telah disetujui."
 	notif.Pesan = ""

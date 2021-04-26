@@ -18,6 +18,7 @@ type BiayaTambahanController struct{}
 func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
+	idToko := vars["idToko"]
 
 	var bt models.BiayaTambahan
 	var order models.Order
@@ -47,7 +48,7 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 		// Update Berat Ongkir
 		var rj RajaOngkir
 		var toko models.Toko
-		dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
+		dataToko, _ := toko.GetToko(idToko)
 		newBerat := dataOrder.Pengiriman.Berat + bt.Berat
 
 		asal, _ := rj.GetIDKota(dataToko.Kota)
@@ -61,15 +62,15 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 	dataOrder.Invoice.TotalPembelian = dataOrder.Invoice.TotalPembelian - dataOrder.Pengiriman.Ongkir + bt.Total + newOngkir
 	dataOrder.Invoice.Tagihan = dataOrder.Invoice.TotalPembelian - dataOrder.Invoice.TotalBayar
 	dataOrder.Invoice.StatusPembayaran = "menunggu pembayaran"
-	_ = dataOrder.Invoice.UpdateInvoice(dataOrder.IDInvoice)
+	_ = dataOrder.Invoice.UpdateInvoice(dataOrder.Invoice.IDInvoice)
 
 	// send notif to customer
 	penerima := []int{}
 	var notif models.Notifikasi
-	notif.IDPenerima = append(penerima, dataOrder.IDCustomer)
+	notif.Penerima = append(penerima, dataOrder.Pemesan)
 	notif.Pengirim = dataOrder.Invoice.NamaToko
 	notif.Judul = "Terdapat Biaya Tambahan Baru"
-	notif.Pesan = "Pesanan " + dataOrder.IDInvoice + " mempunyai biaya tambahan baru."
+	notif.Pesan = "Pesanan " + dataOrder.Invoice.IDInvoice + " mempunyai biaya tambahan baru."
 	notif.Link = "/order?id=" + strconv.Itoa(dataOrder.IDOrder)
 	notif.CreatedAt = time.Now().Format("2006-01-02")
 	notif.CreateNotifikasi()
@@ -82,6 +83,7 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 // DeleteBiayaTambahan is func
 func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	idToko := vars["idToko"]
 	idOrder := vars["idOrder"]
 	idBiayaTambahan := vars["idBiayaTambahan"]
 
@@ -108,7 +110,7 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 		// Update Berat Ongkir
 		var rj RajaOngkir
 		var toko models.Toko
-		dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
+		dataToko, _ := toko.GetToko(idToko)
 		newBerat := dataOrder.Pengiriman.Berat - dataBT.Berat
 
 		asal, _ := rj.GetIDKota(dataToko.Kota)
@@ -124,14 +126,14 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 	if dataOrder.Invoice.Tagihan <= 0 {
 		dataOrder.Invoice.StatusPembayaran = "lunas"
 	}
-	_ = dataOrder.Invoice.UpdateInvoice(dataOrder.IDInvoice)
+	_ = dataOrder.Invoice.UpdateInvoice(dataOrder.Invoice.IDInvoice)
 
 	_ = bt.DeleteBiayaTambahan(idBiayaTambahan, idOrder)
 
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
+	notif.Penerima = append(notif.Penerima, dataOrder.Pemesan)
 	notif.Pengirim = dataOrder.Invoice.NamaToko
-	notif.Judul = "Pembatalan biaya tambahan pada pesanan " + dataOrder.IDInvoice
+	notif.Judul = "Pembatalan biaya tambahan pada pesanan " + dataOrder.Invoice.IDInvoice
 	notif.Pesan = "Biaya tambahan berupa " + dataBT.Item + "(Rp " + strconv.Itoa(dataBT.Total) + ") telah dibatalkan."
 	notif.Link = "/order?id=" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")

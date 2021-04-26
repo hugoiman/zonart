@@ -8,8 +8,6 @@ import (
 // Penggajian is class
 type Penggajian struct {
 	IDPenggajian int    `json:"idPenggajian"`
-	IDToko       int    `json:"idToko"`
-	IDKaryawan   int    `json:"idKaryawan" validate:"required"`
 	NamaKaryawan string `json:"namaKaryawan"`
 	Nominal      int    `json:"nominal" validate:"required"`
 	TglTransaksi string `json:"tglTransaksi" validate:"required"`
@@ -23,7 +21,7 @@ type Penggajians struct {
 // GetGajis is func
 func (p Penggajian) GetGajis(idToko string) Penggajians {
 	con := db.Connect()
-	query := "SELECT a.idPenggajian, a.idToko, a.idKaryawan, b.namaKaryawan, a.nominal, a.tglTransaksi FROM penggajian a " +
+	query := "SELECT a.idPenggajian, b.namaKaryawan, a.nominal, a.tglTransaksi FROM penggajian a " +
 		"JOIN karyawan b ON a.idKaryawan = b.idKaryawan WHERE a.idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
@@ -32,7 +30,7 @@ func (p Penggajian) GetGajis(idToko string) Penggajians {
 
 	for rows.Next() {
 		rows.Scan(
-			&p.IDPenggajian, &p.IDToko, &p.IDKaryawan, &p.NamaKaryawan, &p.Nominal, &tglTransaksi,
+			&p.IDPenggajian, &p.NamaKaryawan, &p.Nominal, &tglTransaksi,
 		)
 
 		p.TglTransaksi = tglTransaksi.Format("02 Jan 2006")
@@ -45,10 +43,10 @@ func (p Penggajian) GetGajis(idToko string) Penggajians {
 }
 
 // CreateGaji is func
-func (p Penggajian) CreateGaji(idToko string) error {
+func (p Penggajian) CreateGaji(idToko, idKaryawan string) error {
 	con := db.Connect()
 	query := "INSERT INTO penggajian (idToko, idKaryawan, nominal, tglTransaksi) VALUES (?,?,?,?)"
-	_, err := con.Exec(query, idToko, p.IDKaryawan, p.Nominal, p.TglTransaksi)
+	_, err := con.Exec(query, idToko, idKaryawan, p.Nominal, p.TglTransaksi)
 
 	defer con.Close()
 

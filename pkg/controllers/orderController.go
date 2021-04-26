@@ -46,11 +46,11 @@ func (oc OrderController) GetOrderToko(w http.ResponseWriter, r *http.Request) {
 	idToko := vars["idToko"]
 	var order models.Order
 
-	dataOrder, err := order.GetOrder(idOrder)
+	dataOrder, err := order.GetOrderToko(idOrder, idToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if strconv.Itoa(dataOrder.IDToko) != idToko || (position["position"] == "editor" && strconv.Itoa(dataOrder.Penangan.IDKaryawan) != position["idKaryawan"].(string)) {
+	} else if position["position"] == "editor" && strconv.Itoa(dataOrder.Penangan.IDKaryawan) != position["idKaryawan"].(string) {
 		http.Error(w, "Pesanan tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
@@ -162,7 +162,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	order.Invoice.IDInvoice = time.Now().Format("020106150405")
-	order.IDCustomer = user.IDCustomer
+	order.Pemesan = user.IDCustomer
 	order.ProdukOrder.NamaProduk = dataProduk.NamaProduk
 	order.ProdukOrder.BeratProduk = dataProduk.Berat
 	order.Invoice.StatusPesanan = "menunggu konfirmasi"
@@ -193,8 +193,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	order.Invoice.TotalPembelian = (order.ProdukOrder.HargaProduk * order.Pcs) + totalHargaWajah + totalHargaOpsi + order.Pengiriman.Ongkir
 
 	// create invoice
-	order.Invoice.IDCustomer = user.IDCustomer
-	err = order.Invoice.CreateInvoice(idToko)
+	err = order.Invoice.CreateInvoice(idToko, strconv.Itoa(user.IDCustomer))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -233,8 +232,8 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataToko.IDOwner)
-	notif.IDPenerima = append(notif.IDPenerima, admins...)
+	notif.Penerima = append(notif.Penerima, dataToko.Owner)
+	notif.Penerima = append(notif.Penerima, admins...)
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Permintaan pesanan baru"
 	notif.Pesan = notif.Pengirim + " telah memesan produk " + order.ProdukOrder.NamaProduk + ". Pesanan #" + order.Invoice.IDInvoice
@@ -264,10 +263,10 @@ func (oc OrderController) validateGrupOpsiOrder(order models.Order, dataProduk m
 
 func (oc OrderController) setOpsiOrder(order *models.Order, dtProduk []byte) error {
 	for k, v := range order.OpsiOrder {
-		dataGop := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+")#").Array()
-		namaGrup := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").namaGrup").String()
-		spesificRequest := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").spesificRequest").Bool()
-		dataOpsiProduk := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+")#.opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+")").Array()
+		dataGop := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+v.NamaGrup+")#").Array()
+		namaGrup := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+v.NamaGrup+").namaGrup").String()
+		spesificRequest := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+v.NamaGrup+").spesificRequest").Bool()
+		dataOpsiProduk := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+v.NamaGrup+")#.opsi.#(idOpsi=="+v.Opsi+")").Array()
 		if len(dataGop) == 0 {
 			return errors.New("Grup Opsi tidak ditemukan.")
 		} else if len(dataOpsiProduk) == 0 && spesificRequest == false {
@@ -278,10 +277,10 @@ func (oc OrderController) setOpsiOrder(order *models.Order, dtProduk []byte) err
 			order.OpsiOrder[k].Berat = 0
 			order.OpsiOrder[k].PerProduk = false
 		} else {
-			opsi := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+").opsi").String()
-			harga := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+").harga").Int()
-			berat := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+").berat").Int()
-			perProduk := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+strconv.Itoa(v.IDGrupOpsi)+").opsi.#(idOpsi=="+strconv.Itoa(v.IDOpsi)+").perProduk").Bool()
+			opsi := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+v.NamaGrup+").opsi.#(idOpsi=="+v.Opsi+").opsi").String()
+			harga := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+v.NamaGrup+").opsi.#(idOpsi=="+v.Opsi+").harga").Int()
+			berat := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+v.NamaGrup+").opsi.#(idOpsi=="+v.Opsi+").berat").Int()
+			perProduk := gjson.Get(string(dtProduk), "grupOpsi.#(idGrupOpsi=="+v.NamaGrup+").opsi.#(idOpsi=="+v.Opsi+").perProduk").Bool()
 
 			order.OpsiOrder[k].NamaGrup = namaGrup
 			order.OpsiOrder[k].Opsi = opsi
@@ -367,10 +366,10 @@ func (oc OrderController) ProsesOrder(w http.ResponseWriter, r *http.Request) {
 
 	var notif models.Notifikasi
 
-	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
+	notif.Penerima = append(notif.Penerima, dataOrder.Pemesan)
 	notif.Pengirim = dataOrder.Invoice.NamaToko
 	notif.Judul = "Pesanan telah dikonfirmasi"
-	notif.Pesan = "Pesanan " + idOrder + " sedang diproses. Silahkan melakukan pembayaran."
+	notif.Pesan = "Pesanan #" + dataOrder.Invoice.IDInvoice + " sedang diproses. Silahkan melakukan pembayaran."
 	notif.Link = "/order?id=" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
 
@@ -379,6 +378,53 @@ func (oc OrderController) ProsesOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message":"Pesanan diproses."}`))
+}
+
+// TolakOrder is func
+func (oc OrderController) TolakOrder(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idOrder := vars["idOrder"]
+	var order models.Order
+
+	data := struct {
+		Keterangan string `json:"keterangan" validate:"required,max=100"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if err := validator.New().Struct(data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	dataOrder, err := order.GetOrder(idOrder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	dataOrder.Invoice.StatusPesanan = "ditolak"
+
+	err = dataOrder.Invoice.UpdateInvoice(dataOrder.Invoice.IDInvoice)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var notif models.Notifikasi
+
+	notif.Penerima = append(notif.Penerima, dataOrder.Pemesan)
+	notif.Pengirim = dataOrder.Invoice.NamaToko
+	notif.Judul = "Pesanan ditolak"
+	notif.Pesan = "Pesanan #" + dataOrder.Invoice.IDInvoice + " ditolak. Keterangan: " + data.Keterangan
+	notif.Link = "/order?id=" + idOrder
+	notif.CreatedAt = time.Now().Format("2006-01-02")
+
+	notif.CreateNotifikasi()
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Pesanan ditolak."}`))
 }
 
 // SetWaktuPengerjaan is func
@@ -424,22 +470,23 @@ func (oc OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
 
 	dataOrder.Invoice.StatusPesanan = "dibatalkan"
 	if err := dataOrder.Invoice.UpdateInvoice(dataOrder.Invoice.IDInvoice); err != nil {
-		http.Error(w, "Gagal!", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var toko models.Toko
-	dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
+	idToko, _ := toko.GetIDTokoByOrder(idOrder)
+	dataToko, _ := toko.GetToko(idToko)
 
 	var karyawan models.Karyawan
-	admins := karyawan.GetAdmins(strconv.Itoa(dataOrder.IDToko))
+	admins := karyawan.GetAdmins(idToko)
 
 	var customer models.Customer
 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataToko.IDOwner)
-	notif.IDPenerima = append(notif.IDPenerima, admins...)
+	notif.Penerima = append(notif.Penerima, dataToko.Owner)
+	notif.Penerima = append(notif.Penerima, admins...)
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Pesanan dibatalkan"
 	notif.Pesan = "Pesanan #" + dataOrder.Invoice.IDInvoice + " dibatalkan oleh pembeli."
@@ -456,6 +503,7 @@ func (oc OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
 func (oc OrderController) FinishOrder(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
+	idToko := vars["idToko"]
 
 	var order models.Order
 	dataOrder, _ := order.GetOrder(idOrder)
@@ -466,7 +514,6 @@ func (oc OrderController) FinishOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pembukuan models.Pembukuan
-	pembukuan.IDToko = dataOrder.IDToko
 	pembukuan.Jenis = "pemasukan"
 	pembukuan.Keterangan = "Pesanan #" + dataOrder.Invoice.IDInvoice + " telah selesai."
 	pembukuan.Nominal = dataOrder.Invoice.TotalBayar - dataOrder.Pengiriman.Ongkir
@@ -478,7 +525,7 @@ func (oc OrderController) FinishOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = pembukuan.CreatePembukuan(strconv.Itoa(dataOrder.IDToko))
+	_ = pembukuan.CreatePembukuan(idToko)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

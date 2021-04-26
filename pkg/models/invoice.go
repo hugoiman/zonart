@@ -7,8 +7,6 @@ import (
 // Invoice is class
 type Invoice struct {
 	IDInvoice        string `json:"idInvoice"`
-	IDCustomer       int    `json:"idCustomer"`
-	IDToko           int    `json:"idToko"`
 	Pembeli          string `json:"pembeli"`
 	NamaToko         string `json:"namaToko"`
 	SlugToko         string `json:"slugToko"`
@@ -22,12 +20,30 @@ type Invoice struct {
 // GetInvoice is func
 func (i Invoice) GetInvoice(idInvoice string) (Invoice, error) {
 	con := db.Connect()
-	query := "SELECT a.idInvoice, a.idCustomer, a.idToko, c.nama, b.namaToko, b.slug, a.totalPembelian, a.totalBayar, a.tagihan, a.statusPesanan, a.statusPembayaran " +
+	query := "SELECT a.idInvoice, c.nama, b.namaToko, b.slug, a.totalPembelian, a.totalBayar, a.tagihan, a.statusPesanan, a.statusPembayaran " +
 		"FROM `invoice` a JOIN toko b ON a.idToko = b.idToko " +
 		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE a.idInvoice = ?"
 
 	err := con.QueryRow(query, idInvoice).Scan(
-		&i.IDInvoice, &i.IDCustomer, &i.IDToko, &i.Pembeli, &i.NamaToko, &i.SlugToko,
+		&i.IDInvoice, &i.Pembeli, &i.NamaToko, &i.SlugToko,
+		&i.TotalPembelian, &i.TotalBayar, &i.Tagihan, &i.StatusPesanan, &i.StatusPembayaran,
+	)
+
+	defer con.Close()
+
+	return i, err
+}
+
+// GetInvoiceByOrder is func
+func (i Invoice) GetInvoiceByOrder(idOrder string) (Invoice, error) {
+	con := db.Connect()
+	query := "SELECT a.idInvoice, c.nama, b.namaToko, b.slug, a.totalPembelian, a.totalBayar, a.tagihan, a.statusPesanan, a.statusPembayaran " +
+		"FROM `invoice` a JOIN toko b ON a.idToko = b.idToko " +
+		"JOIN `order` d ON a.idInvoice = d.idInvoice " +
+		"JOIN customer c ON a.idCustomer = c.idCustomer WHERE d.idOrder = ?"
+
+	err := con.QueryRow(query, idOrder).Scan(
+		&i.IDInvoice, &i.Pembeli, &i.NamaToko, &i.SlugToko,
 		&i.TotalPembelian, &i.TotalBayar, &i.Tagihan, &i.StatusPesanan, &i.StatusPembayaran,
 	)
 
@@ -37,11 +53,11 @@ func (i Invoice) GetInvoice(idInvoice string) (Invoice, error) {
 }
 
 // CreateInvoice is func
-func (i Invoice) CreateInvoice(idToko string) error {
+func (i Invoice) CreateInvoice(idToko, idCustomer string) error {
 	con := db.Connect()
 	query := "INSERT INTO `invoice` (idInvoice, idCustomer, idToko, totalPembelian, totalbayar, tagihan, statusPesanan, statusPembayaran) " +
 		"VALUES (?,?,?,?,?,?,?,?)"
-	_, err := con.Exec(query, i.IDInvoice, i.IDCustomer, idToko, i.TotalPembelian, i.TotalBayar, i.Tagihan, i.StatusPesanan, i.StatusPembayaran)
+	_, err := con.Exec(query, i.IDInvoice, idCustomer, idToko, i.TotalPembelian, i.TotalBayar, i.Tagihan, i.StatusPesanan, i.StatusPembayaran)
 
 	if err != nil {
 		return err

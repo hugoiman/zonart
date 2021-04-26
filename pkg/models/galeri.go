@@ -6,11 +6,10 @@ import (
 
 // Galeri is class
 type Galeri struct {
-	IDGaleri int    `json:"idGaleri"`
-	IDToko   int    `json:"idToko"`
-	IDProduk int    `json:"idProduk" validate:"required"`
-	Kategori string `json:"kategori"`
-	Gambar   string `json:"gambar"`
+	IDGaleri   int    `json:"idGaleri"`
+	IDKategori int    `json:"idKategori" validate:"required"`
+	Kategori   string `json:"kategori"`
+	Gambar     string `json:"gambar"`
 }
 
 // Galeris is list of galeri
@@ -21,14 +20,14 @@ type Galeris struct {
 // GetGaleris is func
 func (g Galeri) GetGaleris(idToko string) Galeris {
 	con := db.Connect()
-	query := "SELECT a.idGaleri, a.idToko, a.idProduk, b.namaProduk, a.gambar FROM galeri a JOIN produk b ON a.idProduk = b.idProduk WHERE a.idToko = ? ORDER BY a.idGaleri DESC"
+	query := "SELECT a.idGaleri, a.idKategori, b.namaProduk, a.gambar FROM galeri a JOIN produk b ON a.idKategori = b.idProduk WHERE a.idToko = ? ORDER BY a.idGaleri DESC"
 	rows, _ := con.Query(query, idToko)
 
 	var galeris Galeris
 
 	for rows.Next() {
 		rows.Scan(
-			&g.IDGaleri, &g.IDToko, &g.IDProduk, &g.Kategori, &g.Gambar,
+			&g.IDGaleri, &g.IDKategori, &g.Kategori, &g.Gambar,
 		)
 
 		galeris.Galeris = append(galeris.Galeris, g)
@@ -42,8 +41,8 @@ func (g Galeri) GetGaleris(idToko string) Galeris {
 // CreateGaleri is func
 func (g Galeri) CreateGaleri(idToko string) (int, error) {
 	con := db.Connect()
-	query := "INSERT INTO galeri (idToko, idProduk, gambar) VALUES (?,?,?)"
-	exec, err := con.Exec(query, idToko, g.IDProduk, g.Gambar)
+	query := "INSERT INTO galeri (idToko, idKategori, gambar) VALUES (?,?,?)"
+	exec, err := con.Exec(query, idToko, g.IDKategori, g.Gambar)
 
 	if err != nil {
 		return 0, err

@@ -5,19 +5,18 @@ import "zonart/db"
 // BiayaTambahan is class
 type BiayaTambahan struct {
 	IDBiayaTambahan int    `json:"idBiayaTambahan"`
-	IDOrder         int    `json:"idOrder"`
 	Item            string `json:"item" validate:"required"`
-	Berat           int	   `json:"berat"`
+	Berat           int    `json:"berat"`
 	Total           int    `json:"total"`
 }
 
 // GetBiayaTambahan is func
 func (bt BiayaTambahan) GetBiayaTambahan(idBiayaTambahan, idOrder string) (BiayaTambahan, error) {
 	con := db.Connect()
-	query := "SELECT idBiayaTambahan, idOrder, item, berat, total FROM biayaTambahan WHERE idBiayaTambahan = ? AND idOrder = ?"
+	query := "SELECT idBiayaTambahan, item, berat, total FROM biayaTambahan WHERE idBiayaTambahan = ? AND idOrder = ?"
 
 	err := con.QueryRow(query, idBiayaTambahan, idOrder).Scan(
-		&bt.IDBiayaTambahan, &bt.IDOrder, &bt.Item, &bt.Berat, &bt.Total)
+		&bt.IDBiayaTambahan, &bt.Item, &bt.Berat, &bt.Total)
 
 	defer con.Close()
 	return bt, err
@@ -28,12 +27,12 @@ func (bt BiayaTambahan) GetBiayaTambahans(idOrder string) []BiayaTambahan {
 	con := db.Connect()
 	var bts []BiayaTambahan
 
-	query := "SELECT idBiayaTambahan, idOrder, item, berat, total FROM biayaTambahan WHERE idOrder = ?"
+	query := "SELECT idBiayaTambahan, item, berat, total FROM biayaTambahan WHERE idOrder = ?"
 
 	rows, _ := con.Query(query, idOrder)
 	for rows.Next() {
 		rows.Scan(
-			&bt.IDBiayaTambahan, &bt.IDOrder, &bt.Item, &bt.Berat, &bt.Total,
+			&bt.IDBiayaTambahan, &bt.Item, &bt.Berat, &bt.Total,
 		)
 
 		bts = append(bts, bt)

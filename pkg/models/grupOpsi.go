@@ -8,7 +8,6 @@ import (
 // GrupOpsi is class
 type GrupOpsi struct {
 	IDGrupOpsi      int    `json:"idGrupOpsi"`
-	IDToko          int    `json:"idToko"`
 	NamaGrup        string `json:"namaGrup" validate:"required"`
 	Deskripsi       string `json:"deskripsi"`
 	Required        bool   `json:"required"`
@@ -28,7 +27,7 @@ type GrupOpsis struct {
 // GetGrupOpsis is func
 func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) GrupOpsis {
 	con := db.Connect()
-	query := "SELECT idGrupOpsi, idToko, namaGrup, deskripsi, required, min, max, spesificRequest, hardcopy, softcopy FROM grupOpsi WHERE idToko = ?"
+	query := "SELECT idGrupOpsi, namaGrup, deskripsi, required, min, max, spesificRequest, hardcopy, softcopy FROM grupOpsi WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var grupOpsis GrupOpsis
@@ -36,7 +35,7 @@ func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) GrupOpsis {
 
 	for rows.Next() {
 		rows.Scan(
-			&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy,
+			&grupOpsi.IDGrupOpsi, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy,
 		)
 
 		grupOpsi.Opsi = opsi.GetOpsis(strconv.Itoa(grupOpsi.IDGrupOpsi))
@@ -51,10 +50,10 @@ func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) GrupOpsis {
 // GetGrupOpsi is func
 func (grupOpsi GrupOpsi) GetGrupOpsi(idToko, idGrupOpsi string) (GrupOpsi, error) {
 	con := db.Connect()
-	query := "SELECT idGrupOpsi, idToko, namaGrup, deskripsi, required, min, max, spesificRequest, hardcopy, softcopy FROM grupOpsi WHERE idToko = ? AND idGrupOpsi = ?"
+	query := "SELECT idGrupOpsi, namaGrup, deskripsi, required, min, max, spesificRequest, hardcopy, softcopy FROM grupOpsi WHERE idToko = ? AND idGrupOpsi = ?"
 
 	err := con.QueryRow(query, idToko, idGrupOpsi).Scan(
-		&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy)
+		&grupOpsi.IDGrupOpsi, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy)
 
 	var opsi Opsi
 	grupOpsi.Opsi = opsi.GetOpsis(idGrupOpsi)
@@ -67,7 +66,7 @@ func (grupOpsi GrupOpsi) GetGrupOpsi(idToko, idGrupOpsi string) (GrupOpsi, error
 // GetGrupOpsiProduk is get all grup opsi in a produk
 func (grupOpsi GrupOpsi) GetGrupOpsiProduk(idToko, idProduk string) []GrupOpsi {
 	con := db.Connect()
-	query := "SELECT a.idGrupOpsi, a.idToko, a.namaGrup, a.deskripsi, a.required, a.min, a.max, a.spesificRequest, hardcopy, softcopy FROM grupOpsi a JOIN grupOpsiProduk b ON a.idGrupOpsi = b.idGrupOpsi WHERE b.idProduk = ? AND a.idToko = ?"
+	query := "SELECT a.idGrupOpsi, a.namaGrup, a.deskripsi, a.required, a.min, a.max, a.spesificRequest, hardcopy, softcopy FROM grupOpsi a JOIN grupOpsiProduk b ON a.idGrupOpsi = b.idGrupOpsi WHERE b.idProduk = ? AND a.idToko = ?"
 	rows, _ := con.Query(query, idProduk, idToko)
 
 	var gop []GrupOpsi
@@ -75,7 +74,7 @@ func (grupOpsi GrupOpsi) GetGrupOpsiProduk(idToko, idProduk string) []GrupOpsi {
 
 	for rows.Next() {
 		rows.Scan(
-			&grupOpsi.IDGrupOpsi, &grupOpsi.IDToko, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy,
+			&grupOpsi.IDGrupOpsi, &grupOpsi.NamaGrup, &grupOpsi.Deskripsi, &grupOpsi.Required, &grupOpsi.Min, &grupOpsi.Max, &grupOpsi.SpesificRequest, &grupOpsi.HardCopy, &grupOpsi.SoftCopy,
 		)
 
 		grupOpsi.Opsi = opsi.GetOpsis(strconv.Itoa(grupOpsi.IDGrupOpsi))

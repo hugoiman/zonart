@@ -54,7 +54,7 @@ func (pc PenanganController) SetPenangan(w http.ResponseWriter, r *http.Request)
 
 	// send notif to karyawan penangan
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataKaryawan.IDCustomer)
+	notif.Penerima = append(notif.Penerima, dataKaryawan.IDCustomer)
 	notif.Pengirim = dataToko.NamaToko
 	notif.Judul = "Pengerjaan Pesanan"
 	notif.Pesan = "Anda telah diberi tugas untuk mengerjakan pesanan " + idOrder

@@ -80,7 +80,7 @@ func main() {
 	api.HandleFunc("/api/karyawan/{idToko}/{idKaryawan}", mw.AuthOwner(karyawan.UpdateKaryawan)).Methods("PUT")
 	api.HandleFunc("/api/karyawan-customer/{idToko}", karyawan.GetKaryawanByIDCustomer).Methods("GET")
 
-	api.HandleFunc("/api/undangan/{idUndangan}", undangan.GetUndangan).Methods("GET")
+	api.HandleFunc("/api/undangan/{idUndangan}", undangan.GetUndanganCustomer).Methods("GET")
 	api.HandleFunc("/api/daftar-undangan/{idToko}", mw.AuthOwner(undangan.GetUndangans)).Methods("GET")
 	api.HandleFunc("/api/undangan/{idToko}", mw.AuthOwner(undangan.UndangKaryawan)).Methods("POST")
 	api.HandleFunc("/api/undangan-tolak/{idUndangan}", undangan.TolakUndangan).Methods("POST")
@@ -111,17 +111,18 @@ func main() {
 	api.HandleFunc("/api/order/{idOrder}", mw.CustomerOrder(order.GetOrder)).Methods("GET")
 	api.HandleFunc("/api/invoice/{idInvoice}", order.GetOrderByInvoice).Methods("GET")
 	// detail order toko
-	api.HandleFunc("/api/order-toko/{idToko}/{idOrder}", mw.SetUserPosition(order.GetOrderToko)).Methods("GET")
 	api.HandleFunc("/api/order-toko/{idToko}", mw.SetUserPosition(order.GetOrdersToko)).Methods("GET")
+	api.HandleFunc("/api/order-toko/{idToko}/{idOrder}", mw.SetUserPosition(order.GetOrderToko)).Methods("GET")
 	// list order editor
 	api.HandleFunc("/api/order-editor/{idOrder}", mw.PenanganOrder(order.GetOrder)).Methods("GET")
 
 	api.HandleFunc("/api/order/{idToko}/{idProduk}", order.CreateOrder).Methods("POST")
 	api.HandleFunc("/api/order-waktu/{idToko}/{idOrder}", mw.AuthOwnerAdmin(order.SetWaktuPengerjaan)).Methods("POST")
 	api.HandleFunc("/api/order-proses/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.ProsesOrder))).Methods("POST")
+	api.HandleFunc("/api/order-tolak/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.TolakOrder))).Methods("POST")
 	api.HandleFunc("/api/order-batal/{idOrder}", mw.CustomerOrder(order.CancelOrder)).Methods("POST")
 	api.HandleFunc("/api/order-selesai/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(order.FinishOrder))).Methods("POST")
-	api.HandleFunc("/api/order-hasil/{idOrder}", mw.PenanganOrder(ho.AddHasilOrder)).Methods("POST")
+	api.HandleFunc("/api/order-hasil/{idToko}/{idOrder}", mw.PenanganOrder(ho.AddHasilOrder)).Methods("POST")
 	api.HandleFunc("/api/order-setujui/{idOrder}", mw.CustomerOrder(ho.SetujuiHasilOrder)).Methods("POST")
 
 	api.HandleFunc("/api/biaya-tambahan/{idToko}/{idOrder}", mw.AuthOwnerAdmin(mw.OwnerAdminOrder(bt.CreateBiayaTambahan))).Methods("POST")
@@ -137,7 +138,7 @@ func main() {
 	api.HandleFunc("/api/revisi/{idOrder}", mw.CustomerOrder(revisi.CreateRevisi)).Methods("POST")
 
 	api.HandleFunc("/api/gaji/{idToko}", mw.AuthOwner(penggajian.GetGajis)).Methods("GET")
-	api.HandleFunc("/api/gaji/{idToko}", mw.AuthOwner(penggajian.CreateGaji)).Methods("POST")
+	api.HandleFunc("/api/gaji/{idToko}/{idKaryawan}", mw.AuthOwner(penggajian.CreateGaji)).Methods("POST")
 	api.HandleFunc("/api/gaji/{idToko}/{idPenggajian}", mw.AuthOwner(penggajian.DeleteGaji)).Methods("DELETE")
 
 	api.HandleFunc("/api/notifikasi", notif.GetNotifikasis).Methods("GET")

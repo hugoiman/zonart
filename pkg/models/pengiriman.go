@@ -5,7 +5,6 @@ import "zonart/db"
 // Pengiriman is class
 type Pengiriman struct {
 	IDPengiriman int    `json:"idPengiriman"`
-	IDOrder      int    `json:"idOrder"`
 	Penerima     string `json:"penerima" validate:"required"`
 	Telp         string `json:"telp" validate:"required"`
 	Alamat       string `json:"alamat"`
@@ -34,10 +33,10 @@ func (p Pengiriman) CreatePengiriman(idOrder string) error {
 // GetPengiriman is func
 func (p Pengiriman) GetPengiriman(idOrder string) (Pengiriman, error) {
 	con := db.Connect()
-	query := "SELECT idPengiriman, idOrder, penerima, telp, alamat, kota, label, berat, kurir, kodeKurir, service, estimasi, resi, ongkir FROM pengiriman WHERE idOrder = ?"
+	query := "SELECT idPengiriman, penerima, telp, alamat, kota, label, berat, kurir, kodeKurir, service, estimasi, resi, ongkir FROM pengiriman WHERE idOrder = ?"
 
 	err := con.QueryRow(query, idOrder).Scan(
-		&p.IDPengiriman, &p.IDOrder, &p.Penerima, &p.Telp, &p.Alamat, &p.Kota, &p.Label, &p.Berat, &p.Kurir, &p.KodeKurir, &p.Service, &p.Estimasi, &p.Resi, &p.Ongkir)
+		&p.IDPengiriman, &p.Penerima, &p.Telp, &p.Alamat, &p.Kota, &p.Label, &p.Berat, &p.Kurir, &p.KodeKurir, &p.Service, &p.Estimasi, &p.Resi, &p.Ongkir)
 
 	defer con.Close()
 	return p, err

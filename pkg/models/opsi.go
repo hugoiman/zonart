@@ -4,23 +4,22 @@ import "zonart/db"
 
 // Opsi is class
 type Opsi struct {
-	IDOpsi     int    `json:"idOpsi"`
-	IDGrupOpsi int    `json:"idGrupOpsi"`
-	NamaGrup   string `json:"namaGrup"`
-	Opsi       string `json:"opsi" validate:"required"`
-	Harga      int    `json:"harga"`
-	Berat      int    `json:"berat"`
-	PerProduk  bool   `json:"perProduk"`
-	Status     bool   `json:"status"`
+	IDOpsi    int    `json:"idOpsi"`
+	NamaGrup  string `json:"namaGrup"`
+	Opsi      string `json:"opsi" validate:"required"`
+	Harga     int    `json:"harga"`
+	Berat     int    `json:"berat"`
+	PerProduk bool   `json:"perProduk"`
+	Status    bool   `json:"status"`
 }
 
 // GetOpsi is func
 func (opsi Opsi) GetOpsi(idGrupOpsi, idOpsi string) (Opsi, error) {
 	con := db.Connect()
-	query := "SELECT idOpsi, idGrupOpsi, opsi, harga, berat, perProduk, status FROM opsi WHERE idGrupOpsi = ? AND idOpsi = ?"
+	query := "SELECT idOpsi, opsi, harga, berat, perProduk, status FROM opsi WHERE idGrupOpsi = ? AND idOpsi = ?"
 
 	err := con.QueryRow(query, idGrupOpsi, idOpsi).Scan(
-		&opsi.IDOpsi, &opsi.IDGrupOpsi, &opsi.Opsi, &opsi.Harga, &opsi.Berat, &opsi.PerProduk, &opsi.Status)
+		&opsi.IDOpsi, &opsi.Opsi, &opsi.Harga, &opsi.Berat, &opsi.PerProduk, &opsi.Status)
 
 	defer con.Close()
 	return opsi, err
@@ -29,14 +28,14 @@ func (opsi Opsi) GetOpsi(idGrupOpsi, idOpsi string) (Opsi, error) {
 // GetOpsis is func
 func (opsi Opsi) GetOpsis(idGrupOpsi string) []Opsi {
 	con := db.Connect()
-	query := "SELECT idOpsi, idGrupOpsi, opsi, harga, berat, perProduk, status FROM opsi WHERE idGrupOpsi = ?"
+	query := "SELECT idOpsi, opsi, harga, berat, perProduk, status FROM opsi WHERE idGrupOpsi = ?"
 	rows, _ := con.Query(query, idGrupOpsi)
 
 	var opsis []Opsi
 
 	for rows.Next() {
 		rows.Scan(
-			&opsi.IDOpsi, &opsi.IDGrupOpsi, &opsi.Opsi, &opsi.Harga, &opsi.Berat, &opsi.PerProduk, &opsi.Status,
+			&opsi.IDOpsi, &opsi.Opsi, &opsi.Harga, &opsi.Berat, &opsi.PerProduk, &opsi.Status,
 		)
 
 		opsis = append(opsis, opsi)

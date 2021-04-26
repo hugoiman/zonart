@@ -8,7 +8,6 @@ import (
 // HasilOrder is class
 type HasilOrder struct {
 	IDHasilOrder int    `json:"idHasilOrder"`
-	IDOrder      int    `json:"idOrder"`
 	Hasil        string `json:"hasil"`
 	Status       string `json:"status"`
 	CreatedAt    string `json:"createdAt"`
@@ -17,10 +16,10 @@ type HasilOrder struct {
 // GetHasilOrder is func
 func (ho HasilOrder) GetHasilOrder(idOrder string) (HasilOrder, error) {
 	con := db.Connect()
-	query := "SELECT idHasilOrder, idOrder, hasil, status, createdAt FROM hasilOrder WHERE idOrder = ?"
+	query := "SELECT idHasilOrder, hasil, status, createdAt FROM hasilOrder WHERE idOrder = ?"
 	var createdAt time.Time
 
-	err := con.QueryRow(query, idOrder).Scan(&ho.IDHasilOrder, &ho.IDOrder, &ho.Hasil, &ho.Status, &createdAt)
+	err := con.QueryRow(query, idOrder).Scan(&ho.IDHasilOrder, &ho.Hasil, &ho.Status, &createdAt)
 	ho.CreatedAt = createdAt.Format("02 Jan 2006")
 
 	defer con.Close()

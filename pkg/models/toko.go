@@ -8,7 +8,7 @@ import (
 // Toko is class
 type Toko struct {
 	IDToko             int                  `json:"idToko"`
-	IDOwner            int                  `json:"idOwner"`
+	Owner              int                  `json:"owner"`
 	NamaToko           string               `json:"namaToko" validate:"required"`
 	EmailToko          string               `json:"emailToko" validate:"email"`
 	Deskripsi          string               `json:"deskripsi"`
@@ -33,12 +33,12 @@ type Tokos struct {
 // GetToko is func
 func (t Toko) GetToko(id string) (Toko, error) {
 	con := db.Connect()
-	query := "SELECT idToko, idOwner, namaToko, emailToko, foto, deskripsi, alamat, kota, telp, whatsapp, instagram, website, slug, createdAt FROM toko WHERE idToko = ? OR slug = ?"
+	query := "SELECT idToko, owner, namaToko, emailToko, foto, deskripsi, alamat, kota, telp, whatsapp, instagram, website, slug, createdAt FROM toko WHERE idToko = ? OR slug = ?"
 
 	var createdAt time.Time
 
 	err := con.QueryRow(query, id, id).Scan(
-		&t.IDToko, &t.IDOwner, &t.NamaToko, &t.EmailToko, &t.Foto, &t.Deskripsi, &t.Alamat, &t.Kota,
+		&t.IDToko, &t.Owner, &t.NamaToko, &t.EmailToko, &t.Foto, &t.Deskripsi, &t.Alamat, &t.Kota,
 		&t.Telp, &t.Whatsapp, &t.Instagram, &t.Website, &t.Slug, &createdAt)
 
 	t.CreatedAt = createdAt.Format("02 Jan 2006")
@@ -59,8 +59,8 @@ func (t Toko) GetToko(id string) (Toko, error) {
 // CreateToko is func
 func (t Toko) CreateToko() (int, error) {
 	con := db.Connect()
-	query, _ := con.Prepare("INSERT INTO toko (idOwner, namaToko, emailToko, foto, deskripsi, alamat, kota, telp, whatsapp, instagram, website, slug, createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
-	exec, err := query.Exec(t.IDOwner, t.NamaToko, t.EmailToko, t.Foto, t.Deskripsi, t.Alamat,
+	query, _ := con.Prepare("INSERT INTO toko (owner, namaToko, emailToko, foto, deskripsi, alamat, kota, telp, whatsapp, instagram, website, slug, createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	exec, err := query.Exec(t.Owner, t.NamaToko, t.EmailToko, t.Foto, t.Deskripsi, t.Alamat,
 		t.Kota, t.Telp, t.Whatsapp, t.Instagram, t.Website, t.Slug, t.CreatedAt)
 	if err != nil {
 		return 0, err
@@ -68,6 +68,30 @@ func (t Toko) CreateToko() (int, error) {
 
 	idInt64, _ := exec.LastInsertId()
 	idToko := int(idInt64)
+
+	defer con.Close()
+
+	return idToko, err
+}
+
+func (t Toko) GetIDTokoByOrder(idOrder string) (string, error) {
+	var idToko string
+
+	con := db.Connect()
+	query := "SELECT idToko FROM `order` WHERE idOrder = ?"
+	err := con.QueryRow(query, idOrder).Scan(&idToko)
+
+	defer con.Close()
+
+	return idToko, err
+}
+
+func (t Toko) GetIDTokoByUndangan(idUndangan string) (string, error) {
+	var idToko string
+
+	con := db.Connect()
+	query := "SELECT idToko FROM undangan WHERE idUndangan = ?"
+	err := con.QueryRow(query, idUndangan).Scan(&idToko)
 
 	defer con.Close()
 
@@ -89,7 +113,7 @@ func (t Toko) UpdateToko(id string) error {
 // GetMyToko is func
 func (t Toko) GetMyToko(idCustomer string) Tokos {
 	con := db.Connect()
-	query := "SELECT idToko, namaToko, foto, slug FROM toko WHERE idOwner = ?"
+	query := "SELECT idToko, namaToko, foto, slug FROM toko WHERE owner = ?"
 	rows, _ := con.Query(query, idCustomer)
 
 	var tokos Tokos

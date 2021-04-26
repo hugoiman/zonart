@@ -8,11 +8,8 @@ import (
 
 // Order is class
 type Order struct {
-	IDOrder         int             `json:"idOrder"`    //y
-	IDToko          int             `json:"idToko"`     //y
-	IDProduk        int             `json:"idProduk"`   //y
-	IDCustomer      int             `json:"idCustomer"` //y
-	IDInvoice       string          `json:"idInvoice"`
+	IDOrder         int             `json:"idOrder"`                                                //y
+	Pemesan         int             `json:"pemesan"`                                                //y
 	JenisPesanan    string          `json:"jenisPesanan" validate:"required,eq=cetak|eq=soft copy"` //y
 	TambahanWajah   int             `json:"tambahanWajah"`                                          //y
 	Catatan         string          `json:"catatan"`                                                //y
@@ -41,14 +38,14 @@ type Orders struct {
 // GetOrder is func
 func (o Order) GetOrder(idOrder string) (Order, error) {
 	con := db.Connect()
-	query := "SELECT idOrder, idToko, idProduk, idCustomer, idInvoice, " +
+	query := "SELECT idOrder, idCustomer, " +
 		"jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, waktuPengerjaan, contohGambar, tglOrder " +
 		"FROM `order` WHERE idOrder = ?"
 
 	var tglOrder time.Time
 
 	err := con.QueryRow(query, idOrder).Scan(
-		&o.IDOrder, &o.IDToko, &o.IDProduk, &o.IDCustomer, &o.IDInvoice,
+		&o.IDOrder, &o.Pemesan,
 		&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
 		&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
 	)
@@ -56,8 +53,90 @@ func (o Order) GetOrder(idOrder string) (Order, error) {
 	o.TglOrder = tglOrder.Format("02 Jan 2006")
 
 	o.HasilOrder, _ = o.HasilOrder.GetHasilOrder(idOrder)
-	o.Invoice, _ = o.Invoice.GetInvoice(o.IDInvoice)
-	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(idOrder, strconv.Itoa(o.IDProduk))
+	o.Invoice, _ = o.Invoice.GetInvoiceByOrder(idOrder)
+	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(idOrder)
+	o.Penangan, _ = o.Penangan.GetPenangan(idOrder)
+	o.Pengiriman, _ = o.Pengiriman.GetPengiriman(idOrder)
+
+	var opsiOrder OpsiOrder
+	o.OpsiOrder = opsiOrder.GetOpsiOrder(idOrder)
+
+	var fileOrder FileOrder
+	o.FileOrder = fileOrder.GetFileOrder(idOrder)
+
+	var revisi Revisi
+	o.Revisi = revisi.GetRevisi(idOrder)
+
+	var bt BiayaTambahan
+	o.BiayaTambahan = bt.GetBiayaTambahans(idOrder)
+
+	var pembayaran Pembayaran
+	o.Pembayaran = pembayaran.GetPembayarans(idOrder)
+
+	defer con.Close()
+	return o, err
+}
+
+// GetOrderToko is func
+func (o Order) GetOrderToko(idOrder, idToko string) (Order, error) {
+	con := db.Connect()
+	query := "SELECT idOrder, idCustomer," +
+		"jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, waktuPengerjaan, contohGambar, tglOrder " +
+		"FROM `order` WHERE idOrder = ? AND idToko = ?"
+
+	var tglOrder time.Time
+	err := con.QueryRow(query, idOrder, idToko).Scan(
+		&o.IDOrder, &o.Pemesan,
+		&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
+		&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
+	)
+
+	o.TglOrder = tglOrder.Format("02 Jan 2006")
+
+	o.HasilOrder, _ = o.HasilOrder.GetHasilOrder(idOrder)
+	o.Invoice, _ = o.Invoice.GetInvoiceByOrder(idOrder)
+	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(idOrder)
+	o.Penangan, _ = o.Penangan.GetPenangan(idOrder)
+	o.Pengiriman, _ = o.Pengiriman.GetPengiriman(idOrder)
+
+	var opsiOrder OpsiOrder
+	o.OpsiOrder = opsiOrder.GetOpsiOrder(idOrder)
+
+	var fileOrder FileOrder
+	o.FileOrder = fileOrder.GetFileOrder(idOrder)
+
+	var revisi Revisi
+	o.Revisi = revisi.GetRevisi(idOrder)
+
+	var bt BiayaTambahan
+	o.BiayaTambahan = bt.GetBiayaTambahans(idOrder)
+
+	var pembayaran Pembayaran
+	o.Pembayaran = pembayaran.GetPembayarans(idOrder)
+
+	defer con.Close()
+	return o, err
+}
+
+// GetOrderCustomer is func
+func (o Order) GetOrderCustomer(idOrder, idCustomer string) (Order, error) {
+	con := db.Connect()
+	query := "SELECT idOrder, idCustomer, " +
+		"jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, waktuPengerjaan, contohGambar, tglOrder " +
+		"FROM `order` WHERE idOrder = ? AND idCustomer = ?"
+
+	var tglOrder time.Time
+	err := con.QueryRow(query, idOrder, idCustomer).Scan(
+		&o.IDOrder, &o.Pemesan,
+		&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
+		&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
+	)
+
+	o.TglOrder = tglOrder.Format("02 Jan 2006")
+
+	o.HasilOrder, _ = o.HasilOrder.GetHasilOrder(idOrder)
+	o.Invoice, _ = o.Invoice.GetInvoice(idOrder)
+	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(idOrder)
 	o.Penangan, _ = o.Penangan.GetPenangan(idOrder)
 	o.Pengiriman, _ = o.Pengiriman.GetPengiriman(idOrder)
 
@@ -83,14 +162,14 @@ func (o Order) GetOrder(idOrder string) (Order, error) {
 // GetOrderByInvoice is func
 func (o Order) GetOrderByInvoice(idInvoice string) (Order, error) {
 	con := db.Connect()
-	query := "SELECT idOrder, idToko, idProduk, idCustomer, idInvoice, " +
+	query := "SELECT idOrder, idCustomer, " +
 		"jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, waktuPengerjaan, contohGambar, tglOrder " +
 		"FROM `order` WHERE idInvoice = ?"
 
 	var tglOrder time.Time
 
 	err := con.QueryRow(query, idInvoice).Scan(
-		&o.IDOrder, &o.IDToko, &o.IDProduk, &o.IDCustomer, &o.IDInvoice,
+		&o.IDOrder, &o.Pemesan,
 		&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
 		&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
 	)
@@ -98,7 +177,7 @@ func (o Order) GetOrderByInvoice(idInvoice string) (Order, error) {
 	o.TglOrder = tglOrder.Format("02 Jan 2006")
 
 	o.Invoice, _ = o.Invoice.GetInvoice(idInvoice)
-	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder), strconv.Itoa(o.IDProduk))
+	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder))
 	o.Pengiriman, _ = o.Pengiriman.GetPengiriman(strconv.Itoa(o.IDOrder))
 
 	var opsiOrder OpsiOrder
@@ -114,7 +193,7 @@ func (o Order) GetOrderByInvoice(idInvoice string) (Order, error) {
 // GetOrders is func
 func (o Order) GetOrders(idCustomer string) Orders {
 	con := db.Connect()
-	query := "SELECT idOrder, idToko, idProduk, idCustomer, idInvoice, " +
+	query := "SELECT idOrder, idCustomer, " +
 		"jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, waktuPengerjaan, contohGambar, tglOrder " +
 		"FROM `order` WHERE idCustomer = ?"
 	rows, _ := con.Query(query, idCustomer)
@@ -124,7 +203,7 @@ func (o Order) GetOrders(idCustomer string) Orders {
 
 	for rows.Next() {
 		rows.Scan(
-			&o.IDOrder, &o.IDToko, &o.IDProduk, &o.IDCustomer, &o.IDInvoice,
+			&o.IDOrder, &o.Pemesan,
 			&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
 			&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
 		)
@@ -132,8 +211,8 @@ func (o Order) GetOrders(idCustomer string) Orders {
 		o.TglOrder = tglOrder.Format("02 Jan 2006")
 
 		o.HasilOrder, _ = o.HasilOrder.GetHasilOrder(strconv.Itoa(o.IDOrder))
-		o.Invoice, _ = o.Invoice.GetInvoice(o.IDInvoice)
-		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder), strconv.Itoa(o.IDProduk))
+		o.Invoice, _ = o.Invoice.GetInvoiceByOrder(strconv.Itoa(o.IDOrder))
+		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder))
 
 		var penangan Penangan
 		o.Penangan, _ = penangan.GetPenangan(strconv.Itoa(o.IDOrder))
@@ -166,7 +245,7 @@ func (o Order) GetOrders(idCustomer string) Orders {
 // GetOrdersToko is func
 func (o Order) GetOrdersToko(idToko string) Orders {
 	con := db.Connect()
-	query := "SELECT idOrder, idProduk, idInvoice, tglOrder FROM `order` WHERE idToko = ?"
+	query := "SELECT idOrder, tglOrder FROM `order` WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var orders Orders
@@ -174,12 +253,12 @@ func (o Order) GetOrdersToko(idToko string) Orders {
 
 	for rows.Next() {
 		rows.Scan(
-			&o.IDOrder, &o.IDProduk, &o.IDInvoice, &tglOrder,
+			&o.IDOrder, &tglOrder,
 		)
 
 		o.TglOrder = tglOrder.Format("02 Jan 2006")
-		o.Invoice, _ = o.Invoice.GetInvoice(o.IDInvoice)
-		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder), strconv.Itoa(o.IDProduk))
+		o.Invoice, _ = o.Invoice.GetInvoiceByOrder(strconv.Itoa(o.IDOrder))
+		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder))
 
 		orders.Orders = append(orders.Orders, o)
 	}
@@ -191,7 +270,7 @@ func (o Order) GetOrdersToko(idToko string) Orders {
 // GetOrdersEditor is func
 func (o Order) GetOrdersEditor(idToko, idKaryawan string) Orders {
 	con := db.Connect()
-	query := "SELECT a.idOrder, a.idProduk, a.idInvoice, a.tglOrder " +
+	query := "SELECT a.idOrder, a.tglOrder " +
 		"FROM `order` a JOIN penangan b ON a.idOrder = b.idOrder " +
 		"WHERE a.idToko = ? AND b.idKaryawan = ?"
 	rows, _ := con.Query(query, idToko, idKaryawan)
@@ -201,12 +280,12 @@ func (o Order) GetOrdersEditor(idToko, idKaryawan string) Orders {
 
 	for rows.Next() {
 		rows.Scan(
-			&o.IDOrder, &o.IDProduk, &o.IDInvoice, &tglOrder,
+			&o.IDOrder, &tglOrder,
 		)
 
 		o.TglOrder = tglOrder.Format("02 Jan 2006")
-		o.Invoice, _ = o.Invoice.GetInvoice(o.IDInvoice)
-		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder), strconv.Itoa(o.IDProduk))
+		o.Invoice, _ = o.Invoice.GetInvoiceByOrder(strconv.Itoa(o.IDOrder))
+		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder))
 
 		orders.Orders = append(orders.Orders, o)
 	}
@@ -220,7 +299,7 @@ func (o Order) CreateOrder(idToko, idProduk string) (int, error) {
 	con := db.Connect()
 	query := "INSERT INTO `order` (idToko, idProduk, idCustomer, idInvoice, jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, contohGambar, tglOrder) " +
 		"VALUES (?,?,?,?,?,?,?,?,?,?,?)"
-	exec, err := con.Exec(query, idToko, idProduk, o.IDCustomer, o.Invoice.IDInvoice, o.JenisPesanan, o.TambahanWajah, o.Catatan, o.Pcs,
+	exec, err := con.Exec(query, idToko, idProduk, o.Pemesan, o.Invoice.IDInvoice, o.JenisPesanan, o.TambahanWajah, o.Catatan, o.Pcs,
 		o.RencanaPakai, o.ContohGambar, o.TglOrder)
 
 	if err != nil {

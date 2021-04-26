@@ -46,18 +46,21 @@ func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	var toko models.Toko
+	idToko, _ := toko.GetIDTokoByOrder(idOrder)
+
 	var karyawan models.Karyawan
-	dataKaryawan, _ := karyawan.GetKaryawan(strconv.Itoa(dataOrder.IDToko), strconv.Itoa(dataOrder.Penangan.IDKaryawan))
+	dataKaryawan, _ := karyawan.GetKaryawan(idToko, strconv.Itoa(dataOrder.Penangan.IDKaryawan))
 
 	var customer models.Customer
 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
 	// send notif to penangan
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataKaryawan.IDCustomer)
+	notif.Penerima = append(notif.Penerima, dataKaryawan.IDCustomer)
 	notif.Pengirim = dataCustomer.Nama
-	notif.Judul = "Permintaan revisi pesanan #" + dataOrder.IDInvoice
-	notif.Pesan = "Revisi pesanan #" + dataOrder.IDInvoice + " baru. Segera periksa pesanan."
+	notif.Judul = "Permintaan revisi pesanan #" + dataOrder.Invoice.IDInvoice
+	notif.Pesan = "Revisi pesanan #" + dataOrder.Invoice.IDInvoice + " baru. Segera periksa pesanan."
 	notif.Link = dataOrder.Invoice.SlugToko + "/pesanan/" + idOrder
 	notif.CreatedAt = time.Now().Format("2006-01-02")
 

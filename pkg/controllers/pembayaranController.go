@@ -69,15 +69,16 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	var toko models.Toko
 	var customer models.Customer
 
-	dataToko, _ := toko.GetToko(strconv.Itoa(dataOrder.IDToko))
+	idToko, _ := toko.GetIDTokoByOrder(idOrder)
+	dataToko, _ := toko.GetToko(idToko)
 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
 	var karyawan models.Karyawan
-	admins := karyawan.GetAdmins(strconv.Itoa(dataOrder.IDToko))
+	admins := karyawan.GetAdmins(idToko)
 
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataToko.IDOwner)
-	notif.IDPenerima = append(notif.IDPenerima, admins...)
+	notif.Penerima = append(notif.Penerima, dataToko.Owner)
+	notif.Penerima = append(notif.Penerima, admins...)
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Pembayaran Masuk"
 	notif.Pesan = notif.Pengirim + " telah melakukan pembayaran Rp " + strconv.Itoa(pembayaran.Nominal) + ". No invoice:" + idOrder
@@ -131,7 +132,7 @@ func (pc PembayaranController) KonfirmasiPembayaran(w http.ResponseWriter, r *ht
 
 	// send notif to customer
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataOrder.IDCustomer)
+	notif.Penerima = append(notif.Penerima, dataOrder.Pemesan)
 	notif.Pengirim = dataOrder.Invoice.NamaToko
 	notif.Judul = notif.Pengirim + " telah mengonfirmasi pembayaran anda. Inv: " + idOrder
 	notif.Pesan = ""

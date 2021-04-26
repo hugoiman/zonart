@@ -30,19 +30,16 @@ func (uc UndanganController) GetUndangans(w http.ResponseWriter, r *http.Request
 }
 
 // GetUndangan is func
-func (uc UndanganController) GetUndangan(w http.ResponseWriter, r *http.Request) {
+func (uc UndanganController) GetUndanganCustomer(w http.ResponseWriter, r *http.Request) {
 	user := context.Get(r, "user").(*MyClaims)
 	vars := mux.Vars(r)
 	idUndangan := vars["idUndangan"]
 
 	var undangan models.Undangan
 
-	dataUndangan, err := undangan.GetUndangan(idUndangan)
+	dataUndangan, err := undangan.GetUndanganCustomer(idUndangan, strconv.Itoa(user.IDCustomer))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if dataUndangan.IDCustomer != user.IDCustomer {
-		http.Error(w, "Undangan tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
@@ -85,17 +82,16 @@ func (uc UndanganController) UndangKaryawan(w http.ResponseWriter, r *http.Reque
 
 	dataToko, _ := toko.GetToko(idToko)
 
-	if dataCustomer.IDCustomer == dataToko.IDOwner {
+	if dataCustomer.IDCustomer == dataToko.Owner {
 		http.Error(w, "Anda adalah pemilik dari toko ini.", http.StatusBadRequest)
 		return
 	}
 
 	undangan.IDUndangan = dataUndangan.IDUndangan
-	undangan.IDCustomer = dataCustomer.IDCustomer
 	undangan.Status = "menunggu"
 	undangan.Date = time.Now().Format("2006-01-02")
 
-	idUndangan, err := undangan.UndangKaryawan(idToko)
+	idUndangan, err := undangan.UndangKaryawan(idToko, idCustomer)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -103,7 +99,7 @@ func (uc UndanganController) UndangKaryawan(w http.ResponseWriter, r *http.Reque
 
 	// send notif to new karyawan
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataCustomer.IDCustomer)
+	notif.Penerima = append(notif.Penerima, dataCustomer.IDCustomer)
 	notif.Pengirim = dataToko.NamaToko
 	notif.Judul = "Undangan rekrut pegawai dari " + notif.Pengirim
 	notif.Pesan = notif.Pengirim + " telah mengundang anda sebagai " + undangan.Posisi + "."
@@ -133,12 +129,9 @@ func (uc UndanganController) TolakUndangan(w http.ResponseWriter, r *http.Reques
 	var customer models.Customer
 
 	dataCustomer, _ := customer.GetCustomer(idCustomer)
-	dataUndangan, err := undangan.GetUndangan(idUndangan)
+	dataUndangan, err := undangan.GetUndanganCustomer(idUndangan, idCustomer)
 	if err != nil || dataUndangan.Status != "menunggu" {
 		http.Error(w, "Undangan tidak tersedia", http.StatusBadRequest)
-		return
-	} else if dataUndangan.IDCustomer != user.IDCustomer {
-		http.Error(w, "Undangan tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
@@ -146,11 +139,12 @@ func (uc UndanganController) TolakUndangan(w http.ResponseWriter, r *http.Reques
 
 	// send notif owner
 	var toko models.Toko
-	dataToko, _ := toko.GetToko(strconv.Itoa(dataUndangan.IDToko))
+	idToko, _ := toko.GetIDTokoByUndangan(idUndangan)
+	dataToko, _ := toko.GetToko(idToko)
 
 	// send notif to owner
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataToko.IDOwner)
+	notif.Penerima = append(notif.Penerima, dataToko.Owner)
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Undangan Ditolak"
 	notif.Pesan = notif.Pengirim + " telah menolak undangan anda"
@@ -177,17 +171,16 @@ func (uc UndanganController) TerimaUndangan(w http.ResponseWriter, r *http.Reque
 	var customer models.Customer
 
 	dataCustomer, _ := customer.GetCustomer(idCustomer)
-	dataUndangan, err := undangan.GetUndangan(idUndangan)
+	dataUndangan, err := undangan.GetUndanganCustomer(idUndangan, idCustomer)
 	if err != nil || dataUndangan.Status != "menunggu" {
 		http.Error(w, "Undangan tidak tersedia", http.StatusBadRequest)
 		return
-	} else if dataUndangan.IDCustomer != user.IDCustomer {
-		http.Error(w, "Undangan tidak ditemukan.", http.StatusBadRequest)
-		return
 	}
 
+	var toko models.Toko
+	idToko, _ := toko.GetIDTokoByUndangan(idUndangan)
+
 	karyawan.IDCustomer = user.IDCustomer
-	karyawan.IDToko = dataUndangan.IDToko
 	karyawan.NamaKaryawan = dataCustomer.Nama
 	karyawan.Email = dataCustomer.Email
 	karyawan.Hp = ""
@@ -196,16 +189,15 @@ func (uc UndanganController) TerimaUndangan(w http.ResponseWriter, r *http.Reque
 	karyawan.Status = "aktif"
 	karyawan.Bergabung = time.Now().Format("2006-01-02")
 
-	_ = karyawan.CreateKaryawan()
+	_ = karyawan.CreateKaryawan(idToko)
 
 	_ = undangan.TerimaUndangan(idUndangan)
 
-	var toko models.Toko
-	dataToko, _ := toko.GetToko(strconv.Itoa(dataUndangan.IDToko))
+	dataToko, _ := toko.GetToko(idToko)
 
 	// send notif to owner
 	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataToko.IDOwner)
+	notif.Penerima = append(notif.Penerima, dataToko.Owner)
 	notif.Pengirim = dataCustomer.Nama
 	notif.Judul = "Undangan Diterima"
 	notif.Pesan = notif.Pengirim + " telah menerima undangan anda"
@@ -241,18 +233,6 @@ func (uc UndanganController) BatalkanUndangan(w http.ResponseWriter, r *http.Req
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	var toko models.Toko
-	dataToko, _ := toko.GetToko(idToko)
-
-	// send notif owner
-	var notif models.Notifikasi
-	notif.IDPenerima = append(notif.IDPenerima, dataUndangan.IDCustomer)
-	notif.Pengirim = dataToko.NamaToko
-	notif.Judul = "Rekrut Dibatalkan"
-	notif.Pesan = notif.Pengirim + "telah membatalkan undangan."
-	notif.Link = "/undangan-rekrut/" + idUndangan
-	notif.CreatedAt = time.Now().Format("2006-01-02")
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

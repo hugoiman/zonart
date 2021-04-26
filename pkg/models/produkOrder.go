@@ -5,23 +5,23 @@ import "zonart/db"
 // ProdukOrder is class
 type ProdukOrder struct {
 	IDProdukOrder    int    `json:"idProdukOrder"`
-	IDOrder          int    `json:"idOrder"`
 	NamaProduk       string `json:"namaProduk"`
 	BeratProduk      int    `json:"beratProduk"`
 	HargaProduk      int    `json:"hargaProduk"`
 	HargaSatuanWajah int    `json:"hargaSatuanWajah"`
-	FotoProduk 		 string `json:"fotoProduk"`
-	SlugProduk 		 string `json:"slugProduk"`
+	FotoProduk       string `json:"fotoProduk"`
+	SlugProduk       string `json:"slugProduk"`
 }
 
 // GetProdukOrder is func
-func (po ProdukOrder) GetProdukOrder(idOrder, idProduk string) (ProdukOrder, error) {
+func (po ProdukOrder) GetProdukOrder(idOrder string) (ProdukOrder, error) {
 	con := db.Connect()
-	query := "SELECT a.idProdukOrder, a.idOrder, a.namaProduk, a.beratProduk, a.hargaProduk, a.hargaSatuanWajah, b.gambar, b.slug " +
-		"FROM produkOrder a, produk b WHERE a.idOrder = ? AND b.idProduk = ?"
+	query := "SELECT a.idProdukOrder, a.namaProduk, a.beratProduk, a.hargaProduk, a.hargaSatuanWajah, c.gambar, c.slug " +
+		"FROM produkOrder a JOIN `order` b ON a.idOrder = b.idOrder " +
+		"JOIN produk c ON b.idProduk = c.idProduk WHERE a.idOrder = ?"
 
-	err := con.QueryRow(query, idOrder, idProduk).Scan(
-		&po.IDProdukOrder, &po.IDOrder, &po.NamaProduk, &po.BeratProduk, &po.HargaProduk, &po.HargaSatuanWajah, &po.FotoProduk, &po.SlugProduk,
+	err := con.QueryRow(query, idOrder).Scan(
+		&po.IDProdukOrder, &po.NamaProduk, &po.BeratProduk, &po.HargaProduk, &po.HargaSatuanWajah, &po.FotoProduk, &po.SlugProduk,
 	)
 
 	defer con.Close()

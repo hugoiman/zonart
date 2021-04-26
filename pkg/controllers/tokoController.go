@@ -84,7 +84,7 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	toko.IDOwner = user.IDCustomer
+	toko.Owner = user.IDCustomer
 	toko.Foto = "https://res.cloudinary.com/dbddhr9rz/image/upload/v1612894274/zonart/toko/toko_jhecxf.png"
 	toko.CreatedAt = time.Now().Format("2006-01-02")
 

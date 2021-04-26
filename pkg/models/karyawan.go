@@ -8,7 +8,6 @@ import (
 // Karyawan is class
 type Karyawan struct {
 	IDKaryawan   int    `json:"idKaryawan"`
-	IDToko       int    `json:"idToko"`
 	IDCustomer   int    `json:"idCustomer"`
 	NamaKaryawan string `json:"namaKaryawan"`
 	Email        string `json:"email" validate:"required"`
@@ -27,12 +26,12 @@ type Karyawans struct {
 // GetKaryawan is func
 func (k Karyawan) GetKaryawan(idToko, idKaryawan string) (Karyawan, error) {
 	con := db.Connect()
-	query := "SELECT idKaryawan, idToko, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ? AND idKaryawan = ?"
+	query := "SELECT idKaryawan, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ? AND idKaryawan = ?"
 
 	var bergabung time.Time
 
 	err := con.QueryRow(query, idToko, idKaryawan).Scan(
-		&k.IDKaryawan, &k.IDToko, &k.IDCustomer, &k.NamaKaryawan, &k.Email, &k.Hp, &k.Posisi, &k.Status, &k.Alamat, &bergabung)
+		&k.IDKaryawan, &k.IDCustomer, &k.NamaKaryawan, &k.Email, &k.Hp, &k.Posisi, &k.Status, &k.Alamat, &bergabung)
 
 	k.Bergabung = bergabung.Format("02 Jan 2006")
 
@@ -44,12 +43,12 @@ func (k Karyawan) GetKaryawan(idToko, idKaryawan string) (Karyawan, error) {
 // GetKaryawanByIDCustomer is func
 func (k Karyawan) GetKaryawanByIDCustomer(idToko, idCustomer string) (Karyawan, error) {
 	con := db.Connect()
-	query := "SELECT idKaryawan, idToko, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ? AND idCustomer = ?"
+	query := "SELECT idKaryawan, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ? AND idCustomer = ?"
 
 	var bergabung time.Time
 
 	err := con.QueryRow(query, idToko, idCustomer).Scan(
-		&k.IDKaryawan, &k.IDToko, &k.IDCustomer, &k.NamaKaryawan, &k.Email, &k.Hp, &k.Posisi, &k.Status, &k.Alamat, &bergabung)
+		&k.IDKaryawan, &k.IDCustomer, &k.NamaKaryawan, &k.Email, &k.Hp, &k.Posisi, &k.Status, &k.Alamat, &bergabung)
 
 	k.Bergabung = bergabung.Format("02 Jan 2006")
 
@@ -61,7 +60,7 @@ func (k Karyawan) GetKaryawanByIDCustomer(idToko, idCustomer string) (Karyawan, 
 // GetKaryawans is func
 func (k Karyawan) GetKaryawans(idToko string) Karyawans {
 	con := db.Connect()
-	query := "SELECT idKaryawan, idToko, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ?"
+	query := "SELECT idKaryawan, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var bergabung time.Time
@@ -69,7 +68,7 @@ func (k Karyawan) GetKaryawans(idToko string) Karyawans {
 
 	for rows.Next() {
 		rows.Scan(
-			&k.IDKaryawan, &k.IDToko, &k.IDCustomer, &k.NamaKaryawan, &k.Email, &k.Hp, &k.Posisi, &k.Status, &k.Alamat, &bergabung,
+			&k.IDKaryawan, &k.IDCustomer, &k.NamaKaryawan, &k.Email, &k.Hp, &k.Posisi, &k.Status, &k.Alamat, &bergabung,
 		)
 
 		k.Bergabung = bergabung.Format("02 Jan 2006")
@@ -93,10 +92,10 @@ func (k Karyawan) UpdateKaryawan(idToko, idKaryawan string) error {
 }
 
 // CreateKaryawan is func
-func (k Karyawan) CreateKaryawan() error {
+func (k Karyawan) CreateKaryawan(idToko string) error {
 	con := db.Connect()
 	query := "INSERT INTO karyawan (idToko, idCustomer, namaKaryawan, email, hp, posisi, status, alamat, bergabung) VALUES (?,?,?,?,?,?,?,?,?)"
-	_, err := con.Exec(query, k.IDToko, k.IDCustomer, k.NamaKaryawan, k.Email, k.Hp, k.Posisi, k.Status, k.Alamat, k.Bergabung)
+	_, err := con.Exec(query, idToko, k.IDCustomer, k.NamaKaryawan, k.Email, k.Hp, k.Posisi, k.Status, k.Alamat, k.Bergabung)
 
 	defer con.Close()
 
@@ -109,13 +108,14 @@ func (k Karyawan) GetAdmins(idToko string) []int {
 	query := "SELECT idCustomer FROM karyawan WHERE idToko = ? AND posisi = 'admin' AND status = 'aktif'"
 	rows, _ := con.Query(query, idToko)
 
+	var idCustomer int
 	admin := []int{}
 	for rows.Next() {
 		rows.Scan(
-			&k.IDCustomer,
+			&idCustomer,
 		)
 
-		admin = append(admin, k.IDCustomer)
+		admin = append(admin, idCustomer)
 	}
 
 	defer con.Close()

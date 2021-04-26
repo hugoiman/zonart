@@ -8,7 +8,6 @@ import (
 // Pembukuan is class
 type Pembukuan struct {
 	IDPembukuan  int    `json:"idPembukuan"`
-	IDToko       int    `json:"idToko"`
 	Jenis        string `json:"jenis" validate:"required"`
 	Keterangan   string `json:"keterangan" validate:"required"`
 	Nominal      int    `json:"nominal" validate:"required"`
@@ -23,7 +22,7 @@ type Pembukuans struct {
 // GetPembukuans is func
 func (p Pembukuan) GetPembukuans(idToko string) Pembukuans {
 	con := db.Connect()
-	query := "SELECT idPembukuan, idToko, jenis, keterangan, nominal, tglTransaksi FROM pembukuan WHERE idToko = ?"
+	query := "SELECT idPembukuan, jenis, keterangan, nominal, tglTransaksi FROM pembukuan WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var tglTransaksi time.Time
@@ -31,7 +30,7 @@ func (p Pembukuan) GetPembukuans(idToko string) Pembukuans {
 
 	for rows.Next() {
 		rows.Scan(
-			&p.IDPembukuan, &p.IDToko, &p.Jenis, &p.Keterangan, &p.Nominal, &tglTransaksi,
+			&p.IDPembukuan, &p.Jenis, &p.Keterangan, &p.Nominal, &tglTransaksi,
 		)
 		p.TglTransaksi = tglTransaksi.Format("02 Jan 2006")
 		pembukuans.Pembukuans = append(pembukuans.Pembukuans, p)

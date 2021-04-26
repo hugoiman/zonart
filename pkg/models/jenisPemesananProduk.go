@@ -4,7 +4,6 @@ import "zonart/db"
 
 // JenisPemesananProduk is func
 type JenisPemesananProduk struct {
-	IDProduk         int    `json:"idProduk"`
 	IDJenisPemesanan int    `json:"idJenisPemesanan" validate:"required,eq=1|eq=2"`
 	Jenis            string `json:"jenis"`
 	Harga            int    `json:"harga"`
@@ -16,12 +15,12 @@ func (jpp JenisPemesananProduk) GetJenisPemesananProduk(idProduk string) []Jenis
 	con := db.Connect()
 	var jenisPemesanan []JenisPemesananProduk
 
-	query := "SELECT a.idProduk, a.idJenisPemesanan, b.jenis, a.harga, a.status FROM jenisPemesananProduk a JOIN jenisPemesanan b ON a.idJenisPemesanan = b.idJenisPemesanan WHERE a.idProduk = ?"
+	query := "SELECT a.idJenisPemesanan, b.jenis, a.harga, a.status FROM jenisPemesananProduk a JOIN jenisPemesanan b ON a.idJenisPemesanan = b.idJenisPemesanan WHERE a.idProduk = ?"
 
 	rows, _ := con.Query(query, idProduk)
 	for rows.Next() {
 		rows.Scan(
-			&jpp.IDProduk, &jpp.IDJenisPemesanan, &jpp.Jenis, &jpp.Harga, &jpp.Status,
+			&jpp.IDJenisPemesanan, &jpp.Jenis, &jpp.Harga, &jpp.Status,
 		)
 
 		jenisPemesanan = append(jenisPemesanan, jpp)
