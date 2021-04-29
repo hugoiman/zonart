@@ -38,29 +38,29 @@ func (hoc HasilOrderController) AddHasilOrder(w http.ResponseWriter, r *http.Req
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ho.Hasil = images[0]
+	ho.SetHasil(images[0])
 
 	var order models.Order
 	dataOrder, _ := order.GetOrder(idOrder)
 
-	ho.CreatedAt = time.Now().Format("2006-01-02")
-	ho.Status = "menunggu persetujuan"
+	ho.SetCreatedAt(time.Now().Format("2006-01-02"))
+	ho.SetStatus("menunggu persetujuan")
 	if err := ho.AddHasilOrder(idOrder); err != nil {
 		cloudinary.DeleteImages(images)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	oldImage := []string{dataOrder.HasilOrder.Hasil}
+	oldImage := []string{dataOrder.GetHasilOrder().GetHasil()}
 	cloudinary.DeleteImages(oldImage)
 
 	var notif models.Notifikasi
-	notif.Penerima = append(notif.Penerima, dataOrder.Pemesan)
-	notif.Pengirim = dataOrder.Invoice.NamaToko
-	notif.Judul = "Hasil pesanan sudah keluar"
-	notif.Pesan = "Hasil pesanan " + dataOrder.Invoice.IDInvoice + " sudah keluar. Segera beri tanggapan ke penjual."
-	notif.Link = "/order?id=" + idOrder
-	notif.CreatedAt = time.Now().Format("2006-01-02")
+	notif.SetPenerima(append(notif.GetPenerima(), dataOrder.GetPemesan()))
+	notif.SetPengirim(dataOrder.GetInvoice().GetNamaToko())
+	notif.SetJudul("Hasil pesanan sudah keluar")
+	notif.SetPesan("Hasil pesanan " + dataOrder.GetInvoice().GetIDInvoice() + " sudah keluar. Segera beri tanggapan ke penjual.")
+	notif.SetLink("/order?id=" + idOrder)
+	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
@@ -76,7 +76,7 @@ func (hoc HasilOrderController) SetujuiHasilOrder(w http.ResponseWriter, r *http
 
 	var order models.Order
 	dataOrder, _ := order.GetOrder(idOrder)
-	if dataOrder.Invoice.StatusPesanan != "diproses" {
+	if dataOrder.GetInvoice().GetStatusPesanan() != "diproses" {
 		http.Error(w, "Status pesanan tidak sedang dalam proses.", http.StatusBadRequest)
 		return
 	}
@@ -91,20 +91,20 @@ func (hoc HasilOrderController) SetujuiHasilOrder(w http.ResponseWriter, r *http
 	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(user.IDCustomer))
 
 	var notif models.Notifikasi
-	notif.Penerima = append(notif.Penerima, dataOrder.Penangan.IDPenangan)
-	notif.Pengirim = dataCustomer.Nama
-	notif.Judul = "Hasil pesanan " + dataOrder.Invoice.IDInvoice + " telah disetujui."
-	notif.Pesan = ""
-	notif.Link = "/pesanan/" + idOrder
-	notif.CreatedAt = time.Now().Format("2006-01-02")
+	notif.SetPenerima(append(notif.GetPenerima(), dataOrder.GetPenangan().GetIDPenangan()))
+	notif.SetPengirim(dataCustomer.GetNama())
+	notif.SetJudul("Hasil pesanan " + dataOrder.GetInvoice().GetIDInvoice() + " telah disetujui.")
+	notif.SetPesan("")
+	notif.SetLink("/pesanan/" + idOrder)
+	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
 
 	var message = ""
-	if dataOrder.JenisPesanan == "cetak" {
+	if dataOrder.GetJenisPesanan() == "cetak" {
 		message = "Barang akan segera dikirim."
 	}
 
-	if dataOrder.Invoice.Tagihan > 0 {
+	if dataOrder.GetInvoice().GetTagihan() > 0 {
 		message += " Yuk segera selesaikan pembayaran kamu."
 	}
 

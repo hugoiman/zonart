@@ -27,7 +27,7 @@ func (cc CustomerController) GetCustomer(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	message, err := json.Marshal(data)
+	message, err := json.Marshal(&data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -80,9 +80,6 @@ func (cc CustomerController) UpdateProfil(w http.ResponseWriter, r *http.Request
 	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(customer); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	}
 
 	err := customer.UpdateProfil(user.IDCustomer)
@@ -117,7 +114,8 @@ func (cc CustomerController) ChangePassword(w http.ResponseWriter, r *http.Reque
 	oldPass.Write([]byte(data.OldPassword))
 	var encryptedOldPass = fmt.Sprintf("%x", oldPass.Sum(nil))
 
-	isValid := models.CheckOldPassword(user.IDCustomer, encryptedOldPass)
+	var auth models.Auth
+	isValid := auth.CheckOldPassword(user.IDCustomer, encryptedOldPass)
 	if !isValid {
 		http.Error(w, "Password lama tidak sesuai", http.StatusBadRequest)
 		return

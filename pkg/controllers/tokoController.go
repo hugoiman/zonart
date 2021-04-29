@@ -29,7 +29,7 @@ func (tc TokoController) GetToko(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message, err := json.Marshal(dataToko)
+	message, err := json.Marshal(&dataToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -50,7 +50,7 @@ func (tc TokoController) GetTokos(w http.ResponseWriter, r *http.Request) {
 		dataToko.Tokos = append(dataToko.Tokos, v)
 	}
 
-	message, err := json.Marshal(dataToko)
+	message, err := json.Marshal(&dataToko)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -74,19 +74,19 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 	} else if err := validator.New().Struct(toko); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if !regexSlug.MatchString(toko.Slug) {
+	} else if !regexSlug.MatchString(toko.GetSlug()) {
 		http.Error(w, "Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
 		return
 	}
-	_, ok := rj.GetIDKota(toko.Kota)
+	_, ok := rj.GetIDKota(toko.GetKota())
 	if !ok {
 		http.Error(w, "Kota tidak ditemukan", http.StatusBadRequest)
 		return
 	}
 
-	toko.Owner = user.IDCustomer
-	toko.Foto = "https://res.cloudinary.com/dbddhr9rz/image/upload/v1612894274/zonart/toko/toko_jhecxf.png"
-	toko.CreatedAt = time.Now().Format("2006-01-02")
+	toko.SetOwner(user.IDCustomer)
+	toko.SetFoto("https://res.cloudinary.com/dbddhr9rz/image/upload/v1612894274/zonart/toko/toko_jhecxf.png")
+	toko.SetCreatedAt(time.Now().Format("2006-01-02"))
 
 	_, err := toko.CreateToko()
 	if err != nil {
@@ -96,7 +96,7 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Toko berhasil terdaftar!", "domain":"` + toko.Slug + `"}`))
+	w.Write([]byte(`{"message":"Toko berhasil terdaftar!", "domain":"` + toko.GetSlug() + `"}`))
 }
 
 // UpdateToko is func
@@ -114,15 +114,12 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&toko); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(toko); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if !regexSlug.MatchString(toko.Slug) {
+	} else if !regexSlug.MatchString(toko.GetSlug()) {
 		http.Error(w, "Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
 		return
 	}
 
-	_, ok := rj.GetIDKota(toko.Kota)
+	_, ok := rj.GetIDKota(toko.GetKota())
 	if !ok {
 		http.Error(w, "Kota tidak ditemukan", http.StatusBadRequest)
 		return
@@ -142,7 +139,7 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 		}
 
 		oldToko, _ = toko.GetToko(idToko)
-		toko.Foto = images[0]
+		toko.SetFoto(images[0])
 	}
 
 	// Update main data toko
@@ -153,20 +150,20 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if existImage != http.ErrMissingFile && oldToko.Foto != "https://res.cloudinary.com/dbddhr9rz/image/upload/v1612894274/zonart/toko/toko_jhecxf.png" {
-		oldImage := []string{oldToko.Foto}
+	if existImage != http.ErrMissingFile && oldToko.GetFoto() != "https://res.cloudinary.com/dbddhr9rz/image/upload/v1612894274/zonart/toko/toko_jhecxf.png" {
+		oldImage := []string{oldToko.GetFoto()}
 		cloudinary.DeleteImages(oldImage)
 	}
 
 	// update data pengiriman toko
-	for k := range toko.JasaPengirimanToko {
-		jpt = toko.JasaPengirimanToko[k]
+	for k := range toko.GetJasaPengirimanToko() {
+		jpt = toko.GetJasaPengirimanToko()[k]
 		_ = jpt.CreateUpdatePengirimanToko(idToko)
 	}
 
 	// update rekening toko
-	for x := range toko.Rekening {
-		rekening = toko.Rekening[x]
+	for x := range toko.GetRekening() {
+		rekening = toko.GetRekening()[x]
 		_ = rekening.CreateUpdateRekening(idToko)
 	}
 

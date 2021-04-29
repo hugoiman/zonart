@@ -8,7 +8,6 @@ import (
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // GaleriController is class
@@ -21,7 +20,7 @@ func (gc GaleriController) GetGaleris(w http.ResponseWriter, r *http.Request) {
 	var galeri models.Galeri
 
 	dataGaleri := galeri.GetGaleris(idToko)
-	message, _ := json.Marshal(dataGaleri)
+	message, _ := json.Marshal(&dataGaleri)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -36,9 +35,6 @@ func (gc GaleriController) CreateGaleri(w http.ResponseWriter, r *http.Request) 
 	var galeri models.Galeri
 
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&galeri); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if err := validator.New().Struct(galeri); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if _, _, err := r.FormFile("gambar"); err == http.ErrMissingFile {
@@ -56,7 +52,7 @@ func (gc GaleriController) CreateGaleri(w http.ResponseWriter, r *http.Request) 
 	}
 	var idGaleris []string
 	for _, v := range images {
-		galeri.Gambar = v
+		galeri.SetGambar(v)
 		idGaleri, err := galeri.CreateGaleri(idToko)
 		if err != nil {
 			cloudinary.DeleteImages(images)

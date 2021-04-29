@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // KaryawanController is class
@@ -21,7 +20,7 @@ func (kc KaryawanController) GetKaryawans(w http.ResponseWriter, r *http.Request
 	var karyawan models.Karyawan
 
 	dataKaryawan := karyawan.GetKaryawans(idToko)
-	message, _ := json.Marshal(dataKaryawan)
+	message, _ := json.Marshal(&dataKaryawan)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -41,7 +40,7 @@ func (kc KaryawanController) GetKaryawan(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	message, _ := json.Marshal(dataKaryawan)
+	message, _ := json.Marshal(&dataKaryawan)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -61,7 +60,7 @@ func (kc KaryawanController) GetKaryawanByIDCustomer(w http.ResponseWriter, r *h
 		return
 	}
 
-	message, _ := json.Marshal(dataKaryawan)
+	message, _ := json.Marshal(&dataKaryawan)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -76,9 +75,6 @@ func (kc KaryawanController) UpdateKaryawan(w http.ResponseWriter, r *http.Reque
 	var karyawan models.Karyawan
 
 	if err := json.NewDecoder(r.Body).Decode(&karyawan); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if err := validator.New().Struct(karyawan); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

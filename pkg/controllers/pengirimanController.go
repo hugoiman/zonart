@@ -28,8 +28,8 @@ func (rc PengirimanController) SetResi(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pengiriman models.Pengiriman
-	pengiriman.Resi = resi
-	err := pengiriman.SetResi(idOrder)
+	pengiriman.SetResi(resi)
+	err := pengiriman.InputResi(idOrder)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

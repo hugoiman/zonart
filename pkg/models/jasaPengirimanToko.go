@@ -1,15 +1,51 @@
 package models
 
 import (
+	"encoding/json"
 	"zonart/db"
 )
 
 // JasaPengirimanToko is class
 type JasaPengirimanToko struct {
-	IDJasaPengiriman int    `json:"idJasaPengiriman"`
-	Kurir            string `json:"kurir"`
-	Kode             string `json:"kode"`
-	Status           bool   `json:"status"`
+	idJasaPengiriman int
+	kurir            string
+	kode             string
+	status           bool
+}
+
+func (jpt *JasaPengirimanToko) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		IDJasaPengiriman int    `json:"idJasaPengiriman"`
+		Kurir            string `json:"kurir"`
+		Kode             string `json:"kode"`
+		Status           bool   `json:"status"`
+	}{
+		IDJasaPengiriman: jpt.idJasaPengiriman,
+		Kurir:            jpt.kurir,
+		Kode:             jpt.kode,
+		Status:           jpt.status,
+	})
+}
+
+func (jpt *JasaPengirimanToko) UnmarshalJSON(data []byte) error {
+	alias := struct {
+		IDJasaPengiriman int    `json:"idJasaPengiriman"`
+		Kurir            string `json:"kurir"`
+		Kode             string `json:"kode"`
+		Status           bool   `json:"status"`
+	}{}
+
+	err := json.Unmarshal(data, &alias)
+	if err != nil {
+		return err
+	}
+
+	jpt.idJasaPengiriman = alias.IDJasaPengiriman
+	jpt.kurir = alias.Kurir
+	jpt.kode = alias.Kode
+	jpt.status = alias.Status
+
+	return nil
 }
 
 // GetJasaPengirimanToko is func
@@ -23,12 +59,12 @@ func (jpt JasaPengirimanToko) GetJasaPengirimanToko(idToko int) []JasaPengiriman
 	query := "SELECT a.idJasaPengiriman, b.kurir, b.kode, a.status FROM jasaPengirimanToko a JOIN jasaPengiriman b ON a.idJasaPengiriman = b.idJasaPengiriman WHERE a.idToko = ? AND a.idJasaPengiriman = ?"
 
 	for _, v := range jasaPengiriman {
-		err := con.QueryRow(query, idToko, v.IDJasaPengiriman).Scan(&jpt.IDJasaPengiriman, &jpt.Kurir, &jpt.Kode, &jpt.Status)
+		err := con.QueryRow(query, idToko, v.idJasaPengiriman).Scan(&jpt.idJasaPengiriman, &jpt.kurir, &jpt.kode, &jpt.status)
 		if err != nil {
-			jpt.IDJasaPengiriman = v.IDJasaPengiriman
-			jpt.Kurir = v.Kurir
-			jpt.Kode = v.Kode
-			jpt.Status = false
+			jpt.idJasaPengiriman = v.idJasaPengiriman
+			jpt.kurir = v.kurir
+			jpt.kode = v.kode
+			jpt.status = false
 		}
 		jpts = append(jpts, jpt)
 	}
@@ -46,14 +82,14 @@ func (jpt JasaPengirimanToko) CreateUpdatePengirimanToko(idToko string) error {
 
 	query := "SELECT EXISTS (SELECT 1 FROM jasaPengirimanToko WHERE idToko = ? AND idJasaPengiriman = ?)"
 
-	con.QueryRow(query, idToko, jpt.IDJasaPengiriman).Scan(&isAny)
+	con.QueryRow(query, idToko, jpt.idJasaPengiriman).Scan(&isAny)
 
 	if isAny == true {
 		queryUpdate := "UPDATE jasaPengirimanToko SET status = ? WHERE idJasaPengiriman = ? AND idToko = ?"
-		_, err = con.Exec(queryUpdate, jpt.Status, jpt.IDJasaPengiriman, idToko)
+		_, err = con.Exec(queryUpdate, jpt.status, jpt.idJasaPengiriman, idToko)
 	} else if isAny == false {
 		queryInsert := "INSERT INTO jasaPengirimanToko (idJasaPengiriman, idToko, status) VALUES (?,?,?)"
-		_, err = con.Exec(queryInsert, jpt.IDJasaPengiriman, idToko, jpt.Status)
+		_, err = con.Exec(queryInsert, jpt.idJasaPengiriman, idToko, jpt.status)
 	}
 
 	defer con.Close()

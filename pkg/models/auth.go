@@ -5,18 +5,15 @@ import (
 )
 
 // Auth is class
-type Auth struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
-}
+type Auth struct{}
 
 // Login is func
-func (a *Auth) Login() (string, error) {
+func (a Auth) Login(username, password string) (string, error) {
 	var idCustomer string
 
 	con := db.Connect()
 	query := "SELECT idCustomer FROM customer WHERE username = ? AND password = ?"
-	err := con.QueryRow(query, a.Username, a.Password).Scan(&idCustomer)
+	err := con.QueryRow(query, username, password).Scan(&idCustomer)
 
 	defer con.Close()
 
@@ -24,7 +21,7 @@ func (a *Auth) Login() (string, error) {
 }
 
 // CheckOldPassword is func
-func CheckOldPassword(idCustomer int, password string) bool {
+func (a Auth) CheckOldPassword(idCustomer int, password string) bool {
 	var isAny bool
 	con := db.Connect()
 	query := "SELECT EXISTS (SELECT 1 FROM customer WHERE idCustomer = ? AND password = ?)"

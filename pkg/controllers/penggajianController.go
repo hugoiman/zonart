@@ -6,7 +6,6 @@ import (
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // PenggajianController is class
@@ -19,7 +18,7 @@ func (pc PenggajianController) GetGajis(w http.ResponseWriter, r *http.Request) 
 	var produk models.Penggajian
 
 	dataPenggajian := produk.GetGajis(idToko)
-	message, _ := json.Marshal(dataPenggajian)
+	message, _ := json.Marshal(&dataPenggajian)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -35,9 +34,6 @@ func (pc PenggajianController) CreateGaji(w http.ResponseWriter, r *http.Request
 	var penggajian models.Penggajian
 
 	if err := json.NewDecoder(r.Body).Decode(&penggajian); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if err := validator.New().Struct(penggajian); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

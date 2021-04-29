@@ -1,38 +1,211 @@
 package models
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 	"zonart/db"
+
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // Order is class
 type Order struct {
-	IDOrder         int             `json:"idOrder"`                                                //y
-	Pemesan         int             `json:"pemesan"`                                                //y
-	JenisPesanan    string          `json:"jenisPesanan" validate:"required,eq=cetak|eq=soft copy"` //y
-	TambahanWajah   int             `json:"tambahanWajah"`                                          //y
-	Catatan         string          `json:"catatan"`                                                //y
-	Pcs             int             `json:"pcs" validate:"required,min=1"`                          //y
-	RencanaPakai    string          `json:"rencanaPakai"`                                           //y
-	WaktuPengerjaan string          `json:"waktuPengerjaan"`                                        //y
-	ContohGambar    string          `json:"contohGambar"`                                           //y
-	TglOrder        string          `json:"tglOrder"`                                               //y
-	Invoice         Invoice         `json:"invoice"`
-	ProdukOrder     ProdukOrder     `json:"produkOrder"`
-	Pengiriman      Pengiriman      `json:"pengiriman" validate:"required,dive"`
-	Penangan        Penangan        `json:"penangan"`
-	HasilOrder      HasilOrder      `json:"hasilOrder"`
-	FileOrder       []FileOrder     `json:"fileOrder"`
-	BiayaTambahan   []BiayaTambahan `json:"biayaTambahan"`
-	OpsiOrder       []OpsiOrder     `json:"opsiOrder"`
-	Revisi          []Revisi        `json:"revisi"`
-	Pembayaran      []Pembayaran    `json:"pembayaran"`
+	idOrder         int
+	pemesan         int
+	jenisPesanan    string
+	tambahanWajah   int
+	catatan         string
+	pcs             int
+	rencanaPakai    string
+	waktuPengerjaan string
+	contohGambar    string
+	tglOrder        string
+	invoice         Invoice
+	produkOrder     ProdukOrder
+	pengiriman      Pengiriman
+	penangan        Penangan
+	hasilOrder      HasilOrder
+	fileOrder       []FileOrder
+	biayaTambahan   []BiayaTambahan
+	opsiOrder       []OpsiOrder
+	revisi          []Revisi
+	pembayaran      []Pembayaran
 }
 
 // Orders is order list
 type Orders struct {
 	Orders []Order `json:"order"`
+}
+
+func (o *Order) GetIDOrder() int {
+	return o.idOrder
+}
+
+func (o *Order) SetPemesan(data int) {
+	o.pemesan = data
+}
+
+func (o *Order) GetPemesan() int {
+	return o.pemesan
+}
+
+func (o *Order) GetJenisPesanan() string {
+	return o.jenisPesanan
+}
+
+func (o *Order) GetPcs() int {
+	return o.pcs
+}
+
+func (o *Order) GetTambahanWajah() int {
+	return o.tambahanWajah
+}
+
+func (o *Order) SetWaktu(data string) {
+	o.waktuPengerjaan = data
+}
+
+func (o *Order) GetInvoice() *Invoice {
+	return &o.invoice
+}
+
+func (o *Order) GetPengiriman() *Pengiriman {
+	return &o.pengiriman
+}
+
+func (o *Order) GetPenangan() *Penangan {
+	return &o.penangan
+}
+
+func (o *Order) GetHasilOrder() *HasilOrder {
+	return &o.hasilOrder
+}
+
+func (o *Order) SetTglOrder(data string) {
+	o.tglOrder = data
+}
+
+func (o *Order) GetTglOrder() string {
+	return o.tglOrder
+}
+
+func (o *Order) GetProdukOrder() *ProdukOrder {
+	return &o.produkOrder
+}
+
+func (o *Order) SetFileOrder(data []FileOrder) {
+	o.fileOrder = data
+}
+
+func (o *Order) GetFileOrder() []FileOrder {
+	return o.fileOrder
+}
+
+func (o *Order) GetOpsiOrder() []OpsiOrder {
+	return o.opsiOrder
+}
+
+func (o *Order) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		IDOrder         int             `json:"idOrder"`
+		Pemesan         int             `json:"pemesan"`
+		JenisPesanan    string          `json:"jenisPesanan"`
+		TambahanWajah   int             `json:"tambahanWajah"`
+		Catatan         string          `json:"catatan"`
+		Pcs             int             `json:"pcs"`
+		RencanaPakai    string          `json:"rencanaPakai"`
+		WaktuPengerjaan string          `json:"waktuPengerjaan"`
+		ContohGambar    string          `json:"contohGambar"`
+		TglOrder        string          `json:"tglOrder"`
+		Invoice         *Invoice        `json:"invoice"`
+		ProdukOrder     *ProdukOrder    `json:"produkOrder"`
+		Pengiriman      *Pengiriman     `json:"pengiriman"`
+		Penangan        *Penangan       `json:"penangan"`
+		HasilOrder      *HasilOrder     `json:"hasilOrder"`
+		FileOrder       []FileOrder     `json:"fileOrder"`
+		BiayaTambahan   []BiayaTambahan `json:"biayaTambahan"`
+		OpsiOrder       []OpsiOrder     `json:"opsiOrder"`
+		Revisi          []Revisi        `json:"revisi"`
+		Pembayaran      []Pembayaran    `json:"pembayaran"`
+	}{
+		IDOrder:         o.idOrder,
+		Pemesan:         o.pemesan,
+		JenisPesanan:    o.jenisPesanan,
+		TambahanWajah:   o.tambahanWajah,
+		Catatan:         o.catatan,
+		Pcs:             o.pcs,
+		RencanaPakai:    o.rencanaPakai,
+		WaktuPengerjaan: o.waktuPengerjaan,
+		ContohGambar:    o.contohGambar,
+		TglOrder:        o.tglOrder,
+		Invoice:         &o.invoice,
+		ProdukOrder:     &o.produkOrder,
+		Pengiriman:      &o.pengiriman,
+		Penangan:        &o.penangan,
+		HasilOrder:      &o.hasilOrder,
+		FileOrder:       o.fileOrder,
+		BiayaTambahan:   o.biayaTambahan,
+		OpsiOrder:       o.opsiOrder,
+		Revisi:          o.revisi,
+		Pembayaran:      o.pembayaran,
+	})
+}
+
+func (o *Order) UnmarshalJSON(data []byte) error {
+	alias := struct {
+		IDOrder         int             `json:"idOrder"`
+		Pemesan         int             `json:"pemesan"`
+		JenisPesanan    string          `json:"jenisPesanan" validate:"required,eq=cetak|eq=soft copy"`
+		TambahanWajah   int             `json:"tambahanWajah"`
+		Catatan         string          `json:"catatan"`
+		Pcs             int             `json:"pcs" validate:"required,min=1"`
+		RencanaPakai    string          `json:"rencanaPakai"`
+		WaktuPengerjaan string          `json:"waktuPengerjaan"`
+		ContohGambar    string          `json:"contohGambar"`
+		TglOrder        string          `json:"tglOrder"`
+		Invoice         Invoice         `json:"invoice"`
+		ProdukOrder     ProdukOrder     `json:"produkOrder"`
+		Pengiriman      Pengiriman      `json:"pengiriman" validate:"required,dive"`
+		Penangan        Penangan        `json:"penangan"`
+		HasilOrder      HasilOrder      `json:"hasilOrder"`
+		FileOrder       []FileOrder     `json:"fileOrder"`
+		BiayaTambahan   []BiayaTambahan `json:"biayaTambahan"`
+		OpsiOrder       []OpsiOrder     `json:"opsiOrder"`
+		Revisi          []Revisi        `json:"revisi"`
+		Pembayaran      []Pembayaran    `json:"pembayaran"`
+	}{}
+
+	err := json.Unmarshal(data, &alias)
+	if err != nil {
+		return err
+	}
+
+	o.idOrder = alias.IDOrder
+	o.pemesan = alias.Pemesan
+	o.jenisPesanan = alias.JenisPesanan
+	o.tambahanWajah = alias.TambahanWajah
+	o.catatan = alias.Catatan
+	o.pcs = alias.Pcs
+	o.rencanaPakai = alias.RencanaPakai
+	o.waktuPengerjaan = alias.WaktuPengerjaan
+	o.contohGambar = alias.ContohGambar
+	o.tglOrder = alias.TglOrder
+	o.invoice = alias.Invoice
+	o.produkOrder = alias.ProdukOrder
+	o.pengiriman = alias.Pengiriman
+	o.penangan = alias.Penangan
+	o.hasilOrder = alias.HasilOrder
+	o.fileOrder = alias.FileOrder
+	o.biayaTambahan = alias.BiayaTambahan
+	o.opsiOrder = alias.OpsiOrder
+	o.revisi = alias.Revisi
+	o.pembayaran = alias.Pembayaran
+
+	if err = validator.New().Struct(alias); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetOrder is func
@@ -45,33 +218,33 @@ func (o Order) GetOrder(idOrder string) (Order, error) {
 	var tglOrder time.Time
 
 	err := con.QueryRow(query, idOrder).Scan(
-		&o.IDOrder, &o.Pemesan,
-		&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
-		&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
+		&o.idOrder, &o.pemesan,
+		&o.jenisPesanan, &o.tambahanWajah, &o.catatan, &o.pcs, &o.rencanaPakai,
+		&o.waktuPengerjaan, &o.contohGambar, &tglOrder,
 	)
 
-	o.TglOrder = tglOrder.Format("02 Jan 2006")
+	o.tglOrder = tglOrder.Format("02 Jan 2006")
 
-	o.HasilOrder, _ = o.HasilOrder.GetHasilOrder(idOrder)
-	o.Invoice, _ = o.Invoice.GetInvoiceByOrder(idOrder)
-	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(idOrder)
-	o.Penangan, _ = o.Penangan.GetPenangan(idOrder)
-	o.Pengiriman, _ = o.Pengiriman.GetPengiriman(idOrder)
+	o.hasilOrder, _ = o.hasilOrder.GetHasilOrder(idOrder)
+	o.invoice, _ = o.invoice.GetInvoiceByOrder(idOrder)
+	o.produkOrder, _ = o.produkOrder.GetProdukOrder(idOrder)
+	o.penangan, _ = o.penangan.GetPenangan(idOrder)
+	o.pengiriman, _ = o.pengiriman.GetPengiriman(idOrder)
 
 	var opsiOrder OpsiOrder
-	o.OpsiOrder = opsiOrder.GetOpsiOrder(idOrder)
+	o.opsiOrder = opsiOrder.GetOpsiOrder(idOrder)
 
 	var fileOrder FileOrder
-	o.FileOrder = fileOrder.GetFileOrder(idOrder)
+	o.fileOrder = fileOrder.GetFileOrder(idOrder)
 
 	var revisi Revisi
-	o.Revisi = revisi.GetRevisi(idOrder)
+	o.revisi = revisi.GetRevisi(idOrder)
 
 	var bt BiayaTambahan
-	o.BiayaTambahan = bt.GetBiayaTambahans(idOrder)
+	o.biayaTambahan = bt.GetBiayaTambahans(idOrder)
 
 	var pembayaran Pembayaran
-	o.Pembayaran = pembayaran.GetPembayarans(idOrder)
+	o.pembayaran = pembayaran.GetPembayarans(idOrder)
 
 	defer con.Close()
 	return o, err
@@ -86,33 +259,33 @@ func (o Order) GetOrderToko(idOrder, idToko string) (Order, error) {
 
 	var tglOrder time.Time
 	err := con.QueryRow(query, idOrder, idToko).Scan(
-		&o.IDOrder, &o.Pemesan,
-		&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
-		&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
+		&o.idOrder, &o.pemesan,
+		&o.jenisPesanan, &o.tambahanWajah, &o.catatan, &o.pcs, &o.rencanaPakai,
+		&o.waktuPengerjaan, &o.contohGambar, &tglOrder,
 	)
 
-	o.TglOrder = tglOrder.Format("02 Jan 2006")
+	o.tglOrder = tglOrder.Format("02 Jan 2006")
 
-	o.HasilOrder, _ = o.HasilOrder.GetHasilOrder(idOrder)
-	o.Invoice, _ = o.Invoice.GetInvoiceByOrder(idOrder)
-	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(idOrder)
-	o.Penangan, _ = o.Penangan.GetPenangan(idOrder)
-	o.Pengiriman, _ = o.Pengiriman.GetPengiriman(idOrder)
+	o.hasilOrder, _ = o.hasilOrder.GetHasilOrder(idOrder)
+	o.invoice, _ = o.invoice.GetInvoiceByOrder(idOrder)
+	o.produkOrder, _ = o.produkOrder.GetProdukOrder(idOrder)
+	o.penangan, _ = o.penangan.GetPenangan(idOrder)
+	o.pengiriman, _ = o.pengiriman.GetPengiriman(idOrder)
 
 	var opsiOrder OpsiOrder
-	o.OpsiOrder = opsiOrder.GetOpsiOrder(idOrder)
+	o.opsiOrder = opsiOrder.GetOpsiOrder(idOrder)
 
 	var fileOrder FileOrder
-	o.FileOrder = fileOrder.GetFileOrder(idOrder)
+	o.fileOrder = fileOrder.GetFileOrder(idOrder)
 
 	var revisi Revisi
-	o.Revisi = revisi.GetRevisi(idOrder)
+	o.revisi = revisi.GetRevisi(idOrder)
 
 	var bt BiayaTambahan
-	o.BiayaTambahan = bt.GetBiayaTambahans(idOrder)
+	o.biayaTambahan = bt.GetBiayaTambahans(idOrder)
 
 	var pembayaran Pembayaran
-	o.Pembayaran = pembayaran.GetPembayarans(idOrder)
+	o.pembayaran = pembayaran.GetPembayarans(idOrder)
 
 	defer con.Close()
 	return o, err
@@ -127,33 +300,33 @@ func (o Order) GetOrderCustomer(idOrder, idCustomer string) (Order, error) {
 
 	var tglOrder time.Time
 	err := con.QueryRow(query, idOrder, idCustomer).Scan(
-		&o.IDOrder, &o.Pemesan,
-		&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
-		&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
+		&o.idOrder, &o.pemesan,
+		&o.jenisPesanan, &o.tambahanWajah, &o.catatan, &o.pcs, &o.rencanaPakai,
+		&o.waktuPengerjaan, &o.contohGambar, &tglOrder,
 	)
 
-	o.TglOrder = tglOrder.Format("02 Jan 2006")
+	o.tglOrder = tglOrder.Format("02 Jan 2006")
 
-	o.HasilOrder, _ = o.HasilOrder.GetHasilOrder(idOrder)
-	o.Invoice, _ = o.Invoice.GetInvoice(idOrder)
-	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(idOrder)
-	o.Penangan, _ = o.Penangan.GetPenangan(idOrder)
-	o.Pengiriman, _ = o.Pengiriman.GetPengiriman(idOrder)
+	o.hasilOrder, _ = o.hasilOrder.GetHasilOrder(idOrder)
+	o.invoice, _ = o.invoice.GetInvoice(idOrder)
+	o.produkOrder, _ = o.produkOrder.GetProdukOrder(idOrder)
+	o.penangan, _ = o.penangan.GetPenangan(idOrder)
+	o.pengiriman, _ = o.pengiriman.GetPengiriman(idOrder)
 
 	var opsiOrder OpsiOrder
-	o.OpsiOrder = opsiOrder.GetOpsiOrder(idOrder)
+	o.opsiOrder = opsiOrder.GetOpsiOrder(idOrder)
 
 	var fileOrder FileOrder
-	o.FileOrder = fileOrder.GetFileOrder(idOrder)
+	o.fileOrder = fileOrder.GetFileOrder(idOrder)
 
 	var revisi Revisi
-	o.Revisi = revisi.GetRevisi(idOrder)
+	o.revisi = revisi.GetRevisi(idOrder)
 
 	var bt BiayaTambahan
-	o.BiayaTambahan = bt.GetBiayaTambahans(idOrder)
+	o.biayaTambahan = bt.GetBiayaTambahans(idOrder)
 
 	var pembayaran Pembayaran
-	o.Pembayaran = pembayaran.GetPembayarans(idOrder)
+	o.pembayaran = pembayaran.GetPembayarans(idOrder)
 
 	defer con.Close()
 	return o, err
@@ -169,22 +342,22 @@ func (o Order) GetOrderByInvoice(idInvoice string) (Order, error) {
 	var tglOrder time.Time
 
 	err := con.QueryRow(query, idInvoice).Scan(
-		&o.IDOrder, &o.Pemesan,
-		&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
-		&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
+		&o.idOrder, &o.pemesan,
+		&o.jenisPesanan, &o.tambahanWajah, &o.catatan, &o.pcs, &o.rencanaPakai,
+		&o.waktuPengerjaan, &o.contohGambar, &tglOrder,
 	)
 
-	o.TglOrder = tglOrder.Format("02 Jan 2006")
+	o.tglOrder = tglOrder.Format("02 Jan 2006")
 
-	o.Invoice, _ = o.Invoice.GetInvoice(idInvoice)
-	o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder))
-	o.Pengiriman, _ = o.Pengiriman.GetPengiriman(strconv.Itoa(o.IDOrder))
+	o.invoice, _ = o.invoice.GetInvoice(idInvoice)
+	o.produkOrder, _ = o.produkOrder.GetProdukOrder(strconv.Itoa(o.idOrder))
+	o.pengiriman, _ = o.pengiriman.GetPengiriman(strconv.Itoa(o.idOrder))
 
 	var opsiOrder OpsiOrder
-	o.OpsiOrder = opsiOrder.GetOpsiOrder(strconv.Itoa(o.IDOrder))
+	o.opsiOrder = opsiOrder.GetOpsiOrder(strconv.Itoa(o.idOrder))
 
 	var bt BiayaTambahan
-	o.BiayaTambahan = bt.GetBiayaTambahans(strconv.Itoa(o.IDOrder))
+	o.biayaTambahan = bt.GetBiayaTambahans(strconv.Itoa(o.idOrder))
 
 	defer con.Close()
 	return o, err
@@ -203,37 +376,37 @@ func (o Order) GetOrders(idCustomer string) Orders {
 
 	for rows.Next() {
 		rows.Scan(
-			&o.IDOrder, &o.Pemesan,
-			&o.JenisPesanan, &o.TambahanWajah, &o.Catatan, &o.Pcs, &o.RencanaPakai,
-			&o.WaktuPengerjaan, &o.ContohGambar, &tglOrder,
+			&o.idOrder, &o.pemesan,
+			&o.jenisPesanan, &o.tambahanWajah, &o.catatan, &o.pcs, &o.rencanaPakai,
+			&o.waktuPengerjaan, &o.contohGambar, &tglOrder,
 		)
 
-		o.TglOrder = tglOrder.Format("02 Jan 2006")
+		o.tglOrder = tglOrder.Format("02 Jan 2006")
 
-		o.HasilOrder, _ = o.HasilOrder.GetHasilOrder(strconv.Itoa(o.IDOrder))
-		o.Invoice, _ = o.Invoice.GetInvoiceByOrder(strconv.Itoa(o.IDOrder))
-		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder))
+		o.hasilOrder, _ = o.hasilOrder.GetHasilOrder(strconv.Itoa(o.idOrder))
+		o.invoice, _ = o.invoice.GetInvoiceByOrder(strconv.Itoa(o.idOrder))
+		o.produkOrder, _ = o.produkOrder.GetProdukOrder(strconv.Itoa(o.idOrder))
 
 		var penangan Penangan
-		o.Penangan, _ = penangan.GetPenangan(strconv.Itoa(o.IDOrder))
+		o.penangan, _ = penangan.GetPenangan(strconv.Itoa(o.idOrder))
 
 		var pengiriman Pengiriman
-		o.Pengiriman, _ = pengiriman.GetPengiriman(strconv.Itoa(o.IDOrder))
+		o.pengiriman, _ = pengiriman.GetPengiriman(strconv.Itoa(o.idOrder))
 
 		var opsiOrder OpsiOrder
-		o.OpsiOrder = opsiOrder.GetOpsiOrder(strconv.Itoa(o.IDOrder))
+		o.opsiOrder = opsiOrder.GetOpsiOrder(strconv.Itoa(o.idOrder))
 
 		var fileOrder FileOrder
-		o.FileOrder = fileOrder.GetFileOrder(strconv.Itoa(o.IDOrder))
+		o.fileOrder = fileOrder.GetFileOrder(strconv.Itoa(o.idOrder))
 
 		var revisi Revisi
-		o.Revisi = revisi.GetRevisi(strconv.Itoa(o.IDOrder))
+		o.revisi = revisi.GetRevisi(strconv.Itoa(o.idOrder))
 
 		var bt BiayaTambahan
-		o.BiayaTambahan = bt.GetBiayaTambahans(strconv.Itoa(o.IDOrder))
+		o.biayaTambahan = bt.GetBiayaTambahans(strconv.Itoa(o.idOrder))
 
 		var pembayaran Pembayaran
-		o.Pembayaran = pembayaran.GetPembayarans(strconv.Itoa(o.IDOrder))
+		o.pembayaran = pembayaran.GetPembayarans(strconv.Itoa(o.idOrder))
 
 		orders.Orders = append(orders.Orders, o)
 	}
@@ -253,12 +426,12 @@ func (o Order) GetOrdersToko(idToko string) Orders {
 
 	for rows.Next() {
 		rows.Scan(
-			&o.IDOrder, &tglOrder,
+			&o.idOrder, &tglOrder,
 		)
 
-		o.TglOrder = tglOrder.Format("02 Jan 2006")
-		o.Invoice, _ = o.Invoice.GetInvoiceByOrder(strconv.Itoa(o.IDOrder))
-		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder))
+		o.tglOrder = tglOrder.Format("02 Jan 2006")
+		o.invoice, _ = o.invoice.GetInvoiceByOrder(strconv.Itoa(o.idOrder))
+		o.produkOrder, _ = o.produkOrder.GetProdukOrder(strconv.Itoa(o.idOrder))
 
 		orders.Orders = append(orders.Orders, o)
 	}
@@ -280,12 +453,12 @@ func (o Order) GetOrdersEditor(idToko, idKaryawan string) Orders {
 
 	for rows.Next() {
 		rows.Scan(
-			&o.IDOrder, &tglOrder,
+			&o.idOrder, &tglOrder,
 		)
 
-		o.TglOrder = tglOrder.Format("02 Jan 2006")
-		o.Invoice, _ = o.Invoice.GetInvoiceByOrder(strconv.Itoa(o.IDOrder))
-		o.ProdukOrder, _ = o.ProdukOrder.GetProdukOrder(strconv.Itoa(o.IDOrder))
+		o.tglOrder = tglOrder.Format("02 Jan 2006")
+		o.invoice, _ = o.invoice.GetInvoiceByOrder(strconv.Itoa(o.idOrder))
+		o.produkOrder, _ = o.produkOrder.GetProdukOrder(strconv.Itoa(o.idOrder))
 
 		orders.Orders = append(orders.Orders, o)
 	}
@@ -299,8 +472,8 @@ func (o Order) CreateOrder(idToko, idProduk string) (int, error) {
 	con := db.Connect()
 	query := "INSERT INTO `order` (idToko, idProduk, idCustomer, idInvoice, jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, contohGambar, tglOrder) " +
 		"VALUES (?,?,?,?,?,?,?,?,?,?,?)"
-	exec, err := con.Exec(query, idToko, idProduk, o.Pemesan, o.Invoice.IDInvoice, o.JenisPesanan, o.TambahanWajah, o.Catatan, o.Pcs,
-		o.RencanaPakai, o.ContohGambar, o.TglOrder)
+	exec, err := con.Exec(query, idToko, idProduk, o.pemesan, o.invoice.idInvoice, o.jenisPesanan, o.tambahanWajah, o.catatan, o.pcs,
+		o.rencanaPakai, o.contohGambar, o.tglOrder)
 
 	if err != nil {
 		return 0, err
@@ -309,24 +482,24 @@ func (o Order) CreateOrder(idToko, idProduk string) (int, error) {
 	idInt64, _ := exec.LastInsertId()
 	idOrder := int(idInt64)
 
-	err = o.Pengiriman.CreatePengiriman(strconv.Itoa(idOrder))
+	err = o.pengiriman.CreatePengiriman(strconv.Itoa(idOrder))
 	if err != nil {
 		return 0, err
 	}
 
-	err = o.ProdukOrder.CreateProdukOrder(strconv.Itoa(idOrder))
+	err = o.produkOrder.CreateProdukOrder(strconv.Itoa(idOrder))
 	if err != nil {
 		return 0, err
 	}
 
-	for _, v := range o.FileOrder {
+	for _, v := range o.fileOrder {
 		err = v.CreateFileOrder(strconv.Itoa(idOrder))
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	for _, v := range o.OpsiOrder {
+	for _, v := range o.opsiOrder {
 		err = v.CreateOpsiOrder(strconv.Itoa(idOrder))
 		if err != nil {
 			return 0, err
@@ -353,7 +526,7 @@ func (o Order) CreateOrder(idToko, idProduk string) (int, error) {
 func (o Order) SetWaktuPengerjaan(idOrder string) error {
 	con := db.Connect()
 	query := "UPDATE `order` SET waktuPengerjaan = ? WHERE idOrder = ?"
-	_, err := con.Exec(query, o.WaktuPengerjaan, idOrder)
+	_, err := con.Exec(query, o.waktuPengerjaan, idOrder)
 
 	defer con.Close()
 

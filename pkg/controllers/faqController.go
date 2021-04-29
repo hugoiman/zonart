@@ -8,7 +8,6 @@ import (
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // FaqController is class
@@ -22,7 +21,7 @@ func (fc FaqController) GetFaqs(w http.ResponseWriter, r *http.Request) {
 	var faq models.Faq
 
 	dataFaq := faq.GetFaqs(idToko)
-	message, _ := json.Marshal(dataFaq)
+	message, _ := json.Marshal(&dataFaq)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -42,7 +41,7 @@ func (fc FaqController) GetFaq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message, _ := json.Marshal(dataFaq)
+	message, _ := json.Marshal(&dataFaq)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -58,12 +57,9 @@ func (fc FaqController) CreateFaq(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&faq); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(faq); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	}
 
-	faq.Kategori = strings.Title(strings.ToLower(faq.Kategori))
+	faq.SetKategori(strings.Title(strings.ToLower(faq.GetKategori())))
 
 	idFaq, err := faq.CreateFaq(idToko)
 	if err != nil {

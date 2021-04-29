@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"zonart/internal/gomail"
 	mw "zonart/middleware"
 	"zonart/pkg/models"
 
@@ -28,8 +27,12 @@ type ClaimsResetPassword struct {
 type AuthController struct{}
 
 // Login is func
-func (auth AuthController) Login(w http.ResponseWriter, r *http.Request) {
-	var login models.Auth
+func (ac AuthController) Login(w http.ResponseWriter, r *http.Request) {
+	var auth models.Auth
+	var login = struct {
+		Username string `json:"username" validate:"required"`
+		Password string `json:"password" validate:"required"`
+	}{}
 	if err := json.NewDecoder(r.Body).Decode(&login); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -45,7 +48,7 @@ func (auth AuthController) Login(w http.ResponseWriter, r *http.Request) {
 
 	login.Password = encryptedString
 
-	idCustomer, err := login.Login()
+	idCustomer, err := auth.Login(login.Username, login.Password)
 	if err != nil {
 		http.Error(w, "Username atau password salah.", http.StatusBadRequest)
 		return
@@ -65,11 +68,12 @@ func (auth AuthController) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // createToken is Generate token
-func (auth AuthController) createToken(customer models.Customer) string {
-	var mySigningKey = mw.MySigningKey
+func (ac AuthController) createToken(customer models.Customer) string {
+	var mdw mw.MiddleWare
+	var mySigningKey = mdw.GetSigningKey()
 	claims := MyClaims{
-		IDCustomer: customer.IDCustomer,
-		Username:   customer.Username,
+		IDCustomer: customer.GetIDCustomer(),
+		Username:   customer.GetUsername(),
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24 * 365).Unix(),
 		},
@@ -82,7 +86,7 @@ func (auth AuthController) createToken(customer models.Customer) string {
 }
 
 // ResetPassword is func
-func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
+func (ac AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		Email       string `json:"email"  validate:"required,email"`
 		NewPassword string `json:"newPassword" validate:"required,min=6"`
@@ -103,7 +107,8 @@ func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Generate token
-	var mySigningKey = mw.MySigningKey
+	var mdw mw.MiddleWare
+	var mySigningKey = mdw.GetSigningKey()
 	claims := ClaimsResetPassword{
 		Email:    data.Email,
 		Password: data.NewPassword,
@@ -116,7 +121,8 @@ func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request)
 	tokenString, _ := token.SignedString(mySigningKey)
 	link := "http://localhost:5500/verifikasi-reset-password?token=" + tokenString
 
-	message := "Hallo " + dataCustomer.Nama + ",<br> Silahkan klik link dibawah ini untuk verifikasi. Link ini akan kadaluarsa dalam waktu 15 menit.<br><br>" + link
+	message := "Hallo " + dataCustomer.GetNama() + ",<br> Silahkan klik link dibawah ini untuk verifikasi. Link ini akan kadaluarsa dalam waktu 15 menit.<br><br>" + link
+	var gomail Gomail
 	err = gomail.SendEmail("Reset Password", data.Email, message)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -129,7 +135,7 @@ func (auth AuthController) ResetPassword(w http.ResponseWriter, r *http.Request)
 }
 
 // VerificationResetPassword is func
-func (auth AuthController) VerificationResetPassword(w http.ResponseWriter, r *http.Request) {
+func (ac AuthController) VerificationResetPassword(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		Token string `json:"token"  validate:"required"`
 	}{}
@@ -144,7 +150,8 @@ func (auth AuthController) VerificationResetPassword(w http.ResponseWriter, r *h
 	claimsResetPassword := &ClaimsResetPassword{}
 
 	token, err := jwt.ParseWithClaims(data.Token, claimsResetPassword, func(token *jwt.Token) (interface{}, error) {
-		return mw.MySigningKey, nil
+		var mdw mw.MiddleWare
+		return mdw.GetSigningKey(), nil
 	})
 
 	if err != nil || !token.Valid {
@@ -165,7 +172,7 @@ func (auth AuthController) VerificationResetPassword(w http.ResponseWriter, r *h
 	var encryptedPassword = fmt.Sprintf("%x", pass.Sum(nil))
 
 	//  Update Password
-	_ = customer.UpdatePassword(dataCustomer.IDCustomer, encryptedPassword)
+	_ = customer.UpdatePassword(dataCustomer.GetIDCustomer(), encryptedPassword)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

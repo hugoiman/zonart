@@ -20,7 +20,7 @@ func (gopc GrupOpsiProdukController) GetGrupOpsiProduks(w http.ResponseWriter, r
 	var gop models.GrupOpsiProduk
 
 	dataGOP := gop.GetGrupOpsiProduks(idToko, idGrupOpsi)
-	message, _ := json.Marshal(dataGOP)
+	message, _ := json.Marshal(&dataGOP)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -36,7 +36,7 @@ func (gopc GrupOpsiProdukController) GetGrupOpsiProduksByProduk(w http.ResponseW
 	var gop models.GrupOpsiProduk
 
 	dataGOP := gop.GetGrupOpsiProduksByProduk(idToko, idProduk)
-	message, _ := json.Marshal(dataGOP)
+	message, _ := json.Marshal(&dataGOP)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -9,7 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gosimple/slug"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // ProdukController is class
@@ -22,7 +21,7 @@ func (pc ProdukController) GetProduks(w http.ResponseWriter, r *http.Request) {
 	var produk models.Produk
 
 	dataProduk := produk.GetProduks(idToko)
-	message, _ := json.Marshal(dataProduk)
+	message, _ := json.Marshal(&dataProduk)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -37,12 +36,12 @@ func (pc ProdukController) GetProduk(w http.ResponseWriter, r *http.Request) {
 	var produk models.Produk
 
 	dataProduk, err := produk.GetProduk(idToko, idProduk)
-	if err != nil || dataProduk.Status == "dihapus" {
+	if err != nil || dataProduk.GetStatus() == "dihapus" {
 		http.Error(w, "Produk tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
-	message, _ := json.Marshal(dataProduk)
+	message, _ := json.Marshal(&dataProduk)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -59,9 +58,6 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&produk); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(produk); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	} else if _, _, err := r.FormFile("gambar"); err == http.ErrMissingFile {
 		http.Error(w, "Silahkan masukan foto produk", http.StatusBadRequest)
 		return
@@ -76,8 +72,8 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	produk.Gambar = images[0]
-	produk.Slug = slug.Make(produk.NamaProduk)
+	produk.SetGambar(images[0])
+	produk.SetSlug(slug.Make(produk.GetNamaProduk()))
 
 	idProduk, err := produk.CreateProduk(idToko)
 	if err != nil {
@@ -89,7 +85,7 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Produk telah ditambahkan.","produk":"` + produk.Slug + `"}`))
+	w.Write([]byte(`{"message":"Produk telah ditambahkan.","produk":"` + produk.GetSlug() + `"}`))
 }
 
 // UpdateProduk is func
@@ -101,9 +97,6 @@ func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) 
 	var produk models.Produk
 
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&produk); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if err := validator.New().Struct(produk); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -123,10 +116,10 @@ func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) 
 		}
 
 		oldProduk, _ = produk.GetProduk(idToko, idProduk)
-		produk.Gambar = images[0]
+		produk.SetGambar(images[0])
 	}
 
-	produk.Slug = slug.Make(produk.NamaProduk)
+	produk.SetSlug(slug.Make(produk.GetNamaProduk()))
 	err := produk.UpdateProduk(idToko, idProduk)
 	if err != nil {
 		cloudinary.DeleteImages(images)
@@ -135,13 +128,13 @@ func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if existImage != http.ErrMissingFile {
-		oldImage := []string{oldProduk.Gambar}
+		oldImage := []string{oldProduk.GetGambar()}
 		cloudinary.DeleteImages(oldImage)
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Data produk berhasil diperbarui!","produk":"` + produk.Slug + `"}`))
+	w.Write([]byte(`{"message":"Data produk berhasil diperbarui!","produk":"` + produk.GetSlug() + `"}`))
 }
 
 // DeleteProduk is func

@@ -19,7 +19,7 @@ func (nc NotifikasiController) GetNotifikasis(w http.ResponseWriter, r *http.Req
 	var notifikasi models.Notifikasi
 
 	dataNotifikasi := notifikasi.GetNotifikasis(strconv.Itoa(idPenerima))
-	message, _ := json.Marshal(dataNotifikasi)
+	message, _ := json.Marshal(&dataNotifikasi)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -11,9 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// MySigningKey is signature
-var MySigningKey = []byte("jwt super secret keys")
-
 // MyClaims is Credential
 type MyClaims struct {
 	IDCustomer int    `json:"idCustomer"`
@@ -23,6 +20,12 @@ type MyClaims struct {
 
 // MiddleWare is class
 type MiddleWare struct {
+	signingKey []byte // MySigningKey is signature
+}
+
+func (mw *MiddleWare) GetSigningKey() []byte {
+	mw.signingKey = []byte("jwt super secret keys")
+	return mw.signingKey
 }
 
 // AuthToken is middleware
@@ -39,7 +42,7 @@ func (mw MiddleWare) AuthToken(next http.Handler) http.Handler {
 		claims := &MyClaims{}
 
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			return MySigningKey, nil
+			return mw.GetSigningKey(), nil
 		})
 		if err != nil || !token.Valid {
 			http.Error(w, "Token invalid. Dibutuhkan autentikasi. Silahkan login.", http.StatusUnauthorized) // Token expired/key tidak cocok(invalid)
@@ -62,7 +65,7 @@ func (mw MiddleWare) AuthOwner(next http.HandlerFunc) http.HandlerFunc {
 		user := context.Get(r, "user").(*MyClaims)
 
 		dataToko, err := toko.GetToko(idToko)
-		if err != nil || user.IDCustomer != dataToko.Owner {
+		if err != nil || user.IDCustomer != dataToko.GetOwner() {
 			http.Error(w, "Anda tidak memiliki hak akses.", http.StatusForbidden)
 			return
 		}
@@ -88,7 +91,7 @@ func (mw MiddleWare) AuthOwnerAdmin(next http.HandlerFunc) http.HandlerFunc {
 		// }
 
 		dataKaryawan, err := karyawan.GetKaryawanByIDCustomer(idToko, strconv.Itoa(user.IDCustomer))
-		if user.IDCustomer != dataToko.Owner && (dataKaryawan.Posisi != "admin" || dataKaryawan.Status != "aktif" || err != nil) {
+		if user.IDCustomer != dataToko.GetOwner() && (dataKaryawan.GetPosisi() != "admin" || dataKaryawan.GetStatus() != "aktif" || err != nil) {
 			http.Error(w, "Anda tidak memiliki hak akses.", http.StatusForbidden)
 			return
 		}
@@ -107,7 +110,7 @@ func (mw MiddleWare) AuthEditor(next http.HandlerFunc) http.HandlerFunc {
 		user := context.Get(r, "user").(*MyClaims)
 
 		dataKaryawan, err := karyawan.GetKaryawanByIDCustomer(idToko, strconv.Itoa(user.IDCustomer))
-		if dataKaryawan.Posisi != "editor" || dataKaryawan.Status != "aktif" || err != nil {
+		if dataKaryawan.GetPosisi() != "editor" || dataKaryawan.GetStatus() != "aktif" || err != nil {
 			http.Error(w, "Anda tidak memiliki hak akses.", http.StatusForbidden)
 			return
 		}
@@ -147,8 +150,8 @@ func (mw MiddleWare) OwnerAdminOrder(next http.HandlerFunc) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		} else if r.Method != http.MethodGet && (dataOrder.Invoice.StatusPesanan == "selesai" || dataOrder.Invoice.StatusPesanan == "ditolak" || dataOrder.Invoice.StatusPesanan == "dibatalkan") {
-			http.Error(w, "Pesanan sudah "+dataOrder.Invoice.StatusPesanan, http.StatusBadRequest)
+		} else if r.Method != http.MethodGet && (dataOrder.GetInvoice().GetStatusPesanan() == "selesai" || dataOrder.GetInvoice().GetStatusPesanan() == "ditolak" || dataOrder.GetInvoice().GetStatusPesanan() == "dibatalkan") {
+			http.Error(w, "Pesanan sudah "+dataOrder.GetInvoice().GetStatusPesanan(), http.StatusBadRequest)
 			return
 		}
 
@@ -178,7 +181,7 @@ func (mw MiddleWare) PenanganOrder(next http.HandlerFunc) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		} else if user.IDCustomer != dataToko.Owner && dataOrder.Penangan.IDPenangan != user.IDCustomer {
+		} else if user.IDCustomer != dataToko.GetOwner() && dataOrder.GetPenangan().GetIDPenangan() != user.IDCustomer {
 			http.Error(w, "Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
 			return
 		}
@@ -200,20 +203,20 @@ func (mw MiddleWare) SetUserPosition(next http.HandlerFunc) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		} else if dataToko.Owner == user.IDCustomer {
+		} else if dataToko.GetOwner() == user.IDCustomer {
 			position = map[string]interface{}{
 				"position": "owner",
 			}
 		} else {
 			var karyawan models.Karyawan
 			dataKaryawan, err := karyawan.GetKaryawanByIDCustomer(idToko, strconv.Itoa(user.IDCustomer))
-			if dataKaryawan.Status != "aktif" || err != nil {
+			if dataKaryawan.GetStatus() != "aktif" || err != nil {
 				http.Error(w, "Anda tidak memiliki hak akses.", http.StatusForbidden)
 				return
 			}
 			position = map[string]interface{}{
-				"position":   dataKaryawan.Posisi,
-				"idKaryawan": strconv.Itoa(dataKaryawan.IDKaryawan),
+				"position":   dataKaryawan.GetPosisi(),
+				"idKaryawan": strconv.Itoa(dataKaryawan.GetIDKaryawan()),
 			}
 		}
 

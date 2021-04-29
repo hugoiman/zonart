@@ -7,7 +7,6 @@ import (
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // GrupOpsiController is class
@@ -20,7 +19,7 @@ func (goc GrupOpsiController) GetGrupOpsis(w http.ResponseWriter, r *http.Reques
 	var grupOpsi models.GrupOpsi
 
 	dataGrupOpsi := grupOpsi.GetGrupOpsis(idToko)
-	message, _ := json.Marshal(dataGrupOpsi)
+	message, _ := json.Marshal(&dataGrupOpsi)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -40,7 +39,7 @@ func (goc GrupOpsiController) GetGrupOpsi(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	message, _ := json.Marshal(dataGrupOpsi)
+	message, _ := json.Marshal(&dataGrupOpsi)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -56,30 +55,27 @@ func (goc GrupOpsiController) CreateGrupOpsi(w http.ResponseWriter, r *http.Requ
 	if err := json.NewDecoder(r.Body).Decode(&grupOpsi); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(grupOpsi); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	}
 
 	// Hitung Jumlah Opsi
-	totalOpsi := len(grupOpsi.Opsi)
-	if grupOpsi.SpesificRequest == true {
+	totalOpsi := len(grupOpsi.GetOpsi())
+	if grupOpsi.GetSpesificRequest() == true {
 		totalOpsi++
 	}
 
-	if grupOpsi.Required == false && grupOpsi.Min != 0 {
+	if grupOpsi.GetRequired() == false && grupOpsi.GetMin() != 0 {
 		http.Error(w, "Jika pilihan tidak wajib diisi, maka minimal pilihan harus 0", http.StatusBadRequest)
 		return
-	} else if grupOpsi.Required == true && grupOpsi.Min < 1 {
+	} else if grupOpsi.GetRequired() == true && grupOpsi.GetMin() < 1 {
 		http.Error(w, "Jika pilihan wajib diisi, maka minimal pilihan setidaknya 1", http.StatusBadRequest)
 		return
-	} else if grupOpsi.Max > totalOpsi {
+	} else if grupOpsi.GetMax() > totalOpsi {
 		http.Error(w, "Maksimal jumlah memilih melebihi batas jumlah opsi", http.StatusBadRequest)
 		return
-	} else if grupOpsi.Min > grupOpsi.Max {
+	} else if grupOpsi.GetMin() > grupOpsi.GetMax() {
 		http.Error(w, "Minimal jumlah memilih harus kurang dari samadengan maksimal jumlah memilih", http.StatusBadRequest)
 		return
-	} else if grupOpsi.HardCopy == false && grupOpsi.SoftCopy == false {
+	} else if grupOpsi.GetHardCopy() == false && grupOpsi.GetSoftCopy() == false {
 		http.Error(w, "Pilih minimal satu jenis pemesanan", http.StatusBadRequest)
 		return
 	}
@@ -105,27 +101,24 @@ func (goc GrupOpsiController) UpdateGrupOpsi(w http.ResponseWriter, r *http.Requ
 	if err := json.NewDecoder(r.Body).Decode(&grupOpsi); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(grupOpsi); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	}
 
 	// Hitung Jumlah Opsi
-	totalOpsi := len(grupOpsi.Opsi)
-	if grupOpsi.SpesificRequest == true {
+	totalOpsi := len(grupOpsi.GetOpsi())
+	if grupOpsi.GetSpesificRequest() == true {
 		totalOpsi++
 	}
 
-	if grupOpsi.Required == false && grupOpsi.Min != 0 {
+	if grupOpsi.GetRequired() == false && grupOpsi.GetMin() != 0 {
 		http.Error(w, "Jika pilihan tidak wajib diisi, maka minimal pilihan harus 0", http.StatusBadRequest)
 		return
-	} else if grupOpsi.Required == true && grupOpsi.Min < 1 {
+	} else if grupOpsi.GetRequired() == true && grupOpsi.GetMin() < 1 {
 		http.Error(w, "Jika pilihan wajib diisi, maka minimal pilihan setidaknya 1", http.StatusBadRequest)
 		return
-	} else if grupOpsi.Max > totalOpsi {
+	} else if grupOpsi.GetMax() > totalOpsi {
 		http.Error(w, "Maksimal jumlah memilih melebihi batas jumlah opsi", http.StatusBadRequest)
 		return
-	} else if grupOpsi.Min > grupOpsi.Max {
+	} else if grupOpsi.GetMin() > grupOpsi.GetMax() {
 		http.Error(w, "Minimal jumlah memilih harus kurang dari samadengan maksimal memilih", http.StatusBadRequest)
 		return
 	}
@@ -136,7 +129,7 @@ func (goc GrupOpsiController) UpdateGrupOpsi(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	for _, v := range grupOpsi.Opsi {
+	for _, v := range grupOpsi.GetOpsi() {
 		_ = v.CreateUpdateOpsi(idGrupOpsi)
 	}
 

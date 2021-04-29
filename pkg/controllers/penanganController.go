@@ -8,7 +8,6 @@ import (
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // PenanganController is class
@@ -21,25 +20,21 @@ func (pc PenanganController) SetPenangan(w http.ResponseWriter, r *http.Request)
 	idOrder := vars["idOrder"]
 
 	var penangan models.Penangan
-	var karyawan models.Karyawan
-	var toko models.Toko
 
 	if err := json.NewDecoder(r.Body).Decode(&penangan); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(penangan); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	}
 
-	dataKaryawan, err := karyawan.GetKaryawan(idToko, strconv.Itoa(penangan.IDKaryawan))
+	var karyawan models.Karyawan
+	dataKaryawan, err := karyawan.GetKaryawan(idToko, strconv.Itoa(penangan.GetIDKaryawan()))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if dataKaryawan.Status != "aktif" {
+	} else if dataKaryawan.GetStatus() != "aktif" {
 		http.Error(w, "Status karyawan tidak aktif.", http.StatusBadRequest)
 		return
-	} else if dataKaryawan.Posisi != "editor" {
+	} else if dataKaryawan.GetPosisi() != "editor" {
 		http.Error(w, "Posisi karyawan bukanlah editor.", http.StatusBadRequest)
 		return
 	}
@@ -50,19 +45,26 @@ func (pc PenanganController) SetPenangan(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	var order models.Order
+	dataOrder, _ := order.GetOrder(idOrder)
+
+	var toko models.Toko
 	dataToko, _ := toko.GetToko(idToko)
+
+	id, _ := karyawan.GetIDCustomerByKaryawan(strconv.Itoa(dataKaryawan.GetIDKaryawan()))
+	idCustomer, _ := strconv.Atoi(id)
 
 	// send notif to karyawan penangan
 	var notif models.Notifikasi
-	notif.Penerima = append(notif.Penerima, dataKaryawan.IDCustomer)
-	notif.Pengirim = dataToko.NamaToko
-	notif.Judul = "Pengerjaan Pesanan"
-	notif.Pesan = "Anda telah diberi tugas untuk mengerjakan pesanan " + idOrder
-	notif.Link = "/order?id=" + idOrder
-	notif.CreatedAt = time.Now().Format("2006-01-02")
+	notif.SetPenerima(append(notif.GetPenerima(), idCustomer))
+	notif.SetPengirim(dataToko.GetNamaToko())
+	notif.SetJudul("Pengerjaan Pesanan")
+	notif.SetPesan("Anda telah diberi tugas untuk mengerjakan pesanan #" + dataOrder.GetInvoice().GetIDInvoice())
+	notif.SetLink("/order?id=" + idOrder)
+	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Pesanan diteruskan ke ` + dataKaryawan.NamaKaryawan + `"}`))
+	w.Write([]byte(`{"message":"Pesanan diteruskan ke ` + dataKaryawan.GetNamaKaryawan() + `"}`))
 }

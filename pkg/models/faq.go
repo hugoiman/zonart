@@ -1,18 +1,69 @@
 package models
 
-import "zonart/db"
+import (
+	"encoding/json"
+	"zonart/db"
+
+	"gopkg.in/go-playground/validator.v9"
+)
 
 // Faq is class
 type Faq struct {
-	IDFaq      int    `json:"idFaq"`
-	Pertanyaan string `json:"pertanyaan" validate:"required"`
-	Jawaban    string `json:"jawaban" validate:"required"`
-	Kategori   string `json:"kategori" validate:"required"`
+	idFaq      int
+	pertanyaan string
+	jawaban    string
+	kategori   string
 }
 
 // Faqs is list of faq
 type Faqs struct {
 	Faqs []Faq `json:"faq"`
+}
+
+func (f *Faq) SetKategori(data string) {
+	f.kategori = data
+}
+
+func (f *Faq) GetKategori() string {
+	return f.kategori
+}
+
+func (f *Faq) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		IDFaq      int    `json:"idFaq"`
+		Pertanyaan string `json:"pertanyaan"`
+		Jawaban    string `json:"jawaban"`
+		Kategori   string `json:"kategori"`
+	}{
+		IDFaq:      f.idFaq,
+		Pertanyaan: f.pertanyaan,
+		Jawaban:    f.jawaban,
+		Kategori:   f.kategori,
+	})
+}
+
+func (f *Faq) UnmarshalJSON(data []byte) error {
+	alias := struct {
+		IDFaq      int    `json:"idFaq"`
+		Pertanyaan string `json:"pertanyaan" validate:"required"`
+		Jawaban    string `json:"jawaban" validate:"required"`
+		Kategori   string `json:"kategori" validate:"required"`
+	}{}
+
+	err := json.Unmarshal(data, &alias)
+	if err != nil {
+		return err
+	}
+
+	f.idFaq = alias.IDFaq
+	f.pertanyaan = alias.Pertanyaan
+	f.jawaban = alias.Jawaban
+	f.kategori = alias.Kategori
+
+	if err = validator.New().Struct(alias); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetFaqs is func
@@ -25,7 +76,7 @@ func (f Faq) GetFaqs(idToko string) Faqs {
 
 	for rows.Next() {
 		rows.Scan(
-			&f.IDFaq, &f.Pertanyaan, &f.Jawaban, &f.Kategori,
+			&f.idFaq, &f.pertanyaan, &f.jawaban, &f.kategori,
 		)
 
 		faqs.Faqs = append(faqs.Faqs, f)
@@ -42,7 +93,7 @@ func (f Faq) GetFaq(idFaq, idToko string) (Faq, error) {
 	query := "SELECT idFaq, pertanyaan, jawaban, kategori FROM faq WHERE idFaq = ? AND idToko = ?"
 
 	err := con.QueryRow(query, idFaq, idToko).Scan(
-		&f.IDFaq, &f.Pertanyaan, &f.Jawaban, &f.Kategori)
+		&f.idFaq, &f.pertanyaan, &f.jawaban, &f.kategori)
 
 	defer con.Close()
 	return f, err
@@ -52,7 +103,7 @@ func (f Faq) GetFaq(idFaq, idToko string) (Faq, error) {
 func (f Faq) CreateFaq(idToko string) (int, error) {
 	con := db.Connect()
 	query := "INSERT INTO faq (idToko, pertanyaan, jawaban, kategori) VALUES (?,?,?,?)"
-	exec, err := con.Exec(query, idToko, f.Pertanyaan, f.Jawaban, f.Kategori)
+	exec, err := con.Exec(query, idToko, f.pertanyaan, f.jawaban, f.kategori)
 
 	if err != nil {
 		return 0, err

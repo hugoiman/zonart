@@ -14,7 +14,7 @@ func (jpc JasaPengirimanController) GetJasaPengirimans(w http.ResponseWriter, r 
 	var jp models.JasaPengiriman
 
 	dataJasaPengiriman := jp.GetJasaPengirimans()
-	message, _ := json.Marshal(dataJasaPengiriman)
+	message, _ := json.Marshal(&dataJasaPengiriman)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

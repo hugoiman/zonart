@@ -1,20 +1,65 @@
 package models
 
 import (
+	"encoding/json"
 	"zonart/db"
+
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // Galeri is class
 type Galeri struct {
-	IDGaleri   int    `json:"idGaleri"`
-	IDKategori int    `json:"idKategori" validate:"required"`
-	Kategori   string `json:"kategori"`
-	Gambar     string `json:"gambar"`
+	idGaleri   int
+	idKategori int
+	kategori   string
+	gambar     string
 }
 
 // Galeris is list of galeri
 type Galeris struct {
 	Galeris []Galeri `json:"galeri"`
+}
+
+func (g *Galeri) SetGambar(data string) {
+	g.gambar = data
+}
+
+func (g *Galeri) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		IDGaleri   int    `json:"idGaleri"`
+		IDKategori int    `json:"idKategori"`
+		Kategori   string `json:"kategori"`
+		Gambar     string `json:"gambar"`
+	}{
+		IDGaleri:   g.idGaleri,
+		IDKategori: g.idKategori,
+		Kategori:   g.kategori,
+		Gambar:     g.gambar,
+	})
+}
+
+func (g *Galeri) UnmarshalJSON(data []byte) error {
+	alias := struct {
+		IDGaleri   int    `json:"idGaleri"`
+		IDKategori int    `json:"idKategori" validate:"required"`
+		Kategori   string `json:"kategori"`
+		Gambar     string `json:"gambar"`
+	}{}
+
+	err := json.Unmarshal(data, &alias)
+	if err != nil {
+		return err
+	}
+
+	g.idGaleri = alias.IDGaleri
+	g.idKategori = alias.IDKategori
+	g.kategori = alias.Kategori
+	g.gambar = alias.Gambar
+
+	if err = validator.New().Struct(alias); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetGaleris is func
@@ -27,7 +72,7 @@ func (g Galeri) GetGaleris(idToko string) Galeris {
 
 	for rows.Next() {
 		rows.Scan(
-			&g.IDGaleri, &g.IDKategori, &g.Kategori, &g.Gambar,
+			&g.idGaleri, &g.idKategori, &g.kategori, &g.gambar,
 		)
 
 		galeris.Galeris = append(galeris.Galeris, g)
@@ -42,7 +87,7 @@ func (g Galeri) GetGaleris(idToko string) Galeris {
 func (g Galeri) CreateGaleri(idToko string) (int, error) {
 	con := db.Connect()
 	query := "INSERT INTO galeri (idToko, idKategori, gambar) VALUES (?,?,?)"
-	exec, err := con.Exec(query, idToko, g.IDKategori, g.Gambar)
+	exec, err := con.Exec(query, idToko, g.idKategori, g.gambar)
 
 	if err != nil {
 		return 0, err

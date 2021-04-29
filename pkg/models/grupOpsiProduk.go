@@ -1,20 +1,56 @@
 package models
 
 import (
+	"encoding/json"
 	"zonart/db"
 )
 
 // GrupOpsiProduk is class
 type GrupOpsiProduk struct {
-	IDProduk   int    `json:"idProduk"`
-	IDGrupOpsi int    `json:"idGrupOpsi"`
-	NamaProduk string `json:"namaProduk"`
-	NamaGrup   string `json:"namaGrup"`
+	idProduk   int
+	idGrupOpsi int
+	namaProduk string
+	namaGrup   string
 }
 
 // GrupOpsiProduks is list of GrupOpsiProduk
 type GrupOpsiProduks struct {
 	GrupOpsiProduks []GrupOpsiProduk `json:"grupOpsiProduk"`
+}
+
+func (gop *GrupOpsiProduk) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		IDProduk   int    `json:"idProduk"`
+		IDGrupOpsi int    `json:"idGrupOpsi"`
+		NamaProduk string `json:"namaProduk"`
+		NamaGrup   string `json:"namaGrup"`
+	}{
+		IDProduk:   gop.idProduk,
+		IDGrupOpsi: gop.idGrupOpsi,
+		NamaProduk: gop.namaProduk,
+		NamaGrup:   gop.namaGrup,
+	})
+}
+
+func (gop *GrupOpsiProduk) UnmarshalJSON(data []byte) error {
+	alias := struct {
+		IDProduk   int    `json:"idProduk"`
+		IDGrupOpsi int    `json:"idGrupOpsi"`
+		NamaProduk string `json:"namaProduk"`
+		NamaGrup   string `json:"namaGrup"`
+	}{}
+
+	err := json.Unmarshal(data, &alias)
+	if err != nil {
+		return err
+	}
+
+	gop.idProduk = alias.IDProduk
+	gop.idGrupOpsi = alias.IDGrupOpsi
+	gop.namaProduk = alias.NamaProduk
+	gop.namaGrup = alias.NamaGrup
+
+	return nil
 }
 
 // GetGrupOpsiProduks is get all produk in a grup opsi
@@ -29,7 +65,7 @@ func (gop GrupOpsiProduk) GetGrupOpsiProduks(idToko, idGrupOpsi string) GrupOpsi
 
 	for rows.Next() {
 		rows.Scan(
-			&gop.IDProduk, &gop.IDGrupOpsi, &gop.NamaGrup, &gop.NamaProduk,
+			&gop.idProduk, &gop.idGrupOpsi, &gop.namaGrup, &gop.namaProduk,
 		)
 
 		gops.GrupOpsiProduks = append(gops.GrupOpsiProduks, gop)
@@ -52,7 +88,7 @@ func (gop GrupOpsiProduk) GetGrupOpsiProduksByProduk(idToko, idProduk string) Gr
 
 	for rows.Next() {
 		rows.Scan(
-			&gop.IDProduk, &gop.IDGrupOpsi, &gop.NamaGrup, &gop.NamaProduk,
+			&gop.idProduk, &gop.idGrupOpsi, &gop.namaGrup, &gop.namaProduk,
 		)
 
 		gops.GrupOpsiProduks = append(gops.GrupOpsiProduks, gop)
