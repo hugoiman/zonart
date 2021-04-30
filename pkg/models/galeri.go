@@ -15,11 +15,6 @@ type Galeri struct {
 	gambar     string
 }
 
-// Galeris is list of galeri
-type Galeris struct {
-	Galeris []Galeri `json:"galeri"`
-}
-
 func (g *Galeri) SetGambar(data string) {
 	g.gambar = data
 }
@@ -63,19 +58,19 @@ func (g *Galeri) UnmarshalJSON(data []byte) error {
 }
 
 // GetGaleris is func
-func (g Galeri) GetGaleris(idToko string) Galeris {
+func (g Galeri) GetGaleris(idToko string) []Galeri {
 	con := db.Connect()
 	query := "SELECT a.idGaleri, a.idKategori, b.namaProduk, a.gambar FROM galeri a JOIN produk b ON a.idKategori = b.idProduk WHERE a.idToko = ? ORDER BY a.idGaleri DESC"
 	rows, _ := con.Query(query, idToko)
 
-	var galeris Galeris
+	var galeris []Galeri
 
 	for rows.Next() {
 		rows.Scan(
 			&g.idGaleri, &g.idKategori, &g.kategori, &g.gambar,
 		)
 
-		galeris.Galeris = append(galeris.Galeris, g)
+		galeris = append(galeris, g)
 	}
 
 	defer con.Close()

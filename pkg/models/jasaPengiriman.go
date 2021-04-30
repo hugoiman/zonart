@@ -12,11 +12,6 @@ type JasaPengiriman struct {
 	kode             string
 }
 
-// JasaPengirimans is list of jasaPengiriman
-type JasaPengirimans struct {
-	JasaPengirimans []JasaPengiriman `json:"jasaPengiriman"`
-}
-
 func (jp *JasaPengiriman) GetIDJasaPengiriman() int {
 	return jp.idJasaPengiriman
 }
@@ -60,29 +55,8 @@ func (jp *JasaPengiriman) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// GetJasaPengirimans is func
-func (jp JasaPengiriman) GetJasaPengirimans() JasaPengirimans {
-	con := db.Connect()
-	query := "SELECT idJasaPengiriman, kurir, kode FROM jasaPengiriman"
-	rows, _ := con.Query(query)
-
-	var jasaPengirimans JasaPengirimans
-
-	for rows.Next() {
-		rows.Scan(
-			&jp.idJasaPengiriman, &jp.kurir, &jp.kode,
-		)
-
-		jasaPengirimans.JasaPengirimans = append(jasaPengirimans.JasaPengirimans, jp)
-	}
-
-	defer con.Close()
-
-	return jasaPengirimans
-}
-
 // GetJasaPengiriman is func
-func (jp JasaPengiriman) GetJasaPengiriman() []JasaPengiriman {
+func (jp JasaPengiriman) GetJasaPengirimans() []JasaPengiriman {
 	con := db.Connect()
 	var jps []JasaPengiriman
 	query := "SELECT idJasaPengiriman, kurir, kode FROM jasaPengiriman"

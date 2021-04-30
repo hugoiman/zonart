@@ -22,7 +22,7 @@ func (pc PembukuanController) GetPembukuans(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"pembukuan":` + string(message) + `}`))
 }
 
 // CreatePembukuan is func

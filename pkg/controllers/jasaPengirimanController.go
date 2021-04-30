@@ -18,5 +18,5 @@ func (jpc JasaPengirimanController) GetJasaPengirimans(w http.ResponseWriter, r 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"jasaPengiriman":` + string(message) + `}`))
 }

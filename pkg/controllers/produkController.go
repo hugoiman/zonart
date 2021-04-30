@@ -25,7 +25,7 @@ func (pc ProdukController) GetProduks(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"produk":` + string(message) + `}`))
 }
 
 // GetProduk is func

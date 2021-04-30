@@ -54,7 +54,7 @@ func (jpt JasaPengirimanToko) GetJasaPengirimanToko(idToko int) []JasaPengiriman
 	var jpts []JasaPengirimanToko
 
 	var jp JasaPengiriman
-	jasaPengiriman := jp.GetJasaPengiriman()
+	jasaPengiriman := jp.GetJasaPengirimans()
 
 	query := "SELECT a.idJasaPengiriman, b.kurir, b.kode, a.status FROM jasaPengirimanToko a JOIN jasaPengiriman b ON a.idJasaPengiriman = b.idJasaPengiriman WHERE a.idToko = ? AND a.idJasaPengiriman = ?"
 

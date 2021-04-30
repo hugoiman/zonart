@@ -23,11 +23,6 @@ type Produk struct {
 	grupOpsi       []GrupOpsi
 }
 
-// Produks is list of produk
-type Produks struct {
-	Produks []Produk `json:"produk"`
-}
-
 func (p *Produk) GetNamaProduk() string {
 	return p.namaProduk
 }
@@ -103,7 +98,7 @@ func (p *Produk) UnmarshalJSON(data []byte) error {
 		Catatan        string                 `json:"catatan"`
 		HargaWajah     int                    `json:"hargaWajah"`
 		Slug           string                 `json:"slug"`
-		JenisPemesanan []JenisPemesananProduk `json:"jenisPemesanan" validate:"unique=IDJenisPemesanan,len=2,dive"`
+		JenisPemesanan []JenisPemesananProduk `json:"jenisPemesanan" validate:"len=2,dive"`
 		GrupOpsi       []GrupOpsi             `json:"grupOpsi"`
 	}{}
 
@@ -130,12 +125,12 @@ func (p *Produk) UnmarshalJSON(data []byte) error {
 }
 
 // GetProduks is func
-func (p Produk) GetProduks(idToko string) Produks {
+func (p Produk) GetProduks(idToko string) []Produk {
 	con := db.Connect()
 	query := "SELECT idProduk, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug FROM produk WHERE idToko = ? AND status != 'dihapus' ORDER BY idProduk DESC"
 	rows, _ := con.Query(query, idToko)
 
-	var produks Produks
+	var produks []Produk
 
 	for rows.Next() {
 		rows.Scan(
@@ -148,7 +143,7 @@ func (p Produk) GetProduks(idToko string) Produks {
 		var grupOpsi GrupOpsi
 		p.grupOpsi = grupOpsi.GetGrupOpsiProduk(idToko, strconv.Itoa(p.idProduk))
 
-		produks.Produks = append(produks.Produks, p)
+		produks = append(produks, p)
 	}
 
 	defer con.Close()

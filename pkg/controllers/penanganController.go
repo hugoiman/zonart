@@ -60,7 +60,7 @@ func (pc PenanganController) SetPenangan(w http.ResponseWriter, r *http.Request)
 	notif.SetPengirim(dataToko.GetNamaToko())
 	notif.SetJudul("Pengerjaan Pesanan")
 	notif.SetPesan("Anda telah diberi tugas untuk mengerjakan pesanan #" + dataOrder.GetInvoice().GetIDInvoice())
-	notif.SetLink("/order?id=" + idOrder)
+	notif.SetLink(dataToko.GetSlug() + "/pesanan/" + idOrder)
 	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
 

@@ -25,7 +25,7 @@ func (uc UndanganController) GetUndangans(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"undangan":` + string(message) + `}`))
 }
 
 // GetUndangan is func

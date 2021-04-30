@@ -24,7 +24,7 @@ func (kc KaryawanController) GetKaryawans(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"karyawan":` + string(message) + `}`))
 }
 
 // GetKaryawan is func

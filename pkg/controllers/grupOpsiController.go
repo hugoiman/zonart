@@ -23,7 +23,7 @@ func (goc GrupOpsiController) GetGrupOpsis(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"grupopsi":` + string(message) + `}`))
 }
 
 // GetGrupOpsi is func

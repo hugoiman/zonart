@@ -92,7 +92,7 @@ func (oc OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"order":` + string(message) + `}`))
 }
 
 // GetOrdersToko is get all order customer
@@ -102,7 +102,7 @@ func (oc OrderController) GetOrdersToko(w http.ResponseWriter, r *http.Request) 
 
 	idToko := vars["idToko"]
 	var order models.Order
-	var dataOrder models.Orders
+	var dataOrder []models.Order
 
 	if position["position"].(string) == "owner" || position["position"].(string) == "admin" {
 		dataOrder = order.GetOrdersToko(idToko)
@@ -114,7 +114,7 @@ func (oc OrderController) GetOrdersToko(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"order":` + string(message) + `}`))
 }
 
 // CreateOrder is func

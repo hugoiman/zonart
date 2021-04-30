@@ -16,11 +16,6 @@ type Penggajian struct {
 	tglTransaksi string
 }
 
-// Penggajians is list of penggajian
-type Penggajians struct {
-	Penggajians []Penggajian `json:"penggajian"`
-}
-
 func (p *Penggajian) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		IDPenggajian int    `json:"idPenggajian"`
@@ -60,14 +55,14 @@ func (p *Penggajian) UnmarshalJSON(data []byte) error {
 }
 
 // GetGajis is func
-func (p Penggajian) GetGajis(idToko string) Penggajians {
+func (p Penggajian) GetGajis(idToko string) []Penggajian {
 	con := db.Connect()
 	query := "SELECT a.idPenggajian, b.namaKaryawan, a.nominal, a.tglTransaksi FROM penggajian a " +
 		"JOIN karyawan b ON a.idKaryawan = b.idKaryawan WHERE a.idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var tglTransaksi time.Time
-	var penggajians Penggajians
+	var penggajians []Penggajian
 
 	for rows.Next() {
 		rows.Scan(
@@ -75,7 +70,7 @@ func (p Penggajian) GetGajis(idToko string) Penggajians {
 		)
 
 		p.tglTransaksi = tglTransaksi.Format("02 Jan 2006")
-		penggajians.Penggajians = append(penggajians.Penggajians, p)
+		penggajians = append(penggajians, p)
 	}
 
 	defer con.Close()

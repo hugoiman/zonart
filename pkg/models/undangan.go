@@ -19,11 +19,6 @@ type Undangan struct {
 	date         string
 }
 
-// Undangans is list of undangan
-type Undangans struct {
-	Undangans []Undangan `json:"undangan"`
-}
-
 func (u *Undangan) SetIDUndangan(data int) {
 	u.idUndangan = data
 }
@@ -106,7 +101,7 @@ func (u *Undangan) UnmarshalJSON(data []byte) error {
 }
 
 // GetUndangans is func
-func (u Undangan) GetUndangans(idToko string) Undangans {
+func (u Undangan) GetUndangans(idToko string) []Undangan {
 	con := db.Connect()
 	query := "SELECT a.idUndangan, a.posisi, a.status, b.namaToko, c.nama, c.email, a.date FROM undangan a " +
 		"JOIN toko b ON a.idToko = b.idToko " +
@@ -114,7 +109,7 @@ func (u Undangan) GetUndangans(idToko string) Undangans {
 	rows, _ := con.Query(query, idToko)
 
 	var tgl time.Time
-	var undangans Undangans
+	var undangans []Undangan
 
 	for rows.Next() {
 		rows.Scan(
@@ -122,7 +117,7 @@ func (u Undangan) GetUndangans(idToko string) Undangans {
 		)
 
 		u.date = tgl.Format("02 Jan 2006")
-		undangans.Undangans = append(undangans.Undangans, u)
+		undangans = append(undangans, u)
 	}
 
 	defer con.Close()

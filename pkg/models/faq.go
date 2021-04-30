@@ -67,19 +67,19 @@ func (f *Faq) UnmarshalJSON(data []byte) error {
 }
 
 // GetFaqs is func
-func (f Faq) GetFaqs(idToko string) Faqs {
+func (f Faq) GetFaqs(idToko string) []Faq {
 	con := db.Connect()
 	query := "SELECT idFaq, pertanyaan, jawaban, kategori FROM faq WHERE idToko = ? ORDER BY idFaq DESC"
 	rows, _ := con.Query(query, idToko)
 
-	var faqs Faqs
+	var faqs []Faq
 
 	for rows.Next() {
 		rows.Scan(
 			&f.idFaq, &f.pertanyaan, &f.jawaban, &f.kategori,
 		)
 
-		faqs.Faqs = append(faqs.Faqs, f)
+		faqs = append(faqs, f)
 	}
 
 	defer con.Close()

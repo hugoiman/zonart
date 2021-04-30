@@ -20,11 +20,6 @@ type Karyawan struct {
 	bergabung    string
 }
 
-// Karyawans is list of karyawan
-type Karyawans struct {
-	Karyawans []Karyawan `json:"karyawan"`
-}
-
 func (k *Karyawan) GetIDKaryawan() int {
 	return k.idKaryawan
 }
@@ -158,13 +153,13 @@ func (k Karyawan) GetKaryawanByIDCustomer(idToko, idCustomer string) (Karyawan, 
 }
 
 // GetKaryawans is func
-func (k Karyawan) GetKaryawans(idToko string) Karyawans {
+func (k Karyawan) GetKaryawans(idToko string) []Karyawan {
 	con := db.Connect()
 	query := "SELECT idKaryawan, namaKaryawan, email, hp, posisi, status, alamat, bergabung FROM karyawan WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var bergabung time.Time
-	var karyawans Karyawans
+	var karyawans []Karyawan
 
 	for rows.Next() {
 		rows.Scan(
@@ -172,7 +167,7 @@ func (k Karyawan) GetKaryawans(idToko string) Karyawans {
 		)
 
 		k.bergabung = bergabung.Format("02 Jan 2006")
-		karyawans.Karyawans = append(karyawans.Karyawans, k)
+		karyawans = append(karyawans, k)
 	}
 
 	defer con.Close()

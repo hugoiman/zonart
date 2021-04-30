@@ -17,11 +17,6 @@ type Pembukuan struct {
 	tglTransaksi string
 }
 
-// Pembukuans is list of pembukuan
-type Pembukuans struct {
-	Pembukuans []Pembukuan `json:"pembukuan"`
-}
-
 func (p *Pembukuan) SetJenis(data string) {
 	p.jenis = data
 }
@@ -97,20 +92,20 @@ func (p *Pembukuan) UnmarshalJSON(data []byte) error {
 }
 
 // GetPembukuans is func
-func (p Pembukuan) GetPembukuans(idToko string) Pembukuans {
+func (p Pembukuan) GetPembukuans(idToko string) []Pembukuan {
 	con := db.Connect()
 	query := "SELECT idPembukuan, jenis, keterangan, nominal, tglTransaksi FROM pembukuan WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
 	var tglTransaksi time.Time
-	var pembukuans Pembukuans
+	var pembukuans []Pembukuan
 
 	for rows.Next() {
 		rows.Scan(
 			&p.idPembukuan, &p.jenis, &p.keterangan, &p.nominal, &tglTransaksi,
 		)
 		p.tglTransaksi = tglTransaksi.Format("02 Jan 2006")
-		pembukuans.Pembukuans = append(pembukuans.Pembukuans, p)
+		pembukuans = append(pembukuans, p)
 	}
 
 	defer con.Close()

@@ -22,11 +22,6 @@ type GrupOpsi struct {
 	opsi            []Opsi
 }
 
-// GrupOpsis is list of grupOpsi
-type GrupOpsis struct {
-	GrupOpsis []GrupOpsi `json:"grupopsi"`
-}
-
 func (grupOpsi *GrupOpsi) GetIDGrupOpsi() int {
 	return grupOpsi.idGrupOpsi
 }
@@ -124,13 +119,13 @@ func (grupOpsi *GrupOpsi) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// GetGrupOpsis is func
-func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) GrupOpsis {
+// GetGrupOpsi is func
+func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) []GrupOpsi {
 	con := db.Connect()
 	query := "SELECT idGrupOpsi, namaGrup, deskripsi, required, min, max, spesificRequest, hardcopy, softcopy FROM grupOpsi WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
-	var grupOpsis GrupOpsis
+	var grupOpsis []GrupOpsi
 	var opsi Opsi
 
 	for rows.Next() {
@@ -139,7 +134,7 @@ func (grupOpsi GrupOpsi) GetGrupOpsis(idToko string) GrupOpsis {
 		)
 
 		grupOpsi.opsi = opsi.GetOpsis(strconv.Itoa(grupOpsi.idGrupOpsi))
-		grupOpsis.GrupOpsis = append(grupOpsis.GrupOpsis, grupOpsi)
+		grupOpsis = append(grupOpsis, grupOpsi)
 	}
 
 	defer con.Close()

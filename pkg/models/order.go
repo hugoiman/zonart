@@ -33,11 +33,6 @@ type Order struct {
 	pembayaran      []Pembayaran
 }
 
-// Orders is order list
-type Orders struct {
-	Orders []Order `json:"order"`
-}
-
 func (o *Order) GetIDOrder() int {
 	return o.idOrder
 }
@@ -364,14 +359,14 @@ func (o Order) GetOrderByInvoice(idInvoice string) (Order, error) {
 }
 
 // GetOrders is func
-func (o Order) GetOrders(idCustomer string) Orders {
+func (o Order) GetOrders(idCustomer string) []Order {
 	con := db.Connect()
 	query := "SELECT idOrder, idCustomer, " +
 		"jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, waktuPengerjaan, contohGambar, tglOrder " +
 		"FROM `order` WHERE idCustomer = ?"
 	rows, _ := con.Query(query, idCustomer)
 
-	var orders Orders
+	var orders []Order
 	var tglOrder time.Time
 
 	for rows.Next() {
@@ -408,7 +403,7 @@ func (o Order) GetOrders(idCustomer string) Orders {
 		var pembayaran Pembayaran
 		o.pembayaran = pembayaran.GetPembayarans(strconv.Itoa(o.idOrder))
 
-		orders.Orders = append(orders.Orders, o)
+		orders = append(orders, o)
 	}
 
 	defer con.Close()
@@ -416,12 +411,12 @@ func (o Order) GetOrders(idCustomer string) Orders {
 }
 
 // GetOrdersToko is func
-func (o Order) GetOrdersToko(idToko string) Orders {
+func (o Order) GetOrdersToko(idToko string) []Order {
 	con := db.Connect()
 	query := "SELECT idOrder, tglOrder FROM `order` WHERE idToko = ?"
 	rows, _ := con.Query(query, idToko)
 
-	var orders Orders
+	var orders []Order
 	var tglOrder time.Time
 
 	for rows.Next() {
@@ -433,7 +428,7 @@ func (o Order) GetOrdersToko(idToko string) Orders {
 		o.invoice, _ = o.invoice.GetInvoiceByOrder(strconv.Itoa(o.idOrder))
 		o.produkOrder, _ = o.produkOrder.GetProdukOrder(strconv.Itoa(o.idOrder))
 
-		orders.Orders = append(orders.Orders, o)
+		orders = append(orders, o)
 	}
 
 	defer con.Close()
@@ -441,14 +436,14 @@ func (o Order) GetOrdersToko(idToko string) Orders {
 }
 
 // GetOrdersEditor is func
-func (o Order) GetOrdersEditor(idToko, idKaryawan string) Orders {
+func (o Order) GetOrdersEditor(idToko, idKaryawan string) []Order {
 	con := db.Connect()
 	query := "SELECT a.idOrder, a.tglOrder " +
 		"FROM `order` a JOIN penangan b ON a.idOrder = b.idOrder " +
 		"WHERE a.idToko = ? AND b.idKaryawan = ?"
 	rows, _ := con.Query(query, idToko, idKaryawan)
 
-	var orders Orders
+	var orders []Order
 	var tglOrder time.Time
 
 	for rows.Next() {
@@ -460,7 +455,7 @@ func (o Order) GetOrdersEditor(idToko, idKaryawan string) Orders {
 		o.invoice, _ = o.invoice.GetInvoiceByOrder(strconv.Itoa(o.idOrder))
 		o.produkOrder, _ = o.produkOrder.GetProdukOrder(strconv.Itoa(o.idOrder))
 
-		orders.Orders = append(orders.Orders, o)
+		orders = append(orders, o)
 	}
 
 	defer con.Close()

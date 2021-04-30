@@ -28,11 +28,6 @@ type Toko struct {
 	rekening           []Rekening
 }
 
-// Tokos is list of toko
-type Tokos struct {
-	Tokos []Toko `json:"toko"`
-}
-
 func (t *Toko) SetOwner(data int) {
 	t.owner = data
 }
@@ -240,19 +235,19 @@ func (t Toko) UpdateToko(id string) error {
 }
 
 // GetMyToko is func
-func (t Toko) GetMyToko(idCustomer string) Tokos {
+func (t Toko) GetMyToko(idCustomer string) []Toko {
 	con := db.Connect()
 	query := "SELECT idToko, namaToko, foto, slug FROM toko WHERE owner = ?"
 	rows, _ := con.Query(query, idCustomer)
 
-	var tokos Tokos
+	var tokos []Toko
 
 	for rows.Next() {
 		rows.Scan(
 			&t.idToko, &t.namaToko, &t.foto, &t.slug,
 		)
 		t.deskripsi = "owner"
-		tokos.Tokos = append(tokos.Tokos, t)
+		tokos = append(tokos, t)
 	}
 
 	defer con.Close()
@@ -261,21 +256,21 @@ func (t Toko) GetMyToko(idCustomer string) Tokos {
 }
 
 // GetTokoByEmploye is func
-func (t Toko) GetTokoByEmploye(idCustomer string) Tokos {
+func (t Toko) GetTokoByEmploye(idCustomer string) []Toko {
 	con := db.Connect()
 	query := "SELECT a.idToko, a.namaToko, a.foto, a.slug FROM toko a " +
 		"JOIN karyawan b ON a.idToko = b.idToko " +
 		"WHERE b.idCustomer = ?"
 	rows, _ := con.Query(query, idCustomer)
 
-	var tokos Tokos
+	var tokos []Toko
 
 	for rows.Next() {
 		rows.Scan(
 			&t.idToko, &t.namaToko, &t.foto, &t.slug,
 		)
 		t.deskripsi = "employee"
-		tokos.Tokos = append(tokos.Tokos, t)
+		tokos = append(tokos, t)
 	}
 
 	defer con.Close()

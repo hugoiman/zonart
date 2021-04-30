@@ -18,11 +18,6 @@ type Notifikasi struct {
 	createdAt    string
 }
 
-// Notifikasis is list of notifikasi
-type Notifikasis struct {
-	Notifikasis []Notifikasi `json:"notifikasi"`
-}
-
 func (n *Notifikasi) SetPenerima(data []int) {
 	n.penerima = data
 }
@@ -111,12 +106,12 @@ func (n *Notifikasi) UnmarshalJSON(data []byte) error {
 }
 
 // GetNotifikasis is func
-func (n Notifikasi) GetNotifikasis(idCustomer string) Notifikasis {
+func (n Notifikasi) GetNotifikasis(idCustomer string) []Notifikasi {
 	con := db.Connect()
 	query := "SELECT idNotifikasi, pengirim, judul, pesan, link, dibaca, createdAt FROM notifikasi WHERE idPenerima = ? ORDER BY idNotifikasi DESC"
 	rows, _ := con.Query(query, idCustomer)
 
-	var notifikasis Notifikasis
+	var notifikasis []Notifikasi
 	var createdAt time.Time
 
 	for rows.Next() {
@@ -125,7 +120,7 @@ func (n Notifikasi) GetNotifikasis(idCustomer string) Notifikasis {
 		)
 
 		n.createdAt = createdAt.Format("02 Jan 2006")
-		notifikasis.Notifikasis = append(notifikasis.Notifikasis, n)
+		notifikasis = append(notifikasis, n)
 	}
 
 	defer con.Close()

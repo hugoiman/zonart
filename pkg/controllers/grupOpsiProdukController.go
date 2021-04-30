@@ -24,7 +24,7 @@ func (gopc GrupOpsiProdukController) GetGrupOpsiProduks(w http.ResponseWriter, r
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"grupOpsiProduk":` + string(message) + `}`))
 }
 
 // GetGrupOpsiProduksByProduk is get all produk in a grup opsi
@@ -40,7 +40,7 @@ func (gopc GrupOpsiProdukController) GetGrupOpsiProduksByProduk(w http.ResponseW
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"grupOpsiProduk":` + string(message) + `}`))
 }
 
 // SambungGrupOpsikeProduk is func

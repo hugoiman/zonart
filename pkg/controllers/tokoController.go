@@ -46,8 +46,8 @@ func (tc TokoController) GetTokos(w http.ResponseWriter, r *http.Request) {
 	var toko models.Toko
 
 	dataToko := toko.GetMyToko(strconv.Itoa(user.IDCustomer))
-	for _, v := range toko.GetTokoByEmploye(strconv.Itoa(user.IDCustomer)).Tokos {
-		dataToko.Tokos = append(dataToko.Tokos, v)
+	for _, v := range toko.GetTokoByEmploye(strconv.Itoa(user.IDCustomer)) {
+		dataToko = append(dataToko, v)
 	}
 
 	message, err := json.Marshal(&dataToko)
@@ -58,7 +58,7 @@ func (tc TokoController) GetTokos(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"toko":` + string(message) + `}`))
 }
 
 // CreateToko is func

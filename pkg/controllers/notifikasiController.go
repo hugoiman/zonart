@@ -23,7 +23,7 @@ func (nc NotifikasiController) GetNotifikasis(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"notifikasi":` + string(message) + `}`))
 }
 
 // ReadNotifikasi is func

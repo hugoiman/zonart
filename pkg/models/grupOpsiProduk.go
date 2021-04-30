@@ -13,11 +13,6 @@ type GrupOpsiProduk struct {
 	namaGrup   string
 }
 
-// GrupOpsiProduks is list of GrupOpsiProduk
-type GrupOpsiProduks struct {
-	GrupOpsiProduks []GrupOpsiProduk `json:"grupOpsiProduk"`
-}
-
 func (gop *GrupOpsiProduk) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		IDProduk   int    `json:"idProduk"`
@@ -53,22 +48,22 @@ func (gop *GrupOpsiProduk) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// GetGrupOpsiProduks is get all produk in a grup opsi
-func (gop GrupOpsiProduk) GetGrupOpsiProduks(idToko, idGrupOpsi string) GrupOpsiProduks {
+// GetGrupOpsiProduk is get all produk in a grup opsi
+func (gop GrupOpsiProduk) GetGrupOpsiProduks(idToko, idGrupOpsi string) []GrupOpsiProduk {
 	con := db.Connect()
 	query := "SELECT a.idProduk, a.idGrupOpsi, b.namaGrup, c.namaProduk FROM grupOpsiProduk a " +
 		"JOIN grupOpsi b ON a.idGrupOpsi = b.idGrupOpsi " +
 		"JOIN produk c ON a.idProduk = c.idProduk WHERE b.idToko = ? AND a.idGrupOpsi = ? ORDER BY a.idGrupOpsi ASC"
 	rows, _ := con.Query(query, idToko, idGrupOpsi)
 
-	var gops GrupOpsiProduks
+	var gops []GrupOpsiProduk
 
 	for rows.Next() {
 		rows.Scan(
 			&gop.idProduk, &gop.idGrupOpsi, &gop.namaGrup, &gop.namaProduk,
 		)
 
-		gops.GrupOpsiProduks = append(gops.GrupOpsiProduks, gop)
+		gops = append(gops, gop)
 	}
 
 	defer con.Close()
@@ -77,21 +72,21 @@ func (gop GrupOpsiProduk) GetGrupOpsiProduks(idToko, idGrupOpsi string) GrupOpsi
 }
 
 // GetGrupOpsiProduksByProduk is get all produk in a grup opsi by id produk
-func (gop GrupOpsiProduk) GetGrupOpsiProduksByProduk(idToko, idProduk string) GrupOpsiProduks {
+func (gop GrupOpsiProduk) GetGrupOpsiProduksByProduk(idToko, idProduk string) []GrupOpsiProduk {
 	con := db.Connect()
 	query := "SELECT a.idProduk, a.idGrupOpsi, b.namaGrup, c.namaProduk FROM grupOpsiProduk a " +
 		"JOIN grupOpsi b ON a.idGrupOpsi = b.idGrupOpsi " +
 		"JOIN produk c ON a.idProduk = c.idProduk WHERE b.idToko = ? AND a.idProduk = ? ORDER BY a.idGrupOpsi ASC"
 	rows, _ := con.Query(query, idToko, idProduk)
 
-	var gops GrupOpsiProduks
+	var gops []GrupOpsiProduk
 
 	for rows.Next() {
 		rows.Scan(
 			&gop.idProduk, &gop.idGrupOpsi, &gop.namaGrup, &gop.namaProduk,
 		)
 
-		gops.GrupOpsiProduks = append(gops.GrupOpsiProduks, gop)
+		gops = append(gops, gop)
 	}
 
 	defer con.Close()

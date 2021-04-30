@@ -24,7 +24,7 @@ func (gc GaleriController) GetGaleris(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(message)
+	w.Write([]byte(`{"galeri":` + string(message) + `}`))
 }
 
 // CreateGaleri is func
