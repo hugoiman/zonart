@@ -156,6 +156,9 @@ func main() {
 
 	api.HandleFunc("/api/rekening/{idToko}/{idRekening}", mw.AuthOwner(rekening.DeleteRekening)).Methods("DELETE")
 
+	var c controllers.ClassController
+	router.HandleFunc("/api/main", c.Main).Methods("POST")
+
 	os.Setenv("PORT", "8080")
 	port := "8080"
 

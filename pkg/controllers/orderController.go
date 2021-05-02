@@ -307,11 +307,9 @@ func (oc OrderController) setPengiriman(order *models.Order, dataProduk models.P
 	} else if order.GetJenisPesanan() == "cetak" && order.GetPengiriman().GetKodeKurir() != "cod" {
 		var rj RajaOngkir
 		order.GetPengiriman().SetBerat((dataProduk.GetBerat() * order.GetPcs()) + totalBeratOpsi)
-		asal, _ := rj.GetIDKota(dataToko.GetKota())
-		tujuan, _ := rj.GetIDKota(order.GetPengiriman().GetKota())
-		ongkir, estimasi, kurir, err := rj.GetOngkir(asal, tujuan, order.GetPengiriman().GetKodeKurir(), order.GetPengiriman().GetService(), strconv.Itoa(order.GetPengiriman().GetBerat()))
-		if !err {
-			return errors.New("Terjadi kesalahan. Mohon periksa data pengiriman.")
+		ongkir, estimasi, kurir, err := rj.GetOngkir(dataToko.GetKota(), order.GetPengiriman().GetKota(), order.GetPengiriman().GetKodeKurir(), order.GetPengiriman().GetService(), order.GetPengiriman().GetBerat())
+		if err != nil {
+			return err
 		}
 
 		order.GetPengiriman().SetKurir(kurir)

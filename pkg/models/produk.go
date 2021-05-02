@@ -154,9 +154,9 @@ func (p Produk) GetProduks(idToko string) []Produk {
 // GetProduk is func
 func (p Produk) GetProduk(idToko, idProduk string) (Produk, error) {
 	con := db.Connect()
-	query := "SELECT idProduk, namaProduk, gambar, deskripsi, berat, status, catatan, hargaWajah, slug FROM produk WHERE idToko = ? AND (idProduk = ? OR slug = ?)"
+	query := "SELECT a.idProduk, a.namaProduk, a.gambar, a.deskripsi, a.berat, a.status, a.catatan, a.hargaWajah, a.slug FROM produk a JOIN toko b ON a.idToko = b.idToko WHERE (b.idToko = ? OR b.slug = ?) AND (a.idProduk = ? OR a.slug = ?)"
 
-	err := con.QueryRow(query, idToko, idProduk, idProduk).Scan(
+	err := con.QueryRow(query, idToko, idToko, idProduk, idProduk).Scan(
 		&p.idProduk, &p.namaProduk, &p.gambar, &p.deskripsi, &p.berat, &p.status, &p.catatan, &p.hargaWajah, &p.slug)
 
 	var jpp JenisPemesananProduk

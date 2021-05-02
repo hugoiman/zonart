@@ -11,7 +11,6 @@ import (
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // TokoController is class
@@ -71,15 +70,12 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&toko); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	} else if err := validator.New().Struct(toko); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	} else if !regexSlug.MatchString(toko.GetSlug()) {
 		http.Error(w, "Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
 		return
 	}
-	_, ok := rj.GetIDKota(toko.GetKota())
-	if !ok {
+	_, err := rj.GetIDKota(toko.GetKota())
+	if err != nil {
 		http.Error(w, "Kota tidak ditemukan", http.StatusBadRequest)
 		return
 	}
@@ -88,7 +84,7 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 	toko.SetFoto("https://res.cloudinary.com/dbddhr9rz/image/upload/v1612894274/zonart/toko/toko_jhecxf.png")
 	toko.SetCreatedAt(time.Now().Format("2006-01-02"))
 
-	_, err := toko.CreateToko()
+	_, err = toko.CreateToko()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -107,8 +103,6 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 
 	var toko models.Toko
 	var rj RajaOngkir
-	var rekening models.Rekening
-	var jpt models.JasaPengirimanToko
 	regexSlug := regexp.MustCompile(`^([a-z])([a-z0-9-]{1,48})([a-z0-9])$`)
 
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&toko); err != nil {
@@ -119,8 +113,8 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, ok := rj.GetIDKota(toko.GetKota())
-	if !ok {
+	_, err := rj.GetIDKota(toko.GetKota())
+	if err != nil {
 		http.Error(w, "Kota tidak ditemukan", http.StatusBadRequest)
 		return
 	}
@@ -143,7 +137,7 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update main data toko
-	err := toko.UpdateToko(idToko)
+	err = toko.UpdateToko(idToko)
 	if err != nil {
 		cloudinary.DeleteImages(images)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -157,14 +151,12 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 
 	// update data pengiriman toko
 	for k := range toko.GetJasaPengirimanToko() {
-		jpt = toko.GetJasaPengirimanToko()[k]
-		_ = jpt.CreateUpdatePengirimanToko(idToko)
+		_ = toko.GetJasaPengirimanToko()[k].CreateUpdatePengirimanToko(idToko)
 	}
 
 	// update rekening toko
 	for x := range toko.GetRekening() {
-		rekening = toko.GetRekening()[x]
-		_ = rekening.CreateUpdateRekening(idToko)
+		_ = toko.GetRekening()[x].CreateUpdateRekening(idToko)
 	}
 
 	w.Header().Set("Content-type", "application/json")

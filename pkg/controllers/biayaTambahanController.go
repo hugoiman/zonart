@@ -46,10 +46,7 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 		var toko models.Toko
 		dataToko, _ := toko.GetToko(idToko)
 		newBerat := dataOrder.GetPengiriman().GetBerat() + bt.GetBerat()
-
-		asal, _ := rj.GetIDKota(dataToko.GetKota())
-		tujuan, _ := rj.GetIDKota(dataOrder.GetPengiriman().GetKota())
-		newOngkir, _, _, _ = rj.GetOngkir(asal, tujuan, dataOrder.GetPengiriman().GetKodeKurir(), dataOrder.GetPengiriman().GetService(), strconv.Itoa(newBerat))
+		newOngkir, _, _, _ = rj.GetOngkir(dataToko.GetKota(), dataOrder.GetPengiriman().GetKota(), dataOrder.GetPengiriman().GetKodeKurir(), dataOrder.GetPengiriman().GetService(), newBerat)
 
 		var pengiriman models.Pengiriman
 		_ = pengiriman.UpdateBeratOngkir(idOrder, newBerat, newOngkir)
@@ -109,9 +106,7 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 		dataToko, _ := toko.GetToko(idToko)
 		newBerat := dataOrder.GetPengiriman().GetBerat() - dataBT.GetBerat()
 
-		asal, _ := rj.GetIDKota(dataToko.GetKota())
-		tujuan, _ := rj.GetIDKota(dataOrder.GetPengiriman().GetKota())
-		newOngkir, _, _, _ = rj.GetOngkir(asal, tujuan, dataOrder.GetPengiriman().GetKodeKurir(), dataOrder.GetPengiriman().GetService(), strconv.Itoa(newBerat))
+		newOngkir, _, _, _ = rj.GetOngkir(dataToko.GetKota(), dataOrder.GetPengiriman().GetKota(), dataOrder.GetPengiriman().GetKodeKurir(), dataOrder.GetPengiriman().GetService(), newBerat)
 
 		var pengiriman models.Pengiriman
 		_ = pengiriman.UpdateBeratOngkir(idOrder, newBerat, newOngkir)

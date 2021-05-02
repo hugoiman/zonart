@@ -161,8 +161,8 @@ func (grupOpsi GrupOpsi) GetGrupOpsi(idToko, idGrupOpsi string) (GrupOpsi, error
 // GetGrupOpsiProduk is get all grup opsi in a produk
 func (grupOpsi GrupOpsi) GetGrupOpsiProduk(idToko, idProduk string) []GrupOpsi {
 	con := db.Connect()
-	query := "SELECT a.idGrupOpsi, a.namaGrup, a.deskripsi, a.required, a.min, a.max, a.spesificRequest, hardcopy, softcopy FROM grupOpsi a JOIN grupOpsiProduk b ON a.idGrupOpsi = b.idGrupOpsi WHERE b.idProduk = ? AND a.idToko = ?"
-	rows, _ := con.Query(query, idProduk, idToko)
+	query := "SELECT a.idGrupOpsi, a.namaGrup, a.deskripsi, a.required, a.min, a.max, a.spesificRequest, a.hardcopy, a.softcopy FROM grupOpsi a JOIN grupOpsiProduk b ON a.idGrupOpsi = b.idGrupOpsi JOIN toko c ON a.idToko = c.idToko WHERE b.idProduk = ? AND (c.idToko = ? OR c.slug = ?)"
+	rows, _ := con.Query(query, idProduk, idToko, idToko)
 
 	var gop []GrupOpsi
 	var opsi Opsi

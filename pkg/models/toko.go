@@ -36,12 +36,28 @@ func (t *Toko) GetOwner() int {
 	return t.owner
 }
 
+func (t *Toko) SetNamaToko(data string) {
+	t.namaToko = data
+}
+
 func (t *Toko) GetNamaToko() string {
 	return t.namaToko
 }
 
+func (t *Toko) SetEmailToko(data string) {
+	t.emailToko = data
+}
+
+func (t *Toko) SetKota(data string) {
+	t.kota = data
+}
+
 func (t *Toko) GetKota() string {
 	return t.kota
+}
+
+func (t *Toko) SetSlug(data string) {
+	t.slug = data
 }
 
 func (t *Toko) GetSlug() string {

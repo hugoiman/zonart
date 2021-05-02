@@ -142,10 +142,10 @@ func (n Notifikasi) CreateNotifikasi() error {
 }
 
 // ReadNotifikasi is func
-func (n Notifikasi) ReadNotifikasi(idPenerima string) error {
+func (n Notifikasi) ReadNotifikasi(idCustomer string) error {
 	con := db.Connect()
 	query := "UPDATE notifikasi SET dibaca = 1 WHERE idPenerima = ?"
-	_, err := con.Exec(query, idPenerima)
+	_, err := con.Exec(query, idCustomer)
 
 	defer con.Close()
 
