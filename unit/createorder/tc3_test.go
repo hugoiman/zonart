@@ -3,9 +3,11 @@ package createtoko
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	mw "zonart/middleware"
 
@@ -15,7 +17,7 @@ import (
 )
 
 func Test_TestCase3(t *testing.T) {
-	// file order is empty
+	// produk not found (idProduk = 500)
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
 		"tambahanWajah": 2,
@@ -56,10 +58,29 @@ func Test_TestCase3(t *testing.T) {
 	}
 	data.Write(payload)
 
+	files := []string{"./avatar-1.png", "./avatar-2.png"}
+	for _, file := range files {
+		fw, err := w.CreateFormFile("fileOrder", file)
+		if err != nil {
+			t.Error(err)
+		}
+		fd, err := os.Open(file)
+		if err != nil {
+			t.Error(err)
+		}
+
+		_, err = io.Copy(fw, fd)
+		if err != nil {
+			t.Error(err)
+		}
+
+		fd.Close()
+	}
+
 	w.Close()
 
 	request, _ := http.NewRequest(http.MethodPost, "/order/idToko/idProduk", buffer)
-	request = mux.SetURLVars(request, map[string]string{"idToko": "37", "idProduk": "10"})
+	request = mux.SetURLVars(request, map[string]string{"idToko": "37", "idProduk": "500"})
 	request.Header.Set("Content-Type", w.FormDataContentType())
 	response := httptest.NewRecorder()
 
@@ -71,5 +92,5 @@ func Test_TestCase3(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.NotEqual(t, response.Code, http.StatusBadRequest, "Seharusnya file kosong")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya produk tidak ditemukan")
 }

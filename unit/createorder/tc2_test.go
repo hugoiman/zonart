@@ -3,11 +3,9 @@ package createtoko
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	mw "zonart/middleware"
 
@@ -17,8 +15,9 @@ import (
 )
 
 func Test_TestCase2(t *testing.T) {
+	// file order is empty
 	body := map[string]interface{}{
-		"jenisPesanan":  "", // kosong
+		"jenisPesanan":  "cetak",
 		"tambahanWajah": 2,
 		"pcs":           2,
 		"rencanaPakai":  "24 November 2021",
@@ -57,25 +56,6 @@ func Test_TestCase2(t *testing.T) {
 	}
 	data.Write(payload)
 
-	files := []string{"./avatar-1.png", "./avatar-2.png"}
-	for _, file := range files {
-		fw, err := w.CreateFormFile("fileOrder", file)
-		if err != nil {
-			t.Error(err)
-		}
-		fd, err := os.Open(file)
-		if err != nil {
-			t.Error(err)
-		}
-
-		_, err = io.Copy(fw, fd)
-		if err != nil {
-			t.Error(err)
-		}
-
-		fd.Close()
-	}
-
 	w.Close()
 
 	request, _ := http.NewRequest(http.MethodPost, "/order/idToko/idProduk", buffer)
@@ -91,5 +71,5 @@ func Test_TestCase2(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal memvalidasi")
+	assert.NotEqual(t, response.Code, http.StatusBadRequest, "Seharusnya file kosong")
 }

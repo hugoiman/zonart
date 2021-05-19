@@ -17,13 +17,11 @@ import (
 )
 
 func Test_TestCase10(t *testing.T) {
-	// catatan terlalu panjang (161)
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
 		"tambahanWajah": 2,
 		"pcs":           2,
 		"rencanaPakai":  "24 November 2021",
-		"catatan":       "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when and",
 		"opsiOrder": []map[string]interface{}{
 			{
 				"idGrupOpsi": 32,
@@ -93,5 +91,5 @@ func Test_TestCase10(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya catatan terlalu panjang")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal mendecode")
 }

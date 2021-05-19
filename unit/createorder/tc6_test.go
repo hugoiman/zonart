@@ -17,7 +17,6 @@ import (
 )
 
 func Test_TestCase6(t *testing.T) {
-	// grup opsi order not found
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
 		"tambahanWajah": 2,
@@ -34,7 +33,7 @@ func Test_TestCase6(t *testing.T) {
 				"idOpsi":     36,
 			},
 			{
-				"idGrupOpsi": 500, // not found
+				"idGrupOpsi": 30,
 				"idOpsi":     29,
 			},
 		},
@@ -42,7 +41,7 @@ func Test_TestCase6(t *testing.T) {
 			"penerima":  "Roy",
 			"telp":      "08123456",
 			"alamat":    "Jl. ikan no 23",
-			"kota":      "Jakarta Timur",
+			"kota":      "Jakarta Tengah",
 			"label":     "Rumah",
 			"kodeKurir": "tiki",
 			"service":   "ECO",
@@ -92,5 +91,5 @@ func Test_TestCase6(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya grup opsi tidak ditemukan")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal memvalidasi data pengiriman")
 }

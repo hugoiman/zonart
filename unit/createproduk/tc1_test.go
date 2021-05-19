@@ -21,8 +21,8 @@ var produk controllers.ProdukController
 
 func Test_TestCase1(t *testing.T) {
 	body := map[string]interface{}{
-		"namaProduk": "Bantal Karikatur",
-		"berat":      "500", // salah format
+		"namaProduk": "", // nam produk empty
+		"berat":      500,
 		"status":     "aktif",
 		"hargaWajah": 75000,
 		"jenisPemesanan": []map[string]interface{}{
@@ -78,5 +78,5 @@ func Test_TestCase1(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal mendecode")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal memvalidasi")
 }

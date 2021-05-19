@@ -17,12 +17,11 @@ import (
 )
 
 func Test_TestCase4(t *testing.T) {
-	// size file too big
 	body := map[string]interface{}{
 		"namaProduk": "Bantal Karikatur",
 		"berat":      500,
 		"status":     "aktif",
-		"hargaWajah": 75000,
+		"hargaWajah": 75000000000, // legth melebihi jumlah max
 		"jenisPemesanan": []map[string]interface{}{
 			{
 				"idJenisPemesanan": 1,
@@ -46,7 +45,7 @@ func Test_TestCase4(t *testing.T) {
 	}
 	data.Write(payload)
 
-	file := "./testfail.jpg"
+	file := "./test.jpg"
 	fw, err := w.CreateFormFile("gambar", file)
 	if err != nil {
 		t.Error(err)
@@ -76,5 +75,5 @@ func Test_TestCase4(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal upload diatas 2 MB")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal menyimpan di basis data")
 }

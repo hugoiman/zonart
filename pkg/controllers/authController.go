@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"zonart/custerr"
 	mw "zonart/middleware"
 	"zonart/pkg/models"
 
@@ -37,7 +38,7 @@ func (ac AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(login); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -95,7 +96,7 @@ func (ac AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(data); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

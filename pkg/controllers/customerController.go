@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -52,7 +53,7 @@ func (cc CustomerController) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(data); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -62,7 +63,7 @@ func (cc CustomerController) Register(w http.ResponseWriter, r *http.Request) {
 
 	err := customer.Register(data.Username, data.Email, data.Nama, encryptedPassword)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -78,13 +79,13 @@ func (cc CustomerController) UpdateProfil(w http.ResponseWriter, r *http.Request
 	user := context.Get(r, "user").(*MyClaims)
 
 	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
 	err := customer.UpdateProfil(user.IDCustomer)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -106,7 +107,7 @@ func (cc CustomerController) ChangePassword(w http.ResponseWriter, r *http.Reque
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if err := validator.New().Struct(data); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

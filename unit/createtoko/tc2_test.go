@@ -15,11 +15,11 @@ import (
 func Test_TestCase2(t *testing.T) {
 	body := map[string]interface{}{
 		"namaToko":  "Barokart",
-		"emailToko": "barokartgmail.com", // format email salah
+		"emailToko": "barokart@gmail.com",
 		"alamat":    "Jl. Cindera Mata no 53.",
 		"kota":      "Jakarta Utara",
 		"whatsapp":  "081234567898",
-		"slug":      "barokart",
+		"slug":      "barok-art@&$", // format domain salah
 	}
 	payload, _ := json.Marshal(body)
 	request, _ := http.NewRequest(http.MethodPost, "/toko", bytes.NewBuffer(payload))
@@ -34,5 +34,5 @@ func Test_TestCase2(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Sehausnya gagal memvalidasi")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya format slug salah!")
 }

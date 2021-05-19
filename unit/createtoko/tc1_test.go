@@ -18,7 +18,7 @@ var toko controllers.TokoController
 func Test_TestCase1(t *testing.T) {
 	body := map[string]interface{}{
 		"namaToko":  "Barokart",
-		"emailToko": 1, // format tipe data salah
+		"emailToko": "barokartgmail.com", // format email salah
 		"alamat":    "Jl. Cindera Mata no 53.",
 		"kota":      "Jakarta Utara",
 		"whatsapp":  "081234567898",
@@ -37,5 +37,5 @@ func Test_TestCase1(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal mendecode")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Sehausnya gagal memvalidasi")
 }

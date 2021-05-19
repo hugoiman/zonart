@@ -21,7 +21,7 @@ func Test_TestCase5(t *testing.T) {
 		"namaProduk": "Bantal Karikatur",
 		"berat":      500,
 		"status":     "aktif",
-		"hargaWajah": 75000000000, // legth melebihi jumlah max
+		"hargaWajah": 75000,
 		"jenisPemesanan": []map[string]interface{}{
 			{
 				"idJenisPemesanan": 1,
@@ -75,5 +75,5 @@ func Test_TestCase5(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal menyimpan di basis data")
+	assert.Equal(t, response.Code, http.StatusOK, "Seharusnya berhasil menyimpan")
 }

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -68,7 +69,7 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 	regexSlug := regexp.MustCompile(`^([a-z])([a-z0-9-]{1,48})([a-z0-9])$`)
 
 	if err := json.NewDecoder(r.Body).Decode(&toko); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	} else if !regexSlug.MatchString(toko.GetSlug()) {
 		http.Error(w, "Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
@@ -86,7 +87,7 @@ func (tc TokoController) CreateToko(w http.ResponseWriter, r *http.Request) {
 
 	_, err = toko.CreateToko()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

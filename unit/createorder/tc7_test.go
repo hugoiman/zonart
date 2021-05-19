@@ -17,9 +17,10 @@ import (
 )
 
 func Test_TestCase7(t *testing.T) {
+	// fail create invoice
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
-		"tambahanWajah": 2,
+		"tambahanWajah": 10000000, // out of range
 		"pcs":           2,
 		"rencanaPakai":  "24 November 2021",
 		"opsiOrder": []map[string]interface{}{
@@ -41,7 +42,7 @@ func Test_TestCase7(t *testing.T) {
 			"penerima":  "Roy",
 			"telp":      "08123456",
 			"alamat":    "Jl. ikan no 23",
-			"kota":      "Jakarta Tengah",
+			"kota":      "Jakarta Timur",
 			"label":     "Rumah",
 			"kodeKurir": "tiki",
 			"service":   "ECO",
@@ -91,5 +92,5 @@ func Test_TestCase7(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal memvalidasi data pengiriman")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal membuat invoice")
 }

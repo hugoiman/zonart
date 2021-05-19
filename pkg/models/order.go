@@ -413,7 +413,7 @@ func (o Order) GetOrders(idCustomer string) []Order {
 // GetOrdersToko is func
 func (o Order) GetOrdersToko(idToko string) []Order {
 	con := db.Connect()
-	query := "SELECT idOrder, tglOrder FROM `order` WHERE idToko = ?"
+	query := "SELECT idOrder, tglOrder FROM `order` WHERE idToko = ? ORDER BY idOrder DESC"
 	rows, _ := con.Query(query, idToko)
 
 	var orders []Order

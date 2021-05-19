@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -23,7 +24,7 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	idOrder := vars["idOrder"]
 	var pembayaran models.Pembayaran
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&pembayaran); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	} else if _, _, err := r.FormFile("bukti"); err == http.ErrMissingFile {
 		http.Error(w, "Masukkan bukti pembayaran", http.StatusBadRequest)
@@ -31,7 +32,7 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	}
 
 	var cloudinary Cloudinary
-	maxSize := int64(1024 * 1024 * 2) // 2 MB
+	maxSize := int64(1024 * 1024 * 1) // 1 MB
 	destinationFolder := "zonart/pembayaran"
 	images, err := cloudinary.UploadImages(r, maxSize, destinationFolder)
 	if err != nil {
@@ -53,7 +54,7 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	err = pembayaran.CreatePembayaran(idOrder)
 	if err != nil {
 		cloudinary.DeleteImages(images)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

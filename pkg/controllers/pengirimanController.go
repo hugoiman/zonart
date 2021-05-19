@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -23,7 +24,7 @@ func (rc PengirimanController) SetResi(w http.ResponseWriter, r *http.Request) {
 	resi := fmt.Sprintf("%v", dataJSON["resi"])
 
 	if err := validator.New().Var(resi, "required"); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Resi wajib diisi", http.StatusBadRequest)
 		return
 	}
 
@@ -31,7 +32,7 @@ func (rc PengirimanController) SetResi(w http.ResponseWriter, r *http.Request) {
 	pengiriman.SetResi(resi)
 	err := pengiriman.InputResi(idOrder)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

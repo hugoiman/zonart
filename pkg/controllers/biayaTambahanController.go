@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -23,7 +24,7 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 	var order models.Order
 
 	if err := json.NewDecoder(r.Body).Decode(&bt); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -35,7 +36,7 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 
 	err := bt.CreateBiayaTambahan(idOrder)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

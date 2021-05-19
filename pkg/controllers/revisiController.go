@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -23,7 +24,7 @@ func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) 
 	var revisi models.Revisi
 
 	if err := json.NewDecoder(r.Body).Decode(&revisi); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -38,7 +39,7 @@ func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) 
 
 	err := revisi.CreateRevisi(idOrder)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

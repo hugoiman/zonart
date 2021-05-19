@@ -17,7 +17,7 @@ import (
 )
 
 func Test_TestCase5(t *testing.T) {
-	// opsi konsep tidak diisi
+	// grup opsi order not found
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
 		"tambahanWajah": 2,
@@ -29,12 +29,12 @@ func Test_TestCase5(t *testing.T) {
 				"idOpsi":     0,
 				"opsi":       "kue ultah, terompet, lilin",
 			},
-			// {
-			// 	"idGrupOpsi": 33,
-			// 	"idOpsi":     36,
-			// },
 			{
-				"idGrupOpsi": 30,
+				"idGrupOpsi": 33,
+				"idOpsi":     36,
+			},
+			{
+				"idGrupOpsi": 500, // not found
 				"idOpsi":     29,
 			},
 		},
@@ -92,5 +92,5 @@ func Test_TestCase5(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal validasi grup opsi")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya grup opsi tidak ditemukan")
 }

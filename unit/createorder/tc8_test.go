@@ -17,10 +17,9 @@ import (
 )
 
 func Test_TestCase8(t *testing.T) {
-	// fail create invoice
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
-		"tambahanWajah": 10000000, // out of range
+		"tambahanWajah": 2,
 		"pcs":           2,
 		"rencanaPakai":  "24 November 2021",
 		"opsiOrder": []map[string]interface{}{
@@ -58,7 +57,7 @@ func Test_TestCase8(t *testing.T) {
 	}
 	data.Write(payload)
 
-	files := []string{"./avatar-1.png", "./avatar-2.png"}
+	files := []string{"./avatar-1.png", "./testfail.jpg"}
 	for _, file := range files {
 		fw, err := w.CreateFormFile("fileOrder", file)
 		if err != nil {
@@ -92,5 +91,5 @@ func Test_TestCase8(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal membuat invoice")
+	assert.NotEqual(t, response.Code, http.StatusBadRequest, "Seharusnya gagal mendecode")
 }

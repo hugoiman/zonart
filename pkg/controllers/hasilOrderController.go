@@ -52,7 +52,9 @@ func (hoc HasilOrderController) AddHasilOrder(w http.ResponseWriter, r *http.Req
 	}
 
 	oldImage := []string{dataOrder.GetHasilOrder().GetHasil()}
-	cloudinary.DeleteImages(oldImage)
+	if oldImage[0] != "" {
+		cloudinary.DeleteImages(oldImage)
+	}
 
 	var notif models.Notifikasi
 	notif.SetPenerima(append(notif.GetPenerima(), dataOrder.GetPemesan()))

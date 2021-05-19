@@ -17,7 +17,7 @@ import (
 )
 
 func Test_TestCase4(t *testing.T) {
-	// produk not found (idProduk = 500)
+	// opsi konsep tidak diisi
 	body := map[string]interface{}{
 		"jenisPesanan":  "cetak",
 		"tambahanWajah": 2,
@@ -29,10 +29,10 @@ func Test_TestCase4(t *testing.T) {
 				"idOpsi":     0,
 				"opsi":       "kue ultah, terompet, lilin",
 			},
-			{
-				"idGrupOpsi": 33,
-				"idOpsi":     36,
-			},
+			// {
+			// 	"idGrupOpsi": 33,
+			// 	"idOpsi":     36,
+			// },
 			{
 				"idGrupOpsi": 30,
 				"idOpsi":     29,
@@ -80,7 +80,7 @@ func Test_TestCase4(t *testing.T) {
 	w.Close()
 
 	request, _ := http.NewRequest(http.MethodPost, "/order/idToko/idProduk", buffer)
-	request = mux.SetURLVars(request, map[string]string{"idToko": "37", "idProduk": "500"})
+	request = mux.SetURLVars(request, map[string]string{"idToko": "37", "idProduk": "10"})
 	request.Header.Set("Content-Type", w.FormDataContentType())
 	response := httptest.NewRecorder()
 
@@ -92,5 +92,5 @@ func Test_TestCase4(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya produk tidak ditemukan")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal validasi grup opsi")
 }

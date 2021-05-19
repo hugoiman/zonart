@@ -3,9 +3,11 @@ package createtoko
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	mw "zonart/middleware"
 
@@ -15,7 +17,7 @@ import (
 )
 
 func Test_TestCase3(t *testing.T) {
-	// file is empty
+	// size file too big
 	body := map[string]interface{}{
 		"namaProduk": "Bantal Karikatur",
 		"berat":      500,
@@ -43,6 +45,22 @@ func Test_TestCase3(t *testing.T) {
 		t.Error(err)
 	}
 	data.Write(payload)
+
+	file := "./testfail.jpg"
+	fw, err := w.CreateFormFile("gambar", file)
+	if err != nil {
+		t.Error(err)
+	}
+	fd, err := os.Open(file)
+	if err != nil {
+		t.Error(err)
+	}
+	defer fd.Close()
+
+	_, err = io.Copy(fw, fd)
+	if err != nil {
+		t.Error(err)
+	}
 	w.Close()
 
 	request, _ := http.NewRequest(http.MethodPost, "/produk/idToko", buffer)
@@ -58,5 +76,5 @@ func Test_TestCase3(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya file kosong")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal upload diatas 2 MB")
 }

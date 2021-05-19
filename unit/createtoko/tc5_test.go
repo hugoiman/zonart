@@ -19,7 +19,7 @@ func Test_TestCase5(t *testing.T) {
 		"alamat":    "Jl. Cindera Mata no 53.",
 		"kota":      "Jakarta Utara",
 		"whatsapp":  "081234567898",
-		"slug":      "geno-art", // domain tidak unik
+		"slug":      "barok-art",
 	}
 	payload, _ := json.Marshal(body)
 	request, _ := http.NewRequest(http.MethodPost, "/toko", bytes.NewBuffer(payload))
@@ -34,5 +34,5 @@ func Test_TestCase5(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya slug tidak unik!")
+	assert.Equal(t, response.Code, http.StatusOK, "Seharusnya berhasil menyimpan")
 }

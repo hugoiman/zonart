@@ -21,8 +21,8 @@ var order controllers.OrderController
 
 func Test_TestCase1(t *testing.T) {
 	body := map[string]interface{}{
-		"jenisPesanan":  "cetak",
-		"tambahanWajah": "2", // salah format tipe data
+		"jenisPesanan":  "", // kosong
+		"tambahanWajah": 2,
 		"pcs":           2,
 		"rencanaPakai":  "24 November 2021",
 		"opsiOrder": []map[string]interface{}{
@@ -94,5 +94,5 @@ func Test_TestCase1(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal mendecode")
+	assert.Equal(t, response.Code, http.StatusBadRequest, "Seharusnya gagal memvalidasi")
 }
