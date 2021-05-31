@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -25,11 +26,7 @@ func (oc OrderController) GetOrder(w http.ResponseWriter, r *http.Request) {
 	idOrder := vars["idOrder"]
 	var order models.Order
 
-	dataOrder, err := order.GetOrder(idOrder)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	dataOrder, _ := order.GetOrder(idOrder)
 
 	message, _ := json.Marshal(&dataOrder)
 
@@ -47,10 +44,7 @@ func (oc OrderController) GetOrderToko(w http.ResponseWriter, r *http.Request) {
 	var order models.Order
 
 	dataOrder, err := order.GetOrderToko(idOrder, idToko)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if position["position"] == "editor" && strconv.Itoa(dataOrder.GetPenangan().GetIDKaryawan()) != position["idKaryawan"].(string) {
+	if err != nil || (position["position"] == "editor" && strconv.Itoa(dataOrder.GetPenangan().GetIDKaryawan()) != position["idKaryawan"].(string)) {
 		http.Error(w, "Pesanan tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
@@ -128,7 +122,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	var order models.Order
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&order); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	} else if _, _, err := r.FormFile("fileOrder"); err == http.ErrMissingFile {
 		http.Error(w, "Silahkan masukan foto wajah", http.StatusBadRequest)
@@ -217,7 +211,7 @@ func (oc OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_ = order.GetInvoice().DeleteInvoice(order.GetInvoice().GetIDInvoice())
 		_ = cloudinary.DeleteImages(images)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -343,17 +337,12 @@ func (oc OrderController) ProsesOrder(w http.ResponseWriter, r *http.Request) {
 	idOrder := vars["idOrder"]
 	var order models.Order
 
-	dataOrder, err := order.GetOrder(idOrder)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
+	dataOrder, _ := order.GetOrder(idOrder)
 	dataOrder.GetInvoice().SetTagihan(dataOrder.GetInvoice().GetTotalPembelian())
 	dataOrder.GetInvoice().SetStatusPembayaran("menunggu pembayaran")
 	dataOrder.GetInvoice().SetStatusPesanan("diproses")
 
-	err = dataOrder.GetInvoice().UpdateInvoice(dataOrder.GetInvoice().GetIDInvoice())
+	err := dataOrder.GetInvoice().UpdateInvoice(dataOrder.GetInvoice().GetIDInvoice())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -391,15 +380,14 @@ func (oc OrderController) TolakOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataOrder, err := order.GetOrder(idOrder)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	dataOrder, _ := order.GetOrder(idOrder)
+	if dataOrder.GetInvoice().GetStatusPesanan() != "menunggu konfirmasi" {
+		http.Error(w, "Status pesanan tidak sedang menunggu konfirmasi", http.StatusBadRequest)
 		return
 	}
-
 	dataOrder.GetInvoice().SetStatusPesanan("ditolak")
 
-	err = dataOrder.GetInvoice().UpdateInvoice(dataOrder.GetInvoice().GetIDInvoice())
+	err := dataOrder.GetInvoice().UpdateInvoice(dataOrder.GetInvoice().GetIDInvoice())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -418,7 +406,7 @@ func (oc OrderController) TolakOrder(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Pesanan ditolak."}`))
+	w.Write([]byte(`{"message":"Pesanan telah ditolak"}`))
 }
 
 // SetWaktuPengerjaan is func
@@ -433,14 +421,14 @@ func (oc OrderController) SetWaktuPengerjaan(w http.ResponseWriter, r *http.Requ
 	var order models.Order
 
 	if err := validator.New().Var(waktu, "required"); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Mohon isi waktu pengerjaan", http.StatusBadRequest)
 		return
 	}
 
 	order.SetWaktu(waktu)
 
 	if err := order.SetWaktuPengerjaan(idOrder); err != nil {
-		http.Error(w, "Gagal!", http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -463,10 +451,7 @@ func (oc OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dataOrder.GetInvoice().SetStatusPesanan("dibatalkan")
-	if err := dataOrder.GetInvoice().UpdateInvoice(dataOrder.GetInvoice().GetIDInvoice()); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	dataOrder.GetInvoice().UpdateInvoice(dataOrder.GetInvoice().GetIDInvoice())
 
 	var toko models.Toko
 	idToko, _ := toko.GetIDTokoByOrder(idOrder)

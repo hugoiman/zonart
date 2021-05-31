@@ -84,20 +84,13 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 	var bt models.BiayaTambahan
 	var order models.Order
 
-	dataOrder, err := order.GetOrder(idOrder)
-	if err != nil {
-		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-		return
-	} else if dataOrder.GetInvoice().GetStatusPesanan() != "diproses" {
+	dataOrder, _ := order.GetOrder(idOrder)
+	if dataOrder.GetInvoice().GetStatusPesanan() != "diproses" {
 		http.Error(w, "Pesanan tidak sedang dalam proses pengerjaan.", http.StatusBadRequest)
 		return
 	}
 
-	dataBT, err := bt.GetBiayaTambahan(idBiayaTambahan, idOrder)
-	if err != nil {
-		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-		return
-	}
+	dataBT, _ := bt.GetBiayaTambahan(idBiayaTambahan, idOrder)
 
 	var newOngkir = 0
 	if dataOrder.GetJenisPesanan() == "cetak" && dataOrder.GetPengiriman().GetKodeKurir() != "cod" {

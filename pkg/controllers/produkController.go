@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -56,7 +57,7 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 	var produk models.Produk
 
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&produk); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	} else if _, _, err := r.FormFile("gambar"); err == http.ErrMissingFile {
 		http.Error(w, "Silahkan masukan foto produk", http.StatusBadRequest)
@@ -79,7 +80,7 @@ func (pc ProdukController) CreateProduk(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		cloudinary.DeleteImages(images)
 		produk.DeleteProduk(idToko, strconv.Itoa(idProduk))
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -97,7 +98,7 @@ func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) 
 	var produk models.Produk
 
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&produk); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -123,7 +124,7 @@ func (pc ProdukController) UpdateProduk(w http.ResponseWriter, r *http.Request) 
 	err := produk.UpdateProduk(idToko, idProduk)
 	if err != nil {
 		cloudinary.DeleteImages(images)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -144,11 +145,7 @@ func (pc ProdukController) DeleteProduk(w http.ResponseWriter, r *http.Request) 
 	idProduk := vars["idProduk"]
 	var produk models.Produk
 
-	err := produk.DeleteProduk(idToko, idProduk)
-	if err != nil {
-		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-		return
-	}
+	_ = produk.DeleteProduk(idToko, idProduk)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

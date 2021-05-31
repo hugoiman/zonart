@@ -1,10 +1,8 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 	"zonart/pkg/models"
 
@@ -17,16 +15,19 @@ type HasilOrderController struct{}
 
 // AddHasilOrder is func
 func (hoc HasilOrderController) AddHasilOrder(w http.ResponseWriter, r *http.Request) {
-	payload := r.FormValue("payload")
 	vars := mux.Vars(r)
 	idOrder := vars["idOrder"]
 
 	var ho models.HasilOrder
-	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&ho); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if _, _, err := r.FormFile("hasil"); err == http.ErrMissingFile {
+	if _, _, err := r.FormFile("hasil"); err == http.ErrMissingFile {
 		http.Error(w, "Mohon masukan gambar", http.StatusBadRequest)
+		return
+	}
+
+	var order models.Order
+	dataOrder, _ := order.GetOrder(idOrder)
+	if dataOrder.GetInvoice().GetStatusPesanan() != "diproses" {
+		http.Error(w, "Status pesanan tidak sedang diproses", http.StatusBadRequest)
 		return
 	}
 
@@ -39,9 +40,6 @@ func (hoc HasilOrderController) AddHasilOrder(w http.ResponseWriter, r *http.Req
 		return
 	}
 	ho.SetHasil(images[0])
-
-	var order models.Order
-	dataOrder, _ := order.GetOrder(idOrder)
 
 	ho.SetCreatedAt(time.Now().Format("2006-01-02"))
 	ho.SetStatus("menunggu persetujuan")

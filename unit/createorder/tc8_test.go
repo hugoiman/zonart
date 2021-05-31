@@ -91,5 +91,5 @@ func Test_TestCase8(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	t.Logf("response message:  %v\n status code: %v", response.Body, response.Result().StatusCode)
 
-	assert.NotEqual(t, response.Code, http.StatusBadRequest, "Seharusnya gagal mendecode")
+	assert.NotEqual(t, response.Code, http.StatusBadRequest, "Seharusnya upload gambar")
 }

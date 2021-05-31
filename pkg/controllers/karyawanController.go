@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -75,13 +76,13 @@ func (kc KaryawanController) UpdateKaryawan(w http.ResponseWriter, r *http.Reque
 	var karyawan models.Karyawan
 
 	if err := json.NewDecoder(r.Body).Decode(&karyawan); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
 	err := karyawan.UpdateKaryawan(idToko, idKaryawan)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

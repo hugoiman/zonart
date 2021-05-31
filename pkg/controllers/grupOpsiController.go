@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -53,7 +54,7 @@ func (goc GrupOpsiController) CreateGrupOpsi(w http.ResponseWriter, r *http.Requ
 	var grupOpsi models.GrupOpsi
 
 	if err := json.NewDecoder(r.Body).Decode(&grupOpsi); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -82,7 +83,7 @@ func (goc GrupOpsiController) CreateGrupOpsi(w http.ResponseWriter, r *http.Requ
 
 	idGrupOpsi, err := grupOpsi.CreateGrupOpsi(idToko)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -99,7 +100,7 @@ func (goc GrupOpsiController) UpdateGrupOpsi(w http.ResponseWriter, r *http.Requ
 	var grupOpsi models.GrupOpsi
 
 	if err := json.NewDecoder(r.Body).Decode(&grupOpsi); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -125,7 +126,7 @@ func (goc GrupOpsiController) UpdateGrupOpsi(w http.ResponseWriter, r *http.Requ
 
 	err := grupOpsi.UpdateGrupOpsi(idToko, idGrupOpsi)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -145,11 +146,7 @@ func (goc GrupOpsiController) DeleteGrupOpsi(w http.ResponseWriter, r *http.Requ
 	idGrupOpsi := vars["idGrupOpsi"]
 	var grupOpsi models.GrupOpsi
 
-	err := grupOpsi.DeleteGrupOpsi(idToko, idGrupOpsi)
-	if err != nil {
-		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-		return
-	}
+	_ = grupOpsi.DeleteGrupOpsi(idToko, idGrupOpsi)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

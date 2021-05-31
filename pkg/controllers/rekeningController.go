@@ -17,11 +17,7 @@ func (rc RekeningController) DeleteRekening(w http.ResponseWriter, r *http.Reque
 	idRekening := vars["idRekening"]
 	var rekening models.Rekening
 
-	err := rekening.DeleteRekening(idToko, idRekening)
-	if err != nil {
-		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-		return
-	}
+	_ = rekening.DeleteRekening(idToko, idRekening)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

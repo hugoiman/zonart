@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	"zonart/db"
 )
 
@@ -109,7 +110,12 @@ func (gop GrupOpsiProduk) SambungGrupOpsikeProduk(idProduk, idGrupOpsi string) e
 func (gop GrupOpsiProduk) PutusGrupOpsidiProduk(idProduk, idGrupOpsi string) error {
 	con := db.Connect()
 	query := "DELETE FROM grupOpsiProduk WHERE idProduk = ? AND idGrupOpsi = ?"
-	_, err := con.Exec(query, idProduk, idGrupOpsi)
+	res, err := con.Exec(query, idProduk, idGrupOpsi)
+
+	affectedRows, err := res.RowsAffected()
+	if int(affectedRows) == 0 {
+		err = errors.New("Terjadi kegagalan")
+	}
 
 	defer con.Close()
 

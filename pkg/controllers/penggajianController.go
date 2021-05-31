@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -34,20 +35,20 @@ func (pc PenggajianController) CreateGaji(w http.ResponseWriter, r *http.Request
 	var penggajian models.Penggajian
 
 	if err := json.NewDecoder(r.Body).Decode(&penggajian); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
 	var karyawan models.Karyawan
 	_, err := karyawan.GetKaryawan(idToko, idKaryawan)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Karyawan tidak ditemukan", http.StatusBadRequest)
 		return
 	}
 
 	err = penggajian.CreateGaji(idToko, idKaryawan)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -63,11 +64,7 @@ func (pc PenggajianController) DeleteGaji(w http.ResponseWriter, r *http.Request
 	idPenggajian := vars["idPenggajian"]
 	var penggajian models.Penggajian
 
-	err := penggajian.DeleteGaji(idToko, idPenggajian)
-	if err != nil {
-		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-		return
-	}
+	_ = penggajian.DeleteGaji(idToko, idPenggajian)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

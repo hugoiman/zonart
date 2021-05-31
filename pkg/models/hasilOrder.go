@@ -36,7 +36,6 @@ func (ho *HasilOrder) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		IDHasilOrder int    `json:"idHasilOrder"`
 		Hasil        string `json:"hasil"`
-		Nominal      int    `json:"nominal"`
 		Status       string `json:"status"`
 		CreatedAt    string `json:"createdAt"`
 	}{

@@ -130,7 +130,7 @@ func (mw MiddleWare) CustomerOrder(next http.HandlerFunc) http.HandlerFunc {
 
 		_, err := order.GetOrderCustomer(idOrder, strconv.Itoa(user.IDCustomer))
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Pesanan tidak ditemukan", http.StatusBadRequest)
 			return
 		}
 
@@ -148,7 +148,7 @@ func (mw MiddleWare) OwnerAdminOrder(next http.HandlerFunc) http.HandlerFunc {
 
 		dataOrder, err := order.GetOrderToko(idOrder, idToko)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Pesanan tidak ditemukan", http.StatusBadRequest)
 			return
 		} else if r.Method != http.MethodGet && (dataOrder.GetInvoice().GetStatusPesanan() == "selesai" || dataOrder.GetInvoice().GetStatusPesanan() == "ditolak" || dataOrder.GetInvoice().GetStatusPesanan() == "dibatalkan") {
 			http.Error(w, "Pesanan sudah "+dataOrder.GetInvoice().GetStatusPesanan(), http.StatusBadRequest)
@@ -173,13 +173,13 @@ func (mw MiddleWare) PenanganOrder(next http.HandlerFunc) http.HandlerFunc {
 
 		dataOrder, err := order.GetOrder(idOrder)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Pesanan tidak ditemukan", http.StatusBadRequest)
 			return
 		}
 
 		dataToko, err := toko.GetToko(idToko)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Toko tidak ditemukan", http.StatusBadRequest)
 			return
 		} else if user.IDCustomer != dataToko.GetOwner() && dataOrder.GetPenangan().GetIDPenangan() != user.IDCustomer {
 			http.Error(w, "Anda tidak memiliki otoritas pada pesanan ini.", http.StatusForbidden)
@@ -201,7 +201,7 @@ func (mw MiddleWare) SetUserPosition(next http.HandlerFunc) http.HandlerFunc {
 
 		dataToko, err := toko.GetToko(idToko)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Toko tidak ditemukan", http.StatusBadRequest)
 			return
 		} else if dataToko.GetOwner() == user.IDCustomer {
 			position = map[string]interface{}{

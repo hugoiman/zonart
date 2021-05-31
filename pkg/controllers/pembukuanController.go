@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -32,13 +33,13 @@ func (pc PembukuanController) CreatePembukuan(w http.ResponseWriter, r *http.Req
 	var pembukuan models.Pembukuan
 
 	if err := json.NewDecoder(r.Body).Decode(&pembukuan); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
 	err := pembukuan.CreatePembukuan(idToko)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

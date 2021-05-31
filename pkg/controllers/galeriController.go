@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -35,10 +36,10 @@ func (gc GaleriController) CreateGaleri(w http.ResponseWriter, r *http.Request) 
 	var galeri models.Galeri
 
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&galeri); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	} else if _, _, err := r.FormFile("gambar"); err == http.ErrMissingFile {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Silahkan masukan foto gambar", http.StatusBadRequest)
 		return
 	}
 
@@ -76,11 +77,7 @@ func (gc GaleriController) DeleteGaleri(w http.ResponseWriter, r *http.Request) 
 	idGaleris := []string{idGaleri}
 	var galeri models.Galeri
 
-	err := galeri.DeleteGaleri(idToko, idGaleris)
-	if err != nil {
-		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-		return
-	}
+	_ = galeri.DeleteGaleri(idToko, idGaleris)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/mux"
@@ -55,7 +56,7 @@ func (fc FaqController) CreateFaq(w http.ResponseWriter, r *http.Request) {
 	var faq models.Faq
 
 	if err := json.NewDecoder(r.Body).Decode(&faq); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -63,7 +64,7 @@ func (fc FaqController) CreateFaq(w http.ResponseWriter, r *http.Request) {
 
 	idFaq, err := faq.CreateFaq(idToko)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -79,11 +80,7 @@ func (fc FaqController) DeleteFaq(w http.ResponseWriter, r *http.Request) {
 	idFaq := vars["idFaq"]
 	var faq models.Faq
 
-	err := faq.DeleteFaq(idToko, idFaq)
-	if err != nil {
-		http.Error(w, "Data tidak ditemukan.", http.StatusBadRequest)
-		return
-	}
+	_ = faq.DeleteFaq(idToko, idFaq)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

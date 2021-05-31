@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"zonart/custerr"
 	"zonart/pkg/models"
 
 	"github.com/gorilla/context"
@@ -59,7 +60,7 @@ func (uc UndanganController) UndangKaryawan(w http.ResponseWriter, r *http.Reque
 	var toko models.Toko
 
 	if err := json.NewDecoder(r.Body).Decode(&undangan); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -79,7 +80,7 @@ func (uc UndanganController) UndangKaryawan(w http.ResponseWriter, r *http.Reque
 	dataToko, _ := toko.GetToko(idToko)
 
 	if dataCustomer.GetIDCustomer() == dataToko.GetOwner() {
-		http.Error(w, "Anda adalah pemilik dari toko ini.", http.StatusBadRequest)
+		http.Error(w, "Udangan tidak dapat memberikan ke diri sendiri.", http.StatusBadRequest)
 		return
 	}
 

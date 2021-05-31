@@ -25,15 +25,11 @@ func (tc TokoController) GetToko(w http.ResponseWriter, r *http.Request) {
 
 	dataToko, err := toko.GetToko(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Toko tidak ditemukan", http.StatusBadRequest)
 		return
 	}
 
-	message, err := json.Marshal(&dataToko)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	message, _ := json.Marshal(&dataToko)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -107,7 +103,7 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 	regexSlug := regexp.MustCompile(`^([a-z])([a-z0-9-]{1,48})([a-z0-9])$`)
 
 	if err := json.NewDecoder(strings.NewReader(payload)).Decode(&toko); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	} else if !regexSlug.MatchString(toko.GetSlug()) {
 		http.Error(w, "Domain hanya dapat mengandung huruf, angka atau strip(-) & terdiri 3-50 karakter.", http.StatusBadRequest)
@@ -141,7 +137,7 @@ func (tc TokoController) UpdateToko(w http.ResponseWriter, r *http.Request) {
 	err = toko.UpdateToko(idToko)
 	if err != nil {
 		cloudinary.DeleteImages(images)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, custerr.CustomError(err).Error(), http.StatusBadRequest)
 		return
 	}
 

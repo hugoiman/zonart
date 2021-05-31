@@ -57,7 +57,7 @@ func (gopc GrupOpsiProdukController) SambungGrupOpsikeProduk(w http.ResponseWrit
 	_, errP := produk.GetProduk(idToko, idProduk)        // produk not found
 	_, errGo := grupOpsi.GetGrupOpsi(idToko, idGrupOpsi) // grup opsi tidak ditemukan
 	if errP != nil || errGo != nil {
-		http.Error(w, "Terjadi kesalahan.", http.StatusBadRequest)
+		http.Error(w, "produk atau grup opsi tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
@@ -83,7 +83,7 @@ func (gopc GrupOpsiProdukController) PutusGrupOpsidiProduk(w http.ResponseWriter
 
 	_, err := produk.GetProduk(idToko, idProduk)
 	if err != nil {
-		http.Error(w, "Tidak ditemukan.", http.StatusBadRequest)
+		http.Error(w, "Produk tidak ditemukan.", http.StatusBadRequest)
 		return
 	}
 
