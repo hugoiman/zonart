@@ -181,3 +181,8 @@ func (ac AuthController) VerificationResetPassword(w http.ResponseWriter, r *htt
 }
 
 // Logout is func
+func (ac AuthController) Logout(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Anda telah keluar dari sistem."}`))
+}

@@ -51,6 +51,7 @@ func main() {
 	api.Use(mw.AuthToken)
 
 	router.HandleFunc("/api/login", auth.Login).Methods("POST")
+	router.HandleFunc("/api/logout", auth.Logout).Methods("POST")
 	router.HandleFunc("/api/register", customer.Register).Methods("POST")
 	router.HandleFunc("/api/reset-password", auth.ResetPassword).Methods("POST")
 	router.HandleFunc("/api/verification-reset-password", auth.VerificationResetPassword).Methods("POST")
@@ -159,8 +160,8 @@ func main() {
 	var c controllers.ClassController
 	router.HandleFunc("/api/main", c.Main).Methods("POST")
 
-	os.Setenv("PORT", "8080")
-	port := "8080"
+	// os.Setenv("PORT", "8080")
+	port := os.Getenv("PORT") // "8080"
 
 	fmt.Println("Server running at :", port)
 	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS(origins, headers, methods)(router)))

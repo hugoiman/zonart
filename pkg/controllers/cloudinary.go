@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -24,10 +25,10 @@ type Cloudinary struct {
 
 // setVariable is setter
 func (c *Cloudinary) setVariable() {
-	c.cloudName = "a"
-	c.baseURL = "a" + c.cloudName
-	c.apiKey = "a"
-	c.apiSecret = "a"
+	c.cloudName = os.Getenv("CLOUDINARY_CLOUD_NAME")
+	c.baseURL = os.Getenv("CLOUDINARY_BASE_URL")
+	c.apiKey = os.Getenv("CLOUDINARY_API_KEY")
+	c.apiSecret = os.Getenv("CLOUDINARY_API_SECRET")
 }
 
 func (c Cloudinary) UploadImages(r *http.Request, maxSize int64, destinationFolder string) ([]string, error) {
@@ -74,6 +75,12 @@ func (c Cloudinary) UploadImages(r *http.Request, maxSize int64, destinationFold
 	}
 	return images, nil
 }
+
+// stub UploadImages
+// func (c Cloudinary) UploadImages(r *http.Request, maxSize int64, destinationFolder string) ([]string, error) {
+// 	return []string{}, nil
+//	return []string{"tes.jpg"}, errors.New("Terjadi error")
+// }
 
 // DeleteImages is func
 func (c Cloudinary) DeleteImages(images []string) error {

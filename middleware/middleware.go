@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"zonart/pkg/models"
@@ -24,7 +25,7 @@ type MiddleWare struct {
 }
 
 func (mw *MiddleWare) GetSigningKey() []byte {
-	mw.signingKey = []byte("jwt super secret keys")
+	mw.signingKey = []byte(os.Getenv("SIGNING_KEY"))
 	return mw.signingKey
 }
 
