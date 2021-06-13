@@ -153,12 +153,12 @@ func main() {
 	router.HandleFunc("/api/raja-ongkir/cost", ro.GetCost).Methods("POST")
 	router.HandleFunc("/api/kurir", jp.GetJasaPengirimans).Methods("GET")
 
-	router.HandleFunc("/api/upload-test", controllers.UploadTest).Methods("POST")
+	// router.HandleFunc("/api/upload-test", controllers.UploadTest).Methods("POST")
 
 	api.HandleFunc("/api/rekening/{idToko}/{idRekening}", mw.AuthOwner(rekening.DeleteRekening)).Methods("DELETE")
 
-	var c controllers.ClassController
-	router.HandleFunc("/api/main", c.Main).Methods("POST")
+	// var c controllers.ClassController
+	// router.HandleFunc("/api/main", c.Main).Methods("POST")
 
 	// os.Setenv("PORT", "8080")
 	port := os.Getenv("PORT") // "8080"
