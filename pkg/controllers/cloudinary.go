@@ -32,7 +32,7 @@ func (c *Cloudinary) setVariable() {
 }
 
 func (c Cloudinary) UploadImages(r *http.Request, maxSize int64, destinationFolder string) ([]string, error) {
-	var cloud CloudTest
+	// var cloud CloudTest
 	var images = make([]string, 0)
 
 	c.setVariable()
@@ -53,7 +53,7 @@ func (c Cloudinary) UploadImages(r *http.Request, maxSize int64, destinationFold
 				c.DeleteImages(images)
 				return images, errors.New("Maksimal " + strconv.Itoa(int(maxSize/1024/1024)) + " MB per foto")
 			}
-			cloud.Gambar = append(cloud.Gambar, Gambar{Image: hdr.Filename})
+			// cloud.Gambar = append(cloud.Gambar, Gambar{Image: hdr.Filename})
 
 			var infile multipart.File
 			if infile, err = hdr.Open(); nil != err {
