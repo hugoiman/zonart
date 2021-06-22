@@ -363,7 +363,7 @@ func (o Order) GetOrders(idCustomer string) []Order {
 	con := db.Connect()
 	query := "SELECT idOrder, idCustomer, " +
 		"jenisPesanan, tambahanWajah, catatan, pcs, rencanaPakai, waktuPengerjaan, contohGambar, tglOrder " +
-		"FROM `order` WHERE idCustomer = ?"
+		"FROM `order` WHERE idCustomer = ? ORDER BY idOrder DESC"
 	rows, _ := con.Query(query, idCustomer)
 
 	var orders []Order

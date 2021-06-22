@@ -2,16 +2,12 @@ package rajaongkir
 
 import (
 	"testing"
-	"zonart/pkg/controllers"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var rj controllers.RajaOngkir
-
-func Test_TestCase1(t *testing.T) {
-	_, err := rj.GetIDKota("Jakarta Tengah")
-
+func Test_TestCase2(t *testing.T) {
+	_, err := rj.GetIDKota("Jakarta Pusat")
 	t.Logf("result message:  %v", err)
-	assert.NotNil(t, err, "seharusnya terdapat error")
+	assert.Nil(t, err, "seharusnya tidak error")
 }
