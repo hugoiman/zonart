@@ -95,6 +95,17 @@ func (ho HasilOrder) AddHasilOrder(idOrder string) error {
 	return err
 }
 
+// DeleteHasilOrder is func
+func (ho HasilOrder) DeleteHasilOrder(link string) error {
+	con := db.Connect()
+	query := "DELETE FROM hasilOrder WHERE hasil = ?"
+	_, err := con.Exec(query, link)
+
+	defer con.Close()
+
+	return err
+}
+
 // SetujuiHasilOrder is func
 func (ho HasilOrder) SetujuiHasilOrder(idOrder string) error {
 	con := db.Connect()

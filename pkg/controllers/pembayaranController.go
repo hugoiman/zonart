@@ -78,10 +78,14 @@ func (pc PembayaranController) CreatePembayaran(w http.ResponseWriter, r *http.R
 	notif.SetPenerima(append(notif.GetPenerima(), admins...))
 	notif.SetPengirim(dataCustomer.GetNama())
 	notif.SetJudul("Pembayaran Masuk")
-	notif.SetPesan(notif.GetPengirim() + " telah melakukan pembayaran Rp " + strconv.Itoa(pembayaran.GetNominal()) + ". No invoice:" + idOrder)
+	notif.SetPesan(notif.GetPengirim() + " telah melakukan pembayaran Rp " + strconv.Itoa(pembayaran.GetNominal()) + " pada " + pembayaran.GetCreatedAt() + ". No invoice:" + dataOrder.GetInvoice().GetIDInvoice())
 	notif.SetLink(dataOrder.GetInvoice().GetSlugToko() + "/pesanan/" + idOrder)
 	notif.SetCreatedAt(order.GetTglOrder())
 	notif.CreateNotifikasi()
+
+	message := notif.GetPengirim() + " telah melakukan pembayaran Rp " + strconv.Itoa(pembayaran.GetNominal()) + " pada " + pembayaran.GetCreatedAt() + ". No invoice:" + dataOrder.GetInvoice().GetIDInvoice()
+	var gomail Gomail
+	gomail.SendEmail("Pesanan "+dataOrder.GetInvoice().GetIDInvoice()+"telah melakukan pembayaran ", dataToko.GetEmailToko(), message)
 
 	data, _ := json.Marshal(pembayaran)
 
@@ -135,7 +139,6 @@ func (pc PembayaranController) KonfirmasiPembayaran(w http.ResponseWriter, r *ht
 	notif.SetPesan("")
 	notif.SetLink("/order?id=" + idOrder)
 	notif.SetCreatedAt(order.GetTglOrder())
-
 	notif.CreateNotifikasi()
 
 	w.Header().Set("Content-type", "application/json")

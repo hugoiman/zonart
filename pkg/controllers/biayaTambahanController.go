@@ -69,6 +69,13 @@ func (btc BiayaTambahanController) CreateBiayaTambahan(w http.ResponseWriter, r 
 	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
 
+	var customer models.Customer
+	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(dataOrder.GetPemesan()))
+
+	message := "Hallo, Pesanan #" + dataOrder.GetInvoice().GetIDInvoice() + " mempunyai biaya tambahan baru. Segera lakukan pembayaran ya"
+	var gomail Gomail
+	gomail.SendEmail("Tambahan Biaya Baru Pesanan #"+dataOrder.GetInvoice().GetIDInvoice(), dataCustomer.GetEmail(), message)
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message":"Biaya tambahan telah terkirim."}`))
@@ -123,6 +130,13 @@ func (btc BiayaTambahanController) DeleteBiayaTambahan(w http.ResponseWriter, r 
 	notif.SetLink("/order?id=" + idOrder)
 	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
+
+	var customer models.Customer
+	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(dataOrder.GetPemesan()))
+
+	message := "Hallo, biaya tambahan berupa " + dataBT.GetItem() + "(Rp " + strconv.Itoa(dataBT.GetTotal()) + ") telah dibatalkan. Pesanan #" + dataOrder.GetInvoice().GetIDInvoice()
+	var gomail Gomail
+	gomail.SendEmail("Tambahan Biaya Dibatalkan Pesanan #"+dataOrder.GetInvoice().GetIDInvoice(), dataCustomer.GetEmail(), message)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

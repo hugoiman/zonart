@@ -48,6 +48,10 @@ func (t *Toko) SetEmailToko(data string) {
 	t.emailToko = data
 }
 
+func (t *Toko) GetEmailToko() string {
+	return t.emailToko
+}
+
 func (t *Toko) SetKota(data string) {
 	t.kota = data
 }

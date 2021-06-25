@@ -358,6 +358,13 @@ func (oc OrderController) ProsesOrder(w http.ResponseWriter, r *http.Request) {
 	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
 
+	var customer models.Customer
+	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(dataOrder.GetPemesan()))
+
+	message := "Hallo, Pesananmu #" + dataOrder.GetInvoice().GetIDInvoice() + " sedang diproses. Silahkan melakukan pembayaran Rp" + strconv.Itoa(dataOrder.GetInvoice().GetTagihan()) + " ke rekening " + dataOrder.GetInvoice().GetNamaToko()
+	var gomail Gomail
+	gomail.SendEmail("Pesanan diproses", dataCustomer.GetEmail(), message)
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message":"Pesanan diproses."}`))
@@ -401,8 +408,14 @@ func (oc OrderController) TolakOrder(w http.ResponseWriter, r *http.Request) {
 	notif.SetPesan("Pesanan #" + dataOrder.GetInvoice().GetIDInvoice() + " ditolak. Keterangan: " + data.Keterangan)
 	notif.SetLink("/order?id=" + idOrder)
 	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
-
 	notif.CreateNotifikasi()
+
+	var customer models.Customer
+	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(dataOrder.GetPemesan()))
+
+	message := "Pesanan #" + dataOrder.GetInvoice().GetIDInvoice() + " ditolak. Keterangan: " + data.Keterangan
+	var gomail Gomail
+	gomail.SendEmail("Pesanan anda ditolak", dataCustomer.GetEmail(), message)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

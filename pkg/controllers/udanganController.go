@@ -109,6 +109,10 @@ func (uc UndanganController) UndangKaryawan(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	message := "Hallo " + dataCustomer.GetNama() + ",<br> " + notif.GetPengirim() + " telah mengundang anda sebagai " + undangan.GetPosisi()
+	var gomail Gomail
+	gomail.SendEmail("Undangan Karyawan", undangan.GetEmail(), message)
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message":"Undangan telah terkirim. Mohon tunggu persetujuan dari user."}`))

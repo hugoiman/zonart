@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	mw "zonart/middleware"
+	"zonart/pkg/controllers"
 
 	"github.com/gorilla/context"
 	"github.com/stretchr/testify/assert"
@@ -26,6 +27,7 @@ func Test_TestCase4(t *testing.T) {
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 
+	var toko controllers.TokoController
 	handler := http.HandlerFunc(toko.CreateToko)
 
 	// set identitas user

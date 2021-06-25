@@ -27,6 +27,10 @@ func CustomError(err error) error {
 				customErr = fmt.Errorf("%w Email sudah terpakai", customErr)
 			} else if strings.Contains(code.Message, "username") {
 				customErr = fmt.Errorf("%w Username sudah terpakai", customErr)
+			} else if strings.Contains(code.Message, "slug") {
+				customErr = fmt.Errorf("%w Domain sudah terpakai", customErr)
+			} else {
+				customErr = fmt.Errorf("%w Nama sudah terpakai", customErr)
 			}
 		case 1264:
 			customErr = fmt.Errorf("%w Jumlah karakter terlalu panjang", customErr)

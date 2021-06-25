@@ -3,11 +3,13 @@ package rajaongkir
 import (
 	"testing"
 	"time"
+	"zonart/pkg/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_TestCase2(t *testing.T) {
+	var toko models.Toko
 	toko.SetOwner(13)
 	toko.SetNamaToko("Creative Art")
 	toko.SetEmailToko("creativeart@gmail.com")

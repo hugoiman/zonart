@@ -36,6 +36,10 @@ func (k *Karyawan) SetEmail(data string) {
 	k.email = data
 }
 
+func (k *Karyawan) GetEmail() string {
+	return k.email
+}
+
 func (k *Karyawan) SetHP(data string) {
 	k.hp = data
 }

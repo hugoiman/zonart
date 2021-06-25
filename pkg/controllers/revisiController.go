@@ -65,6 +65,10 @@ func (rc RevisiController) CreateRevisi(w http.ResponseWriter, r *http.Request) 
 	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
 
+	message := "Permintaan revisi pesanan #" + dataOrder.GetInvoice().GetIDInvoice()
+	var gomail Gomail
+	gomail.SendEmail("Revisi pesanan #"+dataOrder.GetInvoice().GetIDInvoice(), dataKaryawan.GetEmail(), message)
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message":"Revisi telah terkirim."}`))

@@ -52,6 +52,7 @@ func (hoc HasilOrderController) AddHasilOrder(w http.ResponseWriter, r *http.Req
 	oldImage := []string{dataOrder.GetHasilOrder().GetHasil()}
 	if oldImage[0] != "" {
 		cloudinary.DeleteImages(oldImage)
+		ho.DeleteHasilOrder(oldImage[0])
 	}
 
 	var notif models.Notifikasi
@@ -62,6 +63,13 @@ func (hoc HasilOrderController) AddHasilOrder(w http.ResponseWriter, r *http.Req
 	notif.SetLink("/order?id=" + idOrder)
 	notif.SetCreatedAt(time.Now().Format("2006-01-02"))
 	notif.CreateNotifikasi()
+
+	var customer models.Customer
+	dataCustomer, _ := customer.GetCustomer(strconv.Itoa(dataOrder.GetPemesan()))
+
+	message := "Hallo, hasil pesananmu " + dataOrder.GetInvoice().GetIDInvoice() + " sudah keluar. Segera beri tanggapan ke penjual."
+	var gomail Gomail
+	gomail.SendEmail("Persetujuan hasil pesanan", dataCustomer.GetEmail(), message)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -107,6 +115,13 @@ func (hoc HasilOrderController) SetujuiHasilOrder(w http.ResponseWriter, r *http
 	if dataOrder.GetInvoice().GetTagihan() > 0 {
 		message += " Yuk segera selesaikan pembayaran kamu."
 	}
+
+	var toko models.Toko
+	dataToko, _ := toko.GetToko(dataOrder.GetInvoice().GetSlugToko())
+
+	emessage := "Hasil pesanan " + dataOrder.GetInvoice().GetIDInvoice() + " telah disetujui."
+	var gomail Gomail
+	gomail.SendEmail("Segera kirim barang dan akhhiri transaksi", dataToko.GetEmailToko(), emessage)
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
