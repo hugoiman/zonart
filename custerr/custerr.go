@@ -15,27 +15,27 @@ func CustomError(err error) error {
 		for _, err := range castedObject {
 			switch err.Tag() {
 			case "required":
-				customErr = fmt.Errorf("%w"+fmt.Sprintf(", %s wajib diisi", err.Field()), customErr)
+				customErr = fmt.Errorf("%w"+fmt.Sprintf("%s wajib diisi, ", err.Field()), customErr)
 			case "email":
-				customErr = fmt.Errorf("%w"+fmt.Sprintf(", format %s tidak valid", err.Field()), customErr)
+				customErr = fmt.Errorf("%w"+fmt.Sprintf("format %s tidak valid, ", err.Field()), customErr)
 			}
 		}
 	} else if code, ok := err.(*mysql.MySQLError); ok {
 		switch code.Number {
 		case 1062:
 			if strings.Contains(code.Message, "email") {
-				customErr = fmt.Errorf("%w Email sudah terpakai", customErr)
+				customErr = fmt.Errorf("%wEmail sudah terpakai ", customErr)
 			} else if strings.Contains(code.Message, "username") {
-				customErr = fmt.Errorf("%w Username sudah terpakai", customErr)
+				customErr = fmt.Errorf("%wUsername sudah terpakai ", customErr)
 			} else if strings.Contains(code.Message, "slug") {
-				customErr = fmt.Errorf("%w Domain sudah terpakai", customErr)
+				customErr = fmt.Errorf("%wDomain sudah terpakai ", customErr)
 			} else {
-				customErr = fmt.Errorf("%w Nama sudah terpakai", customErr)
+				customErr = fmt.Errorf("%wNama sudah terpakai ", customErr)
 			}
 		case 1264:
-			customErr = fmt.Errorf("%w Jumlah karakter terlalu panjang", customErr)
+			customErr = fmt.Errorf("%wJumlah karakter terlalu panjang", customErr)
 		case 1406:
-			customErr = fmt.Errorf("%w Jumlah karakter terlalu panjang", customErr)
+			customErr = fmt.Errorf("%wJumlah karakter terlalu panjang", customErr)
 		default:
 			customErr = err
 		}
