@@ -10,7 +10,7 @@ import (
 )
 
 func CustomError(err error) error {
-	customErr := errors.New("")
+	customErr := errors.New("Gagal: ")
 	if castedObject, ok := err.(validator.ValidationErrors); ok {
 		for _, err := range castedObject {
 			switch err.Tag() {
